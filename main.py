@@ -1,0 +1,254 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'test.ui'
+#
+# Created by: PyQt5 UI code generator 5.9
+#
+# WARNING! All changes made in this file will be lost!
+import sys
+
+from PyQt5.QtWidgets import QApplication , QMainWindow,QWidget
+
+from PyQt5 import QtCore, QtGui, QtWidgets,Qt
+from CoreWidget import *
+import chat_view
+import ConversationFrame,MeFrame,ContactFrame,DiscoverFrame
+import WelcomeFrame
+data_path = './wechat_data/'
+class Ui_Form:
+    def __init__(self, Form, h=1280/90, w=720/90):
+        super().__init__()
+        # self.setupUi(*d)
+        self.Form=Form 
+        h, w = h*CRITERION, w*CRITERION
+        Form.setObjectName("Form")
+        Form.resize(w, h)
+        Form.setMinimumSize(QtCore.QSize(w, h))
+        Form.setMaximumSize(QtCore.QSize(w, h))
+        self.size = (w, h)
+        self.bot=None
+        self.welcome=WelcomeFrame.WelcomeFrame()
+        t=self.welcome.setupUi(self.Form,0,0,w,h,father=self)
+        # print('sssssssssssssssss')
+        # self.setupUi()
+    def setupUi(self):
+        Form = self.Form
+        w,h=self.size
+
+        #底边栏的高度
+        ph=int(0.15*w)
+
+        pw=int(w/4)
+        pw+=1
+        self.horizontalLayoutWidget = QtWidgets.QWidget(Form)
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(0, h-ph, w, ph))
+        self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout.setSpacing(0)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+
+        self.Button_1 = YButton(self.horizontalLayoutWidget)
+        self.Button_1.setObjectName("Button_1")
+        self.horizontalLayout.addWidget(self.Button_1)
+
+        self.Button_2 = YButton(self.horizontalLayoutWidget)
+        self.Button_2.setObjectName("Button_2")
+        self.horizontalLayout.addWidget(self.Button_2)
+
+        self.Button_3 = YButton(self.horizontalLayoutWidget)
+        self.Button_3.setObjectName("Button_3")
+        self.horizontalLayout.addWidget(self.Button_3)
+
+        self.Button_4 = YButton(self.horizontalLayoutWidget)
+        self.Button_4.setObjectName("Button_4")
+        self.horizontalLayout.addWidget(self.Button_4)
+
+        self.setButton(self.Button_1,data_path+"icon/button1_ok.jpg",pw,ph,'Button_1',self.button1_click)
+
+        self.setButton(self.Button_2,data_path+"icon/button2_no.jpg",pw,ph,'Button_2',self.button2_click)
+
+        self.setButton(self.Button_3,data_path+"icon/button3_no.jpg",pw,ph,'Button_3',self.button3_click)
+
+        self.setButton(self.Button_4,data_path+"icon/button4_no.jpg",pw,ph,'Button_4',self.button4_click)
+        #顶部设计
+        tw1,tw2=int(490/720*w+0.2),int((490+94)/720*w+0.2)
+        ph_top=CRITERION
+
+        self.Button_name = YTextButton(Form)
+        self.Button_name.setTextIcon(' 微信',(60,60,65),(255,255,255),(tw1,ph_top),'vcenter')
+        self.setButton(self.Button_name,None,tw1,ph_top,'Button_title',self.button_name_click)
+        self.Button_name.setGeometry(QtCore.QRect(0, 0,tw1,ph_top))
+
+
+        self.Button_search = YButton(Form)
+        self.setButton(self.Button_search,data_path+"icon/search.jpg",tw2-tw1,ph_top,'Button_search',self.button_search_click)
+        self.Button_search.setGeometry(QtCore.QRect( tw1,0,tw2-tw1,ph_top))
+
+        self.Button_plus = YButton(Form)
+        self.setButton(self.Button_plus,data_path+"icon/plus.jpg",w-tw2,ph_top,'Button_plus',self.button_plus_click)
+        self.Button_plus.setGeometry(QtCore.QRect( tw2,0,w-tw2,ph_top))
+
+        #主界面显示
+        self.surface_list=[None]*4
+        self.surface_rect=0,ph_top,w,h-ph_top-ph
+        self.surface=ConversationFrame.ConversationFrame()
+        self.surface.setupUi(self.Form,0,ph_top,w,h-ph_top-ph,self)
+        self.surface_list[0]=self.surface
+        self.surface.show()
+        self.retranslateUi(Form)
+        QtCore.QMetaObject.connectSlotsByName(Form)
+        self.active=1
+        self.redirect()
+    def redirect(self):
+    	# self.button1_click(None)
+        pass
+
+    def setButton(self,B,I,pw,ph,objectname,connect=None):
+        if I is not None:
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(I) )
+            B.setIcon(icon)
+            B.setIconSize(QtCore.QSize(pw , ph))
+        B.setObjectName(objectname)
+        if connect is not None:B.clicked.connect(connect)
+
+    def retranslateUi(self, Form):
+        _translate = QtCore.QCoreApplication.translate
+        Form.setWindowTitle(_translate("Form", "wechat"))
+
+    def release_button(self):
+        if self.active==1:
+            self.button1_click(AUTO_PUSH)
+        elif self.active==2:
+            self.button2_click(AUTO_PUSH)
+        elif self.active==3:
+            self.button3_click(AUTO_PUSH)
+        else:
+            self.button4_click(AUTO_PUSH)
+    def hide(self):
+        self.horizontalLayoutWidget.hide()
+        self.Button_name.hide()
+        self.Button_plus.hide()
+        self.Button_search.hide()
+    def show(self):
+        self.horizontalLayoutWidget.show()
+        self.Button_name.show()
+        self.Button_plus.show()
+        self.Button_search.show()
+    def goto_view(self,kind,value):
+        if kind == 'chat':
+            print('chat',value)
+            self.view_active=chat_view.Ui_Chat()
+            self.view_active.setupUi(Bot = self.bot,user_info = value, me_info=self.bot.get_me_info())
+            self.bot.message_dispatcher[value['yxsid']] = self.view_active.accept_callback
+            self.view_active.show()
+        else:
+            pass
+    def button_name_click(self):
+        print('name')
+    def button_search_click(self):
+        print('search')
+    def button_plus_click(self):
+        print('plus')
+    def button1_click(self,k):
+        # k is False: 鼠标点击
+        img = None
+        print('s'*9,self.active)
+        if self.active!=1:
+            print('active1'*8)
+            img=data_path+"icon/button1_ok.jpg"
+            self.release_button()
+            self.active=1
+            if self.surface_list[0] is None:
+                surface=ConversationFrame.ConversationFrame()
+                surface.setupUi(self.Form,*self.surface_rect,self)
+                surface.show()
+                print('show'*8)
+                self.surface_list[0]=surface 
+            else:
+                self.surface_list[0].show()
+            self.surface.hide()
+            self.surface=self.surface_list[0]
+        elif k is AUTO_PUSH:
+            img=data_path+"icon/button1_no.jpg"
+        if img:
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(img)  )
+            self.Button_1.setIcon(icon)
+    def button2_click(self,k):
+        img = None
+        if k is False and self.active!=2:
+            img=data_path+"icon/button2_ok.jpg"
+            self.release_button()
+            self.active=2
+            if self.surface_list[1] is None:
+                surface=ContactFrame.ContactFrame()
+                surface.setupUi(self.Form,*self.surface_rect,self)
+                surface.show()
+                self.surface_list[1]=surface
+            else:
+                self.surface_list[1].show()
+            self.surface.hide()
+            self.surface=self.surface_list[1]
+        elif k is AUTO_PUSH:
+            img=data_path+"icon/button2_no.jpg"
+        if img:
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(img)  )
+            self.Button_2.setIcon(icon)
+        
+    def button3_click(self,k):
+        img = None
+        if self.active!=3:
+            img=data_path+"icon/button3_ok.jpg"
+            self.release_button()
+            self.active=3
+            if self.surface_list[2] is None:
+                surface=DiscoverFrame.DiscoverFrame()
+                surface.setupUi(self.Form,*self.surface_rect,self)
+                surface.show()
+                self.surface_list[2]=surface
+            else:
+                self.surface_list[2].show()
+            self.surface.hide()
+            self.surface=self.surface_list[2]
+
+        elif k is AUTO_PUSH:
+            img=data_path+"icon/button3_no.jpg"
+        if img:
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(img)  )
+            self.Button_3.setIcon(icon)
+    def button4_click(self,k):
+        img = None
+        if k is False and self.active!=4:
+            img=data_path+"icon/button4_ok.jpg"
+            self.release_button()
+            self.active=4
+            if self.surface_list[3] is None:
+                surface=MeFrame.MeFrame()
+                surface.setupUi(self.Form,*self.surface_rect,self)
+                surface.show()
+                self.surface_list[3]=surface
+            else:
+                self.surface_list[3].show()
+            self.surface.hide()
+            self.surface=self.surface_list[3]
+        elif k is AUTO_PUSH:
+            img=data_path+"icon/button4_no.jpg"
+        if img:
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(img)  )
+            self.Button_4.setIcon(icon)
+
+
+if __name__ == '__main__':
+    '''
+    主函数
+    '''
+    app = QApplication(sys.argv)
+    mainWindow = QMainWindow()
+    ui = Ui_Form(mainWindow)
+    mainWindow.show()
+    sys.exit(app.exec_())
