@@ -10,8 +10,8 @@ from PyQt5.QtWidgets import (QWidget, QSlider, QApplication,QMainWindow,
 from PyQt5.QtCore import Qt,QPoint,QRect
 from PyQt5.QtGui import QTextDocument,QPalette,QBrush,QColor,QFontMetrics,QPainter,QPen,QImage,QPixmap
 import sys
-
-
+from pathlib import Path
+import re
 global_font=QtGui.QFont()
 global_font.setFamily('SimHei')
 
@@ -26,7 +26,12 @@ CRITERION = 90/1280*640
 
 ME=5 
 OTHER=6
-
+emoji = dict()
+def read_emoji(path_emoji='./wechat_data/emoji'):
+    p=Path(path_emoji)
+    emo = {i.name[:-4]:str(i) for i in p.glob('*.png')}
+    emoji.update(emo)
+read_emoji()
 class YButton(QtWidgets.QPushButton):
     def __init__(self,d=None):
         super().__init__(d)
@@ -131,7 +136,10 @@ class YSentenceBubble(QtWidgets.QWidget):
     def __init__(self,d):
         super().__init__(d)
         self.Yw=d.Yw
-        
+        s='|'.join(emoji.keys())
+        s=s.replace('[',r'\[')
+        s=s.replace(']',r'\]')
+        self.emoji_re = re.compile('({})'.format(s))
         self.min_height=d.min_height
     def paintEvent(self,e):
         qp = QPainter()
@@ -172,9 +180,17 @@ class YSentenceBubble(QtWidgets.QWidget):
         self.textEdit.setReadOnly(True)
         
         self.d=self.textEdit.document()
+        cur = self.textEdit.textCursor()
         self.d.setTextWidth(self.max_width)
-        self.textEdit.setPlainText(text)
-        width = self.d.idealWidth()
+        emos = self.emoji_re.findall(text)
+        for i in emos:
+            position=text.find(i)
+            cur.insertText(text[0:position])
+            cur.insertImage(emoji[i])
+            text = text[position+len(i):]
+        cur.insertText(text)
+
+        width = self.d.idealWidth()#获取对话框的宽度
         if sys.platform.startswith('linux'):
             width += int(self.font_size/4)
         self.Ysize=width,self.d.size().height()
