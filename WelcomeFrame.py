@@ -3,7 +3,6 @@
 #
 # Created by: PyQt5 UI code generator 5.9
 #
-import sys
 
 from PyQt5.QtWidgets import QApplication , QMainWindow,QWidget,QPushButton
 
@@ -11,8 +10,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from CoreWidget import *
 import wxtools
-import os
-import time
 
 
 
@@ -21,19 +18,17 @@ class LogInThread(QtCore.QThread):
 
     def setValue(self,father):
         self.father = father
+
     def run(self):
         bot = wxtools.myBot(cache_path=True,qr_callback = self.father.qr_callback,login_callback=self.father.login_callback)
         bot.enable_yxsid()
         bot.enable_sql()
         @bot.register()
         def get_message(msg):
-            # bot.get_message(msg)
             self.trigger.emit((msg,'MSG'))
-        # bot.get_avatar_all()
+
         if bot.is_first:
-            # bot.get_avatar_all()
             bot.first_run()
-            # bot.get_avatar_all()
         
         self.trigger.emit((bot, 'BOT'))
         bot.auto_run()
@@ -59,14 +54,14 @@ class WelcomeFrame:
         s=QtGui.QImage('qrcode.png')
         self.QR_label.setPixmap(QtGui.QPixmap.fromImage(s))
         self.QR_label.show()
+
     def login_callback(self,*t):
         print('login callback')
+
     def bot_callback(self,callback_data):
-        # print('obtain robot')
         data, TYPE = callback_data
         if TYPE == 'BOT':
             self.bot=data
-            # self.bot.first_run()
             self.father_view.bot = self.bot
             self.hide()
             self.father_view.setupUi()
@@ -81,11 +76,7 @@ class WelcomeFrame:
         self.loginthread.setValue(self)
         self.loginthread.trigger.connect(self.bot_callback)
         self.loginthread.start()
-        # print('asdfasdf')
-        # self.qr_callback(0,0,0)
-        # self.hide()
-        # self.father_view.setupUi()
-        # self.father_view.show()
+
     def goto_view(self,name):
         #跳转到conversation的内容界面
         self.father_view.goto_view('chat',name)
@@ -93,21 +84,5 @@ class WelcomeFrame:
     def hide(self):
         self.LogIn_button.hide()
         self.QR_label.hide()
-    def show(self):
-        self.scrollArea.show()
 
-
-if __name__ == '__main__':
-    '''
-    主函数
-    '''
-    # app = QApplication(sys.argv)
-    # mainWindow = QMainWindow()
-    # ui = Ui_Form()
-    # ui.setupUi(mainWindow)
-    # mainWindow.show()
-    # sys.exit(app.exec_())
-    # print(dir(YButton))
-    # help(wxpy.Bot)
-    s=wxpy.Bot(qr_path = './as.png')
     

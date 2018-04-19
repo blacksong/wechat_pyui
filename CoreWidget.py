@@ -9,8 +9,9 @@ from PyQt5.QtWidgets import (QWidget, QSlider, QApplication,QMainWindow,
                              QHBoxLayout, QVBoxLayout,QLabel)
 from PyQt5.QtCore import Qt,QPoint,QRect
 from PyQt5.QtGui import QTextDocument,QPalette,QBrush,QColor,QFontMetrics,QPainter,QPen,QImage,QPixmap
-import sys,time
-#滚动区域
+import sys
+
+
 global_font=QtGui.QFont()
 global_font.setFamily('SimHei')
 
@@ -23,7 +24,7 @@ PICTURE = 3
 GIF = 4
 CRITERION = 90/1280*640
 
-ME=5
+ME=5 
 OTHER=6
 
 class YButton(QtWidgets.QPushButton):
@@ -352,7 +353,4 @@ class YInputText(QtWidgets.QTextEdit):
     def paintEvent(self,d):
         super().paintEvent(d)
         self.statusConnect((self.d.size().height(),self.height(),self.d.isEmpty()))
-if __name__=='__main__':
-    for i in dir(QtWidgets.QTextEdit):
-        if i.lower().find('event')!=-1:
-            print(i)
+

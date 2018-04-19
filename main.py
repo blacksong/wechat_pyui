@@ -139,6 +139,7 @@ class Ui_Form:
     def goto_view(self,kind,value):
         if kind == 'chat':
             print('chat',value)
+            if value['yxsid'] in self.bot.message_dispatcher:return #保证一个窗口只被打开一次
             self.view_active=chat_view.Ui_Chat()
             self.view_active.setupUi(Bot = self.bot,user_info = value, me_info=self.bot.get_me_info())
             self.bot.message_dispatcher[value['yxsid']] = self.view_active.accept_callback
