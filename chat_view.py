@@ -180,8 +180,9 @@ class Ui_Chat(QWidget):
 
     def button_send_click(self,e):
         s=self.input_text.toPlainText()
-        self.bot.send_data(s.encode('utf8'),self.user_info)
         self.input_text.setPlainText('')
+        self.bot.send_data(s.encode('utf8'),self.user_info)
         self.addMessage(s,ME,TEXT)
+        self.input_text.setFocus()
     def closeEvent(self,e):
         self.bot.message_dispatcher.pop(self.user_info['yxsid'])

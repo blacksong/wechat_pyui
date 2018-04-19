@@ -332,8 +332,10 @@ class YInputText(QtWidgets.QTextEdit):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.statusConnect = lambda x:None
         self.d=self.document()
+
     def press_enter_connect(self,func):
         self.press_enter = func
+        
     def focusInEvent(self,e):
         super().focusInEvent(e)
         self.statusConnect('FOCUS')
@@ -346,10 +348,11 @@ class YInputText(QtWidgets.QTextEdit):
     def keyReleaseEvent(self,e):
         self.statusConnect((self.d.size().height(),self.height(),self.d.isEmpty()))
     def keyPressEvent(self,e): #输入框按键事件
-        super().keyPressEvent(e)
         value = e.key()
-        if value == Qt.Key_Enter:
+        if value == Qt.Key_Return:
             self.press_enter()
+            return
+        super().keyPressEvent(e)
     def paintEvent(self,d):
         super().paintEvent(d)
         self.statusConnect((self.d.size().height(),self.height(),self.d.isEmpty()))
