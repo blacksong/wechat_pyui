@@ -12,6 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from CoreWidget import *
 import wxtools
 import os
+import time
 
 
 
@@ -23,10 +24,17 @@ class LogInThread(QtCore.QThread):
     def run(self):
         bot = wxtools.myBot(cache_path=True,qr_callback = self.father.qr_callback,login_callback=self.father.login_callback)
         bot.enable_yxsid()
+        bot.enable_sql()
         @bot.register()
         def get_message(msg):
             # bot.get_message(msg)
             self.trigger.emit((msg,'MSG'))
+        # bot.get_avatar_all()
+        if bot.is_first:
+            # bot.get_avatar_all()
+            bot.first_run()
+            # bot.get_avatar_all()
+        
         self.trigger.emit((bot, 'BOT'))
         bot.auto_run()
 
@@ -58,13 +66,15 @@ class WelcomeFrame:
         data, TYPE = callback_data
         if TYPE == 'BOT':
             self.bot=data
-            self.bot.enable_sql()
+            # self.bot.first_run()
             self.father_view.bot = self.bot
             self.hide()
             self.father_view.setupUi()
             self.father_view.show()
         elif TYPE == 'MSG':
             self.bot.get_message(data)
+        elif TYPE == 'FIRST':
+            pass
     def get_QRcode(self):
         print('jump to user frame')
         self.loginthread=LogInThread()

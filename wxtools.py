@@ -7,11 +7,14 @@ import hashlib
 import sys
 import asyncio
 import yxspkg_encrypt as encrypt
-semaphore = asyncio.Semaphore(8)
+# semaphore = asyncio.Semaphore(8)
+# sql.check_same_thread = False
+# help(sql.threadsafety)
 class mydb:
     def __init__(self,conn):
         self.conn=conn
         self.cur=self.conn.cursor()
+        self.table_columns=dict()
     def __del__(self):
         self.cur.close()
         self.conn.close()
@@ -27,6 +30,7 @@ class mydb:
                 stype = 'varchar({0})'.format(len(str(value).encode('utf8'))+2)
             a.append('{0} {1},'.format(str(key),stype))
         content = ''.join(a)
+        print(content)
         s='create table {table}({content})'.format(table = table,content=content[:-1])
         self.cur.execute(s)
     def table_exists(self,table):
@@ -35,6 +39,8 @@ class mydb:
             return True
         else:
             return False
+    def commit(self):
+        self.conn.commit()
     def to_sql(self,table,data,if_exists='append'):
         result = self.table_exists(table)
         
@@ -44,17 +50,24 @@ class mydb:
         else:
             if if_exists == 'replace':
                 self.cur.execute('delete from {table} where 1=1'.format(table=table))
-                self.conn.commit()
-        # print(table,'exists')
+                
+        res = self.cur.execute('select * from {}'.format(table))
+        columns = set([i[0] for i in res.description])
         for d in data:
+            c2 = set(d.keys())
+            g = c2-columns
+            if g:
+                print(g)
+                columns.update(g)
+                for i in g:
+                    self.cur.execute('alter table {table} add {column} varchar(3)'.format(table = table, column = i))
             t=','.join(['`'+i+'`' for i in d.keys()])
             v=['"'+str(i).replace('"','""')+'"' for i in d.values()]
             v=','.join(v)
             v='('+v+')'
             s='insert into '+table+'('+t+') values'+v
-            print(s)
+            # print(s)
             self.cur.execute(s)
-        self.conn.commit()
     def select(self,table=None,columns=('*',),where='1=1'):
         c=','.join(columns)
         s='select %s from %s where %s;' % (c,table,where)
@@ -74,6 +87,7 @@ class myBot(wxpy.Bot):
         self.senders = None
         self.me_info = None
         self.message_dispatcher=dict()
+        self.is_first=False
     def get_me_info(self):
         if self.me_info is None:
             yxsid = self.get_user_yxsid(self.self)
@@ -101,17 +115,17 @@ class myBot(wxpy.Bot):
     def contact_list(self):
         tags = ('yxsid', 'NickName', 'RemarkName')
         t = self.db.select('friend_info', tags)
-        print(t)
+        # print(t)
         info_list = [{'yxsid': yxsid, 'name': (RemarkName if RemarkName else NickName), 'img_path': str(
             self.avatar_path / (yxsid+'.jpg'))} for yxsid, NickName, RemarkName in t]
-        print(info_list)
+        # print(info_list)
         return info_list
     def conversation_list(self):
         tags = ('yxsid', 'NickName', 'RemarkName')
         t = self.db.select('friend_info',tags)
-        print(t)
+        # print(t)
         info_list = [{'yxsid':yxsid,'name': (RemarkName if RemarkName else NickName),'img_path':str(self.avatar_path / (yxsid+'.jpg'))} for yxsid,NickName,RemarkName in t]
-        print(info_list)
+        # print(info_list)
         return info_list
 
     def setPath(self,path): #设置微信账号的信息存储路径
@@ -122,8 +136,10 @@ class myBot(wxpy.Bot):
             self.path.mkdir()
         if not self.avatar_path.exists():
             self.avatar_path.mkdir()
-        self.db = mydb(sql.connect(str(self.path / 'wechat_data.db')))
-        self.first_run()
+            self.is_first = True
+        self.db = mydb(sql.connect(
+            str(self.path / 'wechat_data.db'), check_same_thread=False))
+        # self.first_run()
     def first_run(self):
         if not self.db.table_exists('friend_info'):
             friends = self.friends()
@@ -131,17 +147,21 @@ class myBot(wxpy.Bot):
             mps = self.mps()
             for i in friends+groups+mps:
                 self.update_user_info_one(i,is_append=True)
+        self.db.commit()
+        self.get_avatar_all()
 
     async def get_avatar_one(self,user,name):
-        async with semaphore:
-            loop = asyncio.get_event_loop()
-            fu = loop.run_in_executor(None,user.get_avatar)
-            im = await fu
-            open(name,'wb').write(im)
-            print(name)
+        print('gegegegegegeg')
+        # async with semaphore:
+        loop = asyncio.get_event_loop()
+        fu = loop.run_in_executor(None,user.get_avatar)
+        im = await fu
+        open(name,'wb').write(im)
+        print(name)
 
     def get_avatar_all(self):
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         tasks = [self.get_avatar_one(user,self.avatar_path / (self.get_user_yxsid(user)+'.jpg')) for user in self.friends()+self.groups()]
         loop.run_until_complete(asyncio.wait(tasks))
         loop.close()
@@ -153,6 +173,7 @@ class myBot(wxpy.Bot):
         d['imgmd5'] = self.get_user_md5(user)
         ftype = str(user)[1:].split(':')[0]
         if is_append:
+            print(ftype)
             if ftype == 'Group':
                 self.db.to_sql('group_info',[d])
             elif ftype == 'MP':
