@@ -7,7 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 import sys
 
-from PyQt5.QtWidgets import QApplication , QMainWindow,QWidget
+from PyQt5.QtWidgets import QApplication ,QWidget
 
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from CoreWidget import *
@@ -26,11 +26,13 @@ class Ui_Form:
         Form.setMinimumSize(QtCore.QSize(w, h))
         Form.setMaximumSize(QtCore.QSize(w, h))
         self.size = (w, h)
-        self.bot=None
-        self.welcome=WelcomeFrame.WelcomeFrame()
-        t=self.welcome.setupUi(self.Form,0,0,w,h,father=self)
-        # print('sssssssssssssssss')
-        # self.setupUi()
+        self.bot=None #设置机器人变量 初始为None，登录后会有值，在welcomeFrame中进行赋值
+        self.start_login(True)
+
+    def start_login(self,cache):#进入登录界面
+        w,h = self.size
+        self.welcome = WelcomeFrame.WelcomeFrame(cache)
+        t = self.welcome.setupUi(self.Form, 0, 0, w, h, father=self)
     def setupUi(self):
         Form = self.Form
         w,h=self.size
@@ -96,8 +98,7 @@ class Ui_Form:
         self.surface.setupUi(self.Form,0,ph_top,w,h-ph_top-ph,self)
         self.surface_list[0]=self.surface
         self.surface.show()
-        self.retranslateUi(Form)
-        QtCore.QMetaObject.connectSlotsByName(Form)
+
         self.active=1
         self.redirect()
     def redirect(self):
@@ -112,10 +113,6 @@ class Ui_Form:
             B.setIconSize(QtCore.QSize(pw , ph))
         B.setObjectName(objectname)
         if connect is not None:B.clicked.connect(connect)
-
-    def retranslateUi(self, Form):
-        _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "wechat"))
 
     def release_button(self):
         if self.active==1:
@@ -136,7 +133,8 @@ class Ui_Form:
         self.Button_name.show()
         self.Button_plus.show()
         self.Button_search.show()
-    def goto_view(self,kind,value):
+
+    def goto_view(self,kind,value):#功能跳转，调度
         if kind == 'chat':
             print('chat',value)
             if value['yxsid'] in self.bot.message_dispatcher:return #保证一个窗口只被打开一次
@@ -144,8 +142,16 @@ class Ui_Form:
             self.view_active.setupUi(Bot = self.bot,user_info = value, me_info=self.bot.get_me_info())
             self.bot.message_dispatcher[value['yxsid']] = self.view_active.accept_callback
             self.view_active.show()
+        elif kind == 'LogOut':
+            self.log_out()
         else:
             pass
+    def log_out(self):#退出当前登录
+        self.bot.write_back()
+        self.welcome.loginthread.quit()
+        self.bot.logout()
+        self.start_login(False)
+        self.hide()
     def button_name_click(self):
         print('name')
     def button_search_click(self):
@@ -153,7 +159,7 @@ class Ui_Form:
     def button_plus_click(self):
         print('plus')
     def button1_click(self,k):
-        # k is False: 鼠标点击
+        # k is False: 鼠标点击 吗
         img = None
         print('s'*9,self.active)
         if self.active!=1:
@@ -242,14 +248,25 @@ class Ui_Form:
             icon = QtGui.QIcon()
             icon.addPixmap(QtGui.QPixmap(img)  )
             self.Button_4.setIcon(icon)
+class myMainWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle('wechat')
+    def setBot(self,bot):
+        self.bot=bot
+    def closeEvent(self,e):
+        print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        self.bot.write_back()
 
-
+def main():
+    app = QApplication(sys.argv)
+    mainWindow = myMainWindow()
+    ui = Ui_Form(mainWindow)
+    mainWindow.show()
+    sys.exit(app.exec_())
 if __name__ == '__main__':
     '''
     主函数
     '''
-    app = QApplication(sys.argv)
-    mainWindow = QMainWindow()
-    ui = Ui_Form(mainWindow)
-    mainWindow.show()
-    sys.exit(app.exec_())
+    main()
+    

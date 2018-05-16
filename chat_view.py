@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QApplication , QMainWindow,QWidget,QVBoxLayout,QHBox
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from PyQt5.QtCore import QThread, QTimer, pyqtSignal
 from CoreWidget import *
+import wxpy
 
 
 class Ui_Chat(QWidget):
@@ -54,15 +55,10 @@ class Ui_Chat(QWidget):
 
         self.bot = Bot
     
-    def get_me_info(self,info):
-        pass
-    def get_other_info(self,info):
-        pass
     def resizeEvent(self,d):#根据窗口大小调整白色背景的大小以及发送键的位置
         size = self.size()
         self.blabel.resize(size)
         size_send = self.send_widget.size()
-        print(size_send)
         size_send.setWidth(size.width())
         self.send_widget.resize(size_send)
         self.Button_send.move(size.width()-self.Button_send.width()-20,0)
@@ -124,8 +120,7 @@ class Ui_Chat(QWidget):
 
         return send_widget
 
-    def addMessage(self,value,identity=OTHER,Format=TEXT): 
-
+    def addMessage(self,value,identity=OTHER,Format=TEXT): #value的值始终都为str类型
         button=YTalkWidget(self.scrollWidget_message)
         button.setContent(value,Format,self.icon_dict[identity],identity=identity)
         self.scrollArea.append_element(button)
@@ -146,10 +141,17 @@ class Ui_Chat(QWidget):
         B.setObjectName(objectname)
         if position is not None:B.setGeometry(QtCore.QRect(*position))
         if connect is not None:B.clicked.connect(connect)
-    def accept_callback(self,data):
-        print(data)
-        data = data[0]
-        self.addMessage(data.decode('utf8'),OTHER,TEXT)
+    def accept_callback(self,content,msg_type,yxsid_send):#yxsid_send本质是yxsid
+
+        if yxsid_send == self.me_info['yxsid']:#判断消息是自己从手机发出的还是别人发过来的
+            person = ME
+        else:
+            person = OTHER
+
+        if msg_type not in [TEXT,PICTURE]:
+            content = '不支持的消息类型，请在手机中查看：'+msg_type
+            msg_type = TEXT
+        self.addMessage(content,person,msg_type)#显示消息
     def adjustInputTextSize(self,h_d):
         return 
         if h_d<=self.input_text_height:
@@ -178,10 +180,11 @@ class Ui_Chat(QWidget):
         gt.moveTo(QtCore.QPoint(gt.x(),p-3))
         self.labelLine.setGeometry(gt)
 
-    def button_send_click(self,e):
+    def button_send_click(self,e):#发送消息
+        msg_type=TEXT
         s=self.input_text.toPlainText()
         self.input_text.setPlainText('')
-        self.bot.send_data(s.encode('utf8'),self.user_info)
+        self.bot.send_data(s,msg_type,self.user_info)
         self.addMessage(s,ME,TEXT)
         self.input_text.setFocus()
     def closeEvent(self,e):

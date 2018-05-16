@@ -13,7 +13,7 @@ from CoreWidget import *
 
 import os
 
-class MeFrame(object):
+class MeFrame:
 
     def setupUi(self, Form,ox,oy,w,h,father=None):
         self.father_view=father
@@ -28,22 +28,12 @@ class MeFrame(object):
         self.circle=FunctionButton(self.scrollWidget_discover)
         self.circle.setContent('discover/1.jpg','GIF MAKER',pos=(0,0.3*CRITERION))       
         self.circle.setName('GIFMAKER',self)
+        # self.circle.clicked.connect(self.log_out)
 
-    def drawDiscover(self):
-        self.getDiscover()
-        height=max(self.size[1]-20,self.conversation_height*len(self.conversation_list))
-        self.scrollWidget_discover.setGeometry(QtCore.QRect(0, 0, self.conversation_width,height ))
-        self.scrollWidget_discover.setMinimumSize(QtCore.QSize(self.conversation_width, height))
-        self.scrollWidget_discover.setObjectName("scrollWidget_discover")
-        self.con=[]
-        for n,i in enumerate(self.conversation_list):
-            p1 = ConversationButton(self.scrollWidget_discover)
-            p1.setContent(i,i[-10:-4],i[9:],'前天',self.conversation_width,self.conversation_height)
-            self.setButton(p1,None,self.conversation_width,self.conversation_height,i,(0,n*self.conversation_height,self.conversation_width,self.conversation_height))
-            self.con.append(p1)
     def goto_view(self,name):
         #跳转到conversation的内容界面
-        self.father_view.goto_view('chat',name)
+        self.hide()
+        self.father_view.goto_view('LogOut',name)
     def getDiscover(self):
         dirname='discover/'
         self.conversation_list=[dirname+i for i in os.listdir(dirname)]
@@ -73,7 +63,7 @@ if __name__ == '__main__':
     '''
     app = QApplication(sys.argv)
     mainWindow = QMainWindow()
-    ui = Ui_Form()
+    ui = MeFrame()
     ui.setupUi(mainWindow)
     mainWindow.show()
     sys.exit(app.exec_())

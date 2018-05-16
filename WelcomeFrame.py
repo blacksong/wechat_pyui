@@ -20,10 +20,9 @@ class LogInThread(QtCore.QThread):
         self.father = father
 
     def run(self):
-        bot = wxtools.myBot(cache_path=True,qr_callback = self.father.qr_callback,login_callback=self.father.login_callback)
-        bot.enable_yxsid()
-        bot.enable_sql()
-        @bot.register()
+        bot = wxtools.myBot(cache_path=self.father.cache,qr_callback = self.father.qr_callback,login_callback=self.father.login_callback)
+        bot.set_init()
+        @bot.register(except_self=False)
         def get_message(msg):
             self.trigger.emit((msg,'MSG'))
 
@@ -34,6 +33,8 @@ class LogInThread(QtCore.QThread):
         bot.auto_run()
 
 class WelcomeFrame:
+    def __init__(self,cache=False):
+        self.cache = cache
     def setupUi(self, Form,ox,oy,w,h,father=None):
         self.father_view=father
         self.Form=Form
@@ -63,6 +64,7 @@ class WelcomeFrame:
         if TYPE == 'BOT':
             self.bot=data
             self.father_view.bot = self.bot
+            self.father_view.Form.setBot(self.bot)
             self.hide()
             self.father_view.setupUi()
             self.father_view.show()

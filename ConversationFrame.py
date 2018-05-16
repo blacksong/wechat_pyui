@@ -82,6 +82,8 @@ class ConversationFrame(object):
         self.father_view=father
         self.Form=Form
         self.size=(w,h)
+        self.bot = self.father_view.bot
+        self.bot.update_conversation = self.update_conversation
         self.conversation_height = int(CRITERION*(128/90))
         self.conversation_width = self.size[0]
 
@@ -94,20 +96,24 @@ class ConversationFrame(object):
         
 
     def drawConversations(self):
+        print('draw'*8)
         conversation_list = self.getConversations()
-
+        print(conversation_list)
         for info in conversation_list:
             p1 = ConversationButton(self.scrollWidget_conversation)
             p1.setName(info,self)
-            p1.setContent(info['img_path'],info['name'],'哈哈','前天',self.conversation_width,self.conversation_height)
+            p1.setContent(info['img_path'],info['name'],info['text'],'前天',self.conversation_width,self.conversation_height)
             self.scrollArea.append_element(p1)
+            p1.show()
 
-        
+    def update_conversation(self):
+        self.scrollArea.reset()
+        self.drawConversations()
     def goto_view(self,user_info):
         #跳转到conversation的内容界面
         self.father_view.goto_view('chat',user_info)
     def getConversations(self): #获取对话列表
-        return self.father_view.bot.conversation_list()
+        return self.bot.conversation_list()
     def hide(self):
         self.scrollArea.hide()
     def show(self):

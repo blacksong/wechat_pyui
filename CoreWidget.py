@@ -8,20 +8,19 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QWidget, QSlider, QApplication,QMainWindow,
                              QHBoxLayout, QVBoxLayout,QLabel)
 from PyQt5.QtCore import Qt,QPoint,QRect
-from PyQt5.QtGui import QTextDocument,QPalette,QBrush,QColor,QFontMetrics,QPainter,QPen,QImage,QPixmap
+from PyQt5.QtGui import QTextDocument,QPalette,QBrush,QColor,QFontMetrics,QPainter,QPen,QImage,QPixmap,QMovie
 import sys
 from pathlib import Path
 import re
+from PIL import Image
+from wxpy import TEXT, PICTURE, MAP, VIDEO, CARD, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
 global_font=QtGui.QFont()
 global_font.setFamily('SimHei')
 
 myrobot=['GIFMAKER']
 
 #宏定义值
-TEXT=2
 AUTO_PUSH=1
-PICTURE = 3
-GIF = 4
 CRITERION = 90/1280*640
 
 ME=5 
@@ -58,7 +57,6 @@ class YScrollArea(QtWidgets.QScrollArea):
     def resizeEvent(self,d):
         width_w = self.width()
         height_w = self.main_widget.height()
-        # print(width_w,self.main_widget.width())
         self.main_widget.resize(width_w,height_w)
         for i in self.widgets:
             i.adjust_position(width_w)
@@ -76,6 +74,11 @@ class YScrollArea(QtWidgets.QScrollArea):
     def setWidget(self,w): #设置并记录该滚动区域的widget
         super().setWidget(w)
         self.main_widget = w
+    def reset(self):
+        self.bottom = 0
+        self.main_widget.resize(self.main_widget.width(), 1)
+        [i.hide() for i in self.widgets]
+        self.widgets = list()
 #滚动区域的Widget
 class YWidget(QtWidgets.QWidget):
     def __init__(self,*d,**k):
@@ -108,31 +111,20 @@ class YTextButton(QtWidgets.QPushButton):
         self.setIcon(icon)
         self.setIconSize(QtCore.QSize(*icon_size))
 
-#显示图片
-class YPictureBubble(QtWidgets.QLabel):
-    
-    def __init__(self,d=None):
-        super().__init__(d)
-        self.Yw=d.width()
-    def YSetPicture(self,p,identity):
-        pic=QImage(p)
-        self.setPixmap
 
-    def YSetGif(self,p,identity):
-        pass
 #聊天时显示对话文字内容的bubble
 class YSentenceBubble(QtWidgets.QWidget):
     me_color=100,200,90
     other_color=255,255,255
-    other_triangle=(QPoint(100,100),QPoint(120,80),QPoint(120,120))
-    me_triangle=(QPoint(140,140),QPoint(120,80),QPoint(120,120))
     other_rect_pos=(120/90*CRITERION,24/90*CRITERION)
     radius=10/90*CRITERION
 
     border_text=8/90*CRITERION #bubble和文字边框之间的距离
 
     font_size=int(30/90*CRITERION) #字体大小css  单文px
+
     max_width=450/90*CRITERION
+    
     def __init__(self,d):
         super().__init__(d)
         self.Yw=d.Yw
@@ -160,12 +152,10 @@ class YSentenceBubble(QtWidgets.QWidget):
     def setBubble(self,identity=ME):
         if identity is ME:
             self.color=QColor(*self.me_color)
-            self.triangle = self.me_triangle
             Width=self.Ysize[0]+self.border_text 
             self.rect_pos=self.Yw-(self.other_rect_pos[0]+Width),self.other_rect_pos[1]
         else:
             self.color=QColor(*self.other_color)
-            self.triangle = self.me_triangle
             self.rect_pos=self.other_rect_pos
         self.window_height = max(self.Ysize[1]+self.border_text+self.rect_pos[1],self.min_height)
     def setMessage(self,text,identity=ME):
@@ -179,23 +169,58 @@ class YSentenceBubble(QtWidgets.QWidget):
         self.textEdit.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.textEdit.setReadOnly(True)
         
-        self.d=self.textEdit.document()
-        cur = self.textEdit.textCursor()
-        self.d.setTextWidth(self.max_width)
-        emos = self.emoji_re.findall(text)
-        for i in emos:
-            position=text.find(i)
-            cur.insertText(text[0:position])
-            cur.insertImage(emoji[i])
-            text = text[position+len(i):]
-        cur.insertText(text)
+        self.d = self.textEdit.document() 
+        self.d.setTextWidth(self.max_width) 
+        def sub_func(t): 
+            ft = '< img src="{src}" height="{height}" />' 
+            b = t.group() 
+            return ft.format(src= emoji[b], height = self.font_size) 
+        tt = self.emoji_re.sub(sub_func, text) 
+        text = '<p style="font-size:{height}px;font-family:\'Times New Roman\', Times, serif">{text}</p >'.format(text = tt.replace('\n', '<br />'), height=self.font_size) 
+        self.textEdit.setHtml(text)
 
-        width = self.d.idealWidth()#获取对话框的宽度
+
+
+        width = self.d.idealWidth()   #获取对话框的宽度
         if sys.platform.startswith('linux'):
             width += int(self.font_size/4)
         self.Ysize=width,self.d.size().height()
 
         self.setBubble(identity)
+
+#设置图片和动图的显示框
+class YPictureBubble(QLabel):
+    def __init__(self,widget):
+        super().__init__(widget)
+        self.parent_widget = widget
+        self.setScaledContents(True)
+    def setPicture(self,image_name):
+        # image_name = "/home/yxs/E/pythonAPP/pyqt5_wechat/wechat_pyui-master/wechat_data/63a9f0ea7bb98050796b649e85481845/180422-002650.gif"
+        self.filename = image_name
+        max_width = 300
+        is_gif = False
+        if image_name[-3:].lower() == 'gif':
+            self.gif = QMovie(image_name)
+            if self.gif.isValid():
+                is_gif = True
+                self.setMovie(self.gif)
+                self.gif.start()
+                g = self.gif.currentImage()
+                w,h = (g.width(),g.height())
+        if not is_gif:
+            im = Image.open(image_name)
+            print(dir(im))
+            w,h = im.size
+
+            self.setPixmap(im.toqpixmap())
+        if w>=h and w>max_width:
+            ratio = max_width/w
+        elif h>w and h>max_width:
+            ratio = max_width/h
+        else:
+            ratio = 1
+        self.resize(int(w*ratio),int(h*ratio))
+
 
 class YTalkWidget(QtWidgets.QWidget):
     obj_name={ME:'me',OTHER:'other'}
@@ -211,14 +236,16 @@ class YTalkWidget(QtWidgets.QWidget):
         self.min_height=104/90*CRITERION
     def setContent(self,value,Format,icon_name,identity):
         self.identity=identity
-
+        self.Format = Format
         self.setPic(icon_name,self.obj_name[identity])
-        if Format is TEXT:
+        if Format == TEXT:
             h=self.setMessage(value)
             self.message_bubble.resize(self.Yw,h)
-        elif Format is PICTURE:
+        elif Format == PICTURE:
             h=self.setMessage_Picture(value)
         self.resize(self.Yw,h)
+    def set_position(self,element,identity):
+        pass
     def adjust_position(self,width_w):#当窗口大小变化时调整对话内容的位置
         y=self.pos().y()
         sel_width = self.width()
@@ -240,24 +267,19 @@ class YTalkWidget(QtWidgets.QWidget):
             pos=self.pos_other
         self.figure_button.setGeometry(*pos,80/90*CRITERION,80/90*CRITERION)
     def setMessage_Picture(self,value):
-        if isinstance(value,str):
-            qimg=QImage(value)
-        else:
-            qimg=value
-        max_wh =max(qimg.size().width(),qimg.size().height())
-        if max_wh>self.max_size:factor=self.max_size/max_wh
-        elif max_wh < self.min_size:factor=self.min_size/max_wh
-        else:factor=1
-        qimg=qimg.scaled(factor * qimg.size())
-        self.label_picture=QLabel(self)
-        self.label_picture.setPixmap(QPixmap.fromImage(qimg))
-        w,h=qimg.size().width(),qimg.size().height()
+        self.picture_bubble = YPictureBubble(self)#定义显示图片的组件
+        print(value)
+        self.picture_bubble.setPicture(value)
         if self.identity is ME:
-            pos=self.Yw-(self.other_rect_topleft[0]+w),self.other_rect_topleft[1]
+            pos = self.pos_me[0]-self.picture_bubble.width()-5,self.pos_me[1]
         else:
-            pos=self.other_rect_topleft
-        self.label_picture.move(*pos)
-        return h+pos[1]
+            pic_width = self.pic_qsize.width()
+            pos = self.pos_other[0]+5+pic_width,self.pos_other[1]
+        # print(pos,'pos'*8)
+        self.picture_bubble.move(*pos)
+        return self.picture_bubble.height()
+
+        
 
 
 class YDesignButton(QtWidgets.QPushButton):
@@ -373,3 +395,14 @@ class YInputText(QtWidgets.QTextEdit):
         super().paintEvent(d)
         self.statusConnect((self.d.size().height(),self.height(),self.d.isEmpty()))
 
+if __name__=='__main__':
+    '''__debug__'''
+    app = QApplication(sys.argv)
+    qmain = QMainWindow()
+    a = YTalkWidget(qmain)
+    icon = QtGui.QIcon()
+    icon.addPixmap(QtGui.QPixmap('I'))
+    a.setContent('/home/yxs/E/pythonAPP/pyqt5_wechat/wechat_pyui-master/wechat_data/63a9f0ea7bb98050796b649e85481845/180421-105405.png',PICTURE,icon,OTHER)
+    
+    qmain.show()
+    app.exec_()
