@@ -100,6 +100,7 @@ class ConversationFrame(object):
         conversation_list = self.getConversations()
         print(conversation_list)
         for info in conversation_list:
+            print(info.keys())
             p1 = ConversationButton(self.scrollWidget_conversation)
             p1.setName(info,self)
             p1.setContent(info['img_path'],info['name'],info['text'],'前天',self.conversation_width,self.conversation_height)

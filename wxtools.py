@@ -1,4 +1,3 @@
-
 from pathlib import Path
 import wxpy 
 import time
@@ -33,10 +32,11 @@ FRIENDS = 'Friends'
 # 系统
 SYSTEM = 'System'
 '''
-HEAD_SYSTEM = '__BLACKSONG__HDLJDYLZSX__'
-HEAD_ENCRYPT = '__BLACKSONG__ENMESSAGE__'
+HEAD_SYSTEM = '__SYS__'
+HEAD_ENCRYPT = '__ENC__'
+ASK_FOR_PUBLIC_KEY = HEAD_SYSTEM + 'PUK'
 
-SUFFIX_PUBLICKEY = '.BLCKS_KKK' #系统用文件后缀名
+SUFFIX_PUBLICKEY = '.picklersa' #系统用文件后缀名
 class mydb:
     def __init__(self,conn):
         self.conn=conn
@@ -103,7 +103,7 @@ class mydb:
             c=self.cur.execute(s)
         except Exception as err:
             print(s,err)
-            return False
+            return []
         c=self.cur.fetchall()
         if return_dict:
             c=[dict(zip(columns,i)) for i in c]
@@ -122,16 +122,14 @@ class myBot(wxpy.Bot):
         self.message_dispatcher=dict()
         self.is_first=False
         self.contact_info_list = None
-        self.is_encrypt = False
-        self.encrypt_yxsid_dict = dict()
+
+        self.public_key_dict = dict()
     
     def enable_rsa(self):# 启用加密
-        if self.is_encrypt:
-            return 
-        else:
-            path_rsa_key = self.path.with_name('rsa_key')
-            if not path_rsa_key.is_dir():
-                path_rsa_key.mkdir()
+
+        path_rsa_key = self.path / ('rsa_key')
+        if not path_rsa_key.is_dir():
+            path_rsa_key.mkdir()
         self.publicfile = path_rsa_key / 'publicrsa.picklersa'
         self.privatefile = path_rsa_key / 'privatersa.picklersa'
         if (not self.publicfile.is_file()) or (not self.privatefile.is_file()):
@@ -141,9 +139,7 @@ class myBot(wxpy.Bot):
         else:
             self.public_key = pickle.load(open(self.publicfile,'rb'))
             self.private_key = pickle.load(open(self.privatefile, 'rb'))
-        self.is_encrypt = True
-    def deable_rsa(self):
-        self.is_encrypt = False
+
     def get_me_info(self):
         if self.me_info is None:
             yxsid = self.get_user_yxsid(self.self)
@@ -233,7 +229,7 @@ class myBot(wxpy.Bot):
             self.is_first = True
         self.db = mydb(sql.connect(
             str(self.path / 'wechat_data.db'), check_same_thread=False))
-        # self.first_run()
+        self.enable_rsa()
     def first_run(self):
         if not self.db.table_exists('friend_info'):
             friends = self.friends()
@@ -273,74 +269,117 @@ class myBot(wxpy.Bot):
                 self.db.to_sql('mp_info',[d])
             else:
                 self.db.to_sql('friend_info', [d])
+
     def auto_run(self):#微信机器人启动后自动后台运行的程序
-        
+        print('auto_run'*100)
         self.senders = {self.get_user_yxsid(s): s for s in self.friends()+self.groups()}
+    def get_public_key(self,yxsid):#返回用户publick key
+        #检查是否读取过yxsid的public key
+        if yxsid in self.public_key_dict:
+            return self.public_key_dict[yxsid]
+        else:
+            #检查是否之前已经获取过yxsid的publickey 并存在硬盘中
+            key_path = self.path / "rsa_key"
+            print(yxsid+'_publicrsa.picklersa','find'*12)
+            public_key = list(key_path.glob(yxsid+'_publicrsa.picklersa'))
+            if public_key:
+                #在文件夹中 读取public key
+                pu = pickle.load(open(public_key[0],'rb'))
+                self.public_key_dict[yxsid] = pu 
+                return pu 
+            else:
+                #通过网络获取对方的public key
+                sender = self.senders[yxsid]
+                sender.send(ASK_FOR_PUBLIC_KEY)
+                return None
     def encrypt_data(self,data,msg_type,yxsid):#加密消息
-        public_key = self.encrypt_yxsid_dict[yxsid] 
+        public_key = self.get_public_key(yxsid) 
+        if public_key is None:
+            print('no public key')
+            return
         if msg_type == TEXT:
             data = encrypt.rsaencode(data.encode('utf8'),public_key)
             data = base64.b64encode(data).decode('utf8')
-            return data,TEXT 
+            return HEAD_ENCRYPT + data
         else:
-            return data,msg_type
+            return data
     def decrypt_data(self,data,msg_type):#解密消息
         if msg_type == TEXT:
+            data = data[len(HEAD_ENCRYPT):]
             data = base64.b64decode(data.encode('utf8'))
             data = encrypt.rsadecode(data,self.private_key)
-            return data.decode('utf8'),TEXT
+            return data.decode('utf8')
         else:
-            return data,msg_type    
-    def send_data(self,data,msg_type,target):
-        
+            return data  
+    def warning_message(self,type_ = None):
+        print('warning ',type_)
+    def send_data(self,data,msg_type,target,is_encrypt=True):
         friend = self.senders[target['yxsid']]
-        print(data,target)
         if msg_type == TEXT:
-            friend.send(data)
+            if is_encrypt:
+                data_send = self.encrypt_data(data,msg_type,target['yxsid'])
+                if data_send is None:
+                    return self.warning_message()
+            else:
+                data_send = data
+            print('send'*4,data_send)
+            friend.send(data_send)
+            text_conversation = data
         else:
+            text_conversation = '[Others]'
             friend.send('不支持的消息类型')
         # tags = ('yxsid', 'name', 'latest_time','unread_num', 'latest_user_name')
-        self.add_conversation({'yxsid':target['yxsid'],'name':target['name'],'latest_user_name':'','unread_num':0,'latest_time':str(time.time())})#latest_user_name=''意味着最后说话的人是自己
+        self.add_conversation({'yxsid':target['yxsid'],'text':text_conversation,'name':target['name'],'latest_user_name':'','unread_num':0,'latest_time':str(time.time())})#latest_user_name=''意味着最后说话的人是自己
         self.update_conversation()
 
-    def send_publickey(self,sender):
-        sender.send_file(str(self.publicfile))
+        
     def save_publickey(self,msg):
+        print('save_publickey')
         filename = msg.file_name
-        msg.get_file(filename)
+        yxsid = self.get_user_yxsid(msg.sender)
+        filename = Path(yxsid+'_'+filename)
+        filename = self.path / 'rsa_key' /filename
+        print(filename,'ff'*20)
+        msg.get_file(str(filename))
+    def system_message(self,content,yxsid):
+        print('system-message'*90)
+        if content == ASK_FOR_PUBLIC_KEY:
+            #发送public key
+            sender = self.senders[yxsid]
+            print('send_file', str(self.publicfile))
+            sender.send_file(str(self.publicfile))
     def get_message(self,msg):#处理收到的消息
-        if not self.is_encrypt:
-            self.enable_rsa()
+        #yxsid_send 发送msg的人
         yxsid_send = self.get_user_yxsid(msg.sender)
-
         yxsid = self.get_user_yxsid(msg.chat)
         receiver = self.message_dispatcher.get(yxsid)
 
         msg_type = msg.type#获取消息类型
-        if receiver is not None:
-            if msg_type == TEXT:
-                content = msg.text
-                if content.startswith(HEAD_SYSTEM):#自定义消息 无需显示在界面中
-                    self.send_publickey(msg.sender)
-                    return
-                elif content.startswith(HEAD_ENCRYPT):#加密信息  需要解析后显示
-                    pass
-            elif msg_type == PICTURE:
-                content = str(self.path/msg.file_name)
-                msg.get_file(content)
-            elif msg_type == ATTACHMENT:
-                if msg.file_name.endswith(SUFFIX_PUBLICKEY):#如果文件后缀为SUFFIX_PUBLICKEY则不显示该文件 该文件是公钥文件，，进行保存
-                    self.save_publickey(msg)
-                    return
-                filename = str(self.path/msg.file_name)
-                print(filename)
-                msg.get_file(filename)
-            else:
-                content = 'None'
-            receiver(content,msg_type, yxsid_send)
-            unread = 0
+        print(msg_type)
+        
+        if msg_type == TEXT:
+            content = msg.text
+            if content.startswith(HEAD_SYSTEM):#自定义消息 无需显示在界面中
+                self.system_message(content,yxsid_send)
+                return
+            elif content.startswith(HEAD_ENCRYPT):#加密信息  需要解析后显示
+                content = self.decrypt_data(content,TEXT)
+        elif msg_type == PICTURE:
+            content = str(self.path/msg.file_name)
+            msg.get_file(content)
+        elif msg_type == ATTACHMENT:
+            if msg.file_name.endswith(SUFFIX_PUBLICKEY):#如果文件后缀为SUFFIX_PUBLICKEY则不显示该文件 该文件是公钥文件，，进行保存
+                self.save_publickey(msg)
+                return
+            filename = str(self.path/msg.file_name)
+            print(filename)
+            msg.get_file(filename)
         else:
-            unread = 1
+            content = 'None'
+        if receiver is not None:
+            receiver(content, msg_type, yxsid_send)
+        unread = 0
+
         if msg_type == TEXT:
             text_conversation = msg.text
         elif msg_type == PICTURE:
