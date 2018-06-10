@@ -321,6 +321,7 @@ class myBot(wxpy.Bot):
             else:
                 data_send = data
             friend.send(data_send)
+            print('send',data_send)
             text_conversation = data
         else:
             text_conversation = '[Others]'

@@ -6,8 +6,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5.QtWidgets import QApplication , QMainWindow,QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLineEdit,QDialog
-
+from PyQt5.QtWidgets import QApplication , QMainWindow,QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLineEdit,QDialog,QCheckBox
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from PyQt5.QtCore import QThread, QTimer, pyqtSignal
 from CoreWidget import *
@@ -48,6 +47,8 @@ class Ui_Chat(QWidget):
         self.scrollWidget_message_size= 200,70
         self.scrollWidget_message_bottom = 0
 
+        self.is_encrypt = False
+
         
         self.setLayout(layout)
         self.show()
@@ -62,6 +63,7 @@ class Ui_Chat(QWidget):
         size_send.setWidth(size.width())
         self.send_widget.resize(size_send)
         self.Button_send.move(size.width()-self.Button_send.width()-20,0)
+        self.encrypt_box.move(size.width()-self.Button_send.width()-80,0)
 
     def click_name(self,*d):
         print('press name button')
@@ -108,17 +110,29 @@ class Ui_Chat(QWidget):
         self.input_text_height=self.input_text.document().size().height()
 
         return self.input_text
+
+    
     def set_send(self):
         send_widget = QWidget(self)
         send_widget.setMaximumHeight(30)
         send_widget.setMinimumHeight(30)
         send_widget.setStyleSheet('QWidget{background-color:rgb(255,255,255)}')
         self.Button_send = YTextButton(send_widget)
+
         self.Button_send.setTextIcon('Send',(24,240,12),(244,244,244),(80,30))
         self.Button_send.resize(80,30)
         self.Button_send.clicked.connect(self.button_send_click)
 
+        self.encrypt_box = QCheckBox('RSA',send_widget)
+        self.encrypt_box.stateChanged.connect(self.encrypt_state)
+        self.encrypt_box.resize(60, 30)
         return send_widget
+
+    def encrypt_state(self, state):
+        if state == Qt.Checked:
+            self.is_encrypt = True
+        else:
+            self.is_encrypt = False
 
     def addMessage(self,value,identity=OTHER,Format=TEXT): #value的值始终都为str类型
         button=YTalkWidget(self.scrollWidget_message)
@@ -183,9 +197,10 @@ class Ui_Chat(QWidget):
     def button_send_click(self,e):#发送消息
         msg_type=TEXT
         s=self.input_text.toPlainText()
-        self.input_text.setPlainText('')
-        self.bot.send_data(s,msg_type,self.user_info)
-        self.addMessage(s,ME,TEXT)
+        if  s:
+            self.bot.send_data(s,msg_type,self.user_info,self.is_encrypt)
+            self.addMessage(s,ME,TEXT)
+            self.input_text.setPlainText('')
         self.input_text.setFocus()
     def closeEvent(self,e):
         self.bot.message_dispatcher.pop(self.user_info['yxsid'])
