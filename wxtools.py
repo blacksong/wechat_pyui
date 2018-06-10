@@ -189,7 +189,6 @@ class myBot(wxpy.Bot):
                     break
             else:
                 d['name']='None'
-        # print(d,'add'*9)
         for i in self.conversation_list_now:
             if i['yxsid'] == yxsid:
                 i.update(d)
@@ -271,7 +270,7 @@ class myBot(wxpy.Bot):
                 self.db.to_sql('friend_info', [d])
 
     def auto_run(self):#微信机器人启动后自动后台运行的程序
-        print('auto_run'*100)
+        print('auto_run')
         self.senders = {self.get_user_yxsid(s): s for s in self.friends()+self.groups()}
     def get_public_key(self,yxsid):#返回用户publick key
         #检查是否读取过yxsid的public key
@@ -280,7 +279,6 @@ class myBot(wxpy.Bot):
         else:
             #检查是否之前已经获取过yxsid的publickey 并存在硬盘中
             key_path = self.path / "rsa_key"
-            print(yxsid+'_publicrsa.picklersa','find'*12)
             public_key = list(key_path.glob(yxsid+'_publicrsa.picklersa'))
             if public_key:
                 #在文件夹中 读取public key
@@ -322,7 +320,6 @@ class myBot(wxpy.Bot):
                     return self.warning_message()
             else:
                 data_send = data
-            print('send'*4,data_send)
             friend.send(data_send)
             text_conversation = data
         else:
@@ -334,19 +331,18 @@ class myBot(wxpy.Bot):
 
         
     def save_publickey(self,msg):
-        print('save_publickey')
         filename = msg.file_name
         yxsid = self.get_user_yxsid(msg.sender)
         filename = Path(yxsid+'_'+filename)
         filename = self.path / 'rsa_key' /filename
-        print(filename,'ff'*20)
+        print('saving public key',filename)
         msg.get_file(str(filename))
     def system_message(self,content,yxsid):
-        print('system-message'*90)
+        print('system-message',content)
         if content == ASK_FOR_PUBLIC_KEY:
             #发送public key
             sender = self.senders[yxsid]
-            print('send_file', str(self.publicfile))
+            print('send file', str(self.publicfile))
             sender.send_file(str(self.publicfile))
     def get_message(self,msg):#处理收到的消息
         #yxsid_send 发送msg的人
@@ -364,9 +360,11 @@ class myBot(wxpy.Bot):
                 return
             elif content.startswith(HEAD_ENCRYPT):#加密信息  需要解析后显示
                 content = self.decrypt_data(content,TEXT)
+            text_conversation = content
         elif msg_type == PICTURE:
             content = str(self.path/msg.file_name)
             msg.get_file(content)
+            text_conversation = '[图片]'
         elif msg_type == ATTACHMENT:
             if msg.file_name.endswith(SUFFIX_PUBLICKEY):#如果文件后缀为SUFFIX_PUBLICKEY则不显示该文件 该文件是公钥文件，，进行保存
                 self.save_publickey(msg)
@@ -374,20 +372,14 @@ class myBot(wxpy.Bot):
             filename = str(self.path/msg.file_name)
             print(filename)
             msg.get_file(filename)
+            text_conversation = '[文件]'
         else:
             content = 'None'
+            text_conversation = '[消息]'
         if receiver is not None:
             receiver(content, msg_type, yxsid_send)
         unread = 0
 
-        if msg_type == TEXT:
-            text_conversation = msg.text
-        elif msg_type == PICTURE:
-            text_conversation = '[图片]'
-        elif msg_type == ATTACHMENT:
-            text_conversation = '[文件]'
-        else:
-            text_conversation = '[消息]'
         self.add_conversation({'yxsid': yxsid,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time())})        
         self.update_conversation()
     def update_user_info(self):

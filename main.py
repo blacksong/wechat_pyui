@@ -255,7 +255,6 @@ class myMainWindow(QWidget):
     def setBot(self,bot):
         self.bot=bot
     def closeEvent(self,e):
-        print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
         self.bot.write_back()
 
 def main():
