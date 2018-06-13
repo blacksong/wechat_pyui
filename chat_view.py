@@ -133,14 +133,23 @@ class Ui_Chat(QWidget):
             self.is_encrypt = True
         else:
             self.is_encrypt = False
+        self.addMessage('test system',None,SYSTEM_YXS)
 
-    def addMessage(self,value,identity=OTHER,Format=TEXT): #value的值始终都为str类型
+    def addMessage(self,value:str,identity=OTHER,Format=TEXT): #value的值始终都为str类型
         button=YTalkWidget(self.scrollWidget_message)
-        button.setContent(value,Format,self.icon_dict[identity],identity=identity)
+        icon = self.icon_dict.get(identity)
+        button.setContent(value,Format,icon,identity=identity)
         self.scrollArea.append_element(button)
         button.show()
         self.autoSlideBar()
 
+    def insertMessage(self,value:str,identity=ME,Format=TEXT):#在对话前面插入历史对话信息
+        button = YTalkWidget(self.scrollWidget_message)
+        button.setContent(
+            'value_'+value, TEXT, self.icon_dict[identity], identity=identity)
+        self.scrollArea.insert_elements([button])
+        button.show()
+        self.autoSlideBar()
     def autoSlideBar(self,pos='bottom'):
         if pos=='bottom':
             bottom=self.scrollArea.bottom-self.scrollArea.height()+10
@@ -166,6 +175,7 @@ class Ui_Chat(QWidget):
             content = '不支持的消息类型，请在手机中查看：'+msg_type
             msg_type = TEXT
         self.addMessage(content,person,msg_type)#显示消息
+    
     def adjustInputTextSize(self,h_d):
         return 
         if h_d<=self.input_text_height:
