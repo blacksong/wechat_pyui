@@ -131,9 +131,10 @@ class Ui_Chat(QWidget):
     def encrypt_state(self, state):
         if state == Qt.Checked:
             self.is_encrypt = True
+            self.addMessage('Enable RSA',None,SYSTEM_YXS)
         else:
             self.is_encrypt = False
-        self.addMessage('test system',None,SYSTEM_YXS)
+            self.addMessage('Disable RSA',None,SYSTEM_YXS)
 
     def addMessage(self,value:str,identity=OTHER,Format=TEXT): #value的值始终都为str类型
         button=YTalkWidget(self.scrollWidget_message)
