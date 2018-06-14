@@ -209,7 +209,10 @@ class Ui_Chat(QWidget):
         msg_type=TEXT
         s=self.input_text.toPlainText()
         if  s:
-            self.bot.send_data(s,msg_type,self.user_info,self.is_encrypt)
+            succ,info = self.bot.send_data(s,msg_type,self.user_info,self.is_encrypt)
+            if succ is False:
+                self.addMessage(info,None,SYSTEM_YXS)
+                return
             self.addMessage(s,ME,TEXT)
             self.input_text.setPlainText('')
         self.input_text.setFocus()

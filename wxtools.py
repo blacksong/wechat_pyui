@@ -309,15 +309,14 @@ class myBot(wxpy.Bot):
             return data.decode('utf8')
         else:
             return data  
-    def warning_message(self,type_ = None):
-        print('warning ',type_)
+
     def send_data(self,data,msg_type,target,is_encrypt=True):
         friend = self.senders[target['yxsid']]
         if msg_type == TEXT:
             if is_encrypt:
                 data_send = self.encrypt_data(data,msg_type,target['yxsid'])
                 if data_send is None:
-                    return self.warning_message()
+                    return False,'Encryption failed, please try it again'
             else:
                 data_send = data
             friend.send(data_send)
@@ -329,6 +328,7 @@ class myBot(wxpy.Bot):
         # tags = ('yxsid', 'name', 'latest_time','unread_num', 'latest_user_name')
         self.add_conversation({'yxsid':target['yxsid'],'text':text_conversation,'name':target['name'],'latest_user_name':'','unread_num':0,'latest_time':str(time.time())})#latest_user_name=''意味着最后说话的人是自己
         self.update_conversation()
+        return True,None
 
         
     def save_publickey(self,msg):

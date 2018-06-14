@@ -206,13 +206,9 @@ class YSentenceBubble(QtWidgets.QWidget):
 
 
 class YSystemBubble(QtWidgets.QWidget):#显示系统提示消息
-    other_rect_pos = (120/90*CRITERION, 24/90*CRITERION)
-    radius = 10/90*CRITERION
-
-    border_text = 8/90*CRITERION  # bubble和文字边框之间的距离
+    radius = 5/90*CRITERION
 
     font_size = int(30/90*CRITERION)  # 字体大小css  单文px
-
 
     def __init__(self, d):
         super().__init__(d)
@@ -221,8 +217,6 @@ class YSystemBubble(QtWidgets.QWidget):#显示系统提示消息
         s = s.replace('[', r'\[')
         s = s.replace(']', r'\]')
         self.emoji_re = re.compile('({})'.format(s))
-        self.min_height = d.min_height
-        self.rect_pos = 0,0
         self.color = QColor(200,200,200)
         self.max_width = 7*CRITERION
 
@@ -235,14 +229,11 @@ class YSystemBubble(QtWidgets.QWidget):#显示系统提示消息
     def drawWidget(self, qp):
 
         Width, Height = self.Ysize
-        self.rect = QRect(self.rect_pos[0]-self.border_text, self.rect_pos[1] -
-                          self.border_text, Width+self.border_text*2, Height+self.border_text*2)
-        self.textEdit.setGeometry(
-            self.rect_pos[0], self.rect_pos[1], Width, Height)
+        self.rect = QRect(0, 0, Width, Height)
+        self.textEdit.setGeometry(0, 0, Width, Height)
         qp.setBrush(QBrush(self.color))
         qp.setPen(QPen(self.color))
         qp.drawRoundedRect(self.rect, self.radius, self.radius)
-
 
     def setMessage(self, text, identity=ME):
         self.textEdit = QtWidgets.QTextEdit(self)
@@ -252,8 +243,7 @@ class YSystemBubble(QtWidgets.QWidget):#显示系统提示消息
         self.textEdit.setPalette(pl)
         self.textEdit.setStyleSheet("border:none;")
         self.textEdit.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.textEdit.setHorizontalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAlwaysOff)
+        self.textEdit.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.textEdit.setReadOnly(True)
 
         self.d = self.textEdit.document()
@@ -337,8 +327,8 @@ class YTalkWidget(QtWidgets.QWidget):
         self.system_bubble = YSystemBubble(self)
         self.system_bubble.setMessage(value,None)
         w = (self.Yw - self.system_bubble.width()) // 2
-        self.system_bubble.move(w,0)
-        return self.system_bubble.Ysize[1]
+        self.system_bubble.move(w,2)
+        return self.system_bubble.Ysize[1]+4
     def adjust_position(self,width_w):#当窗口大小变化时调整对话内容的位置
         y=self.pos().y()
         sel_width = self.width()
