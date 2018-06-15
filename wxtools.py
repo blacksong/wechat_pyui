@@ -7,7 +7,6 @@ import sys
 import yxspkg_encrypt as encrypt
 import asyncio
 import base64
-import pickle
 from wxpy import TEXT, PICTURE, MAP, VIDEO, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
 '''
 TEXT = 'Text'
@@ -35,8 +34,10 @@ SYSTEM = 'System'
 HEAD_SYSTEM = '__SYS__'
 HEAD_ENCRYPT = '__ENC__'
 ASK_FOR_PUBLIC_KEY = HEAD_SYSTEM + 'PUK'
-
-SUFFIX_PUBLICKEY = '.picklersa' #系统用文件后缀名
+RSA_PUBLIC_KEY_FILE_PASSWD = 'I just want encrypt this file!666'
+SUFFIX_PUBLICKEY = '.yprkf' #系统用文件后缀名
+PUBLIC_KEY_FILE = 'pupu.yprkf'
+PRIVATE_KEY_FILE = 'prpr.yprkf'
 class mydb:
     def __init__(self,conn):
         self.conn=conn
@@ -130,15 +131,23 @@ class myBot(wxpy.Bot):
         path_rsa_key = self.path / ('rsa_key')
         if not path_rsa_key.is_dir():
             path_rsa_key.mkdir()
-        self.publicfile = path_rsa_key / 'publicrsa.picklersa'
-        self.privatefile = path_rsa_key / 'privatersa.picklersa'
+        self.publicfile = path_rsa_key / PUBLIC_KEY_FILE
+        self.privatefile = path_rsa_key / PRIVATE_KEY_FILE
         if (not self.publicfile.is_file()) or (not self.privatefile.is_file()):
             self.public_key, self.private_key = encrypt.newkeys(2048)
-            pickle.dump(self.public_key, open(self.publicfile, 'wb'))
-            pickle.dump(self.private_key, open(self.privatefile, 'wb'))
+            pu_der = self.public_key.save_pkcs1('DER')
+            pr_der = self.private_key.save_pkcs1('DER')
+            pu_der = encrypt.encode(pu_der,RSA_PUBLIC_KEY_FILE_PASSWD)
+            pr_der = encrypt.encode(pr_der,RSA_PUBLIC_KEY_FILE_PASSWD)
+            open(self.publicfile, 'wb').write(pu_der)
+            open(self.privatefile, 'wb').write(pr_der)
         else:
-            self.public_key = pickle.load(open(self.publicfile,'rb'))
-            self.private_key = pickle.load(open(self.privatefile, 'rb'))
+            pu_der = open(self.publicfile, 'rb').read()
+            pr_der = open(self.privatefile, 'rb').read()
+            pu_der = encrypt.decode(pu_der,RSA_PUBLIC_KEY_FILE_PASSWD)
+            pr_der = encrypt.decode(pr_der,RSA_PUBLIC_KEY_FILE_PASSWD)
+            self.public_key = encrypt._rsa.PublicKey.load_pkcs1(pu_der,'DER')
+            self.private_key = encrypt._rsa.PrivateKey.load_pkcs1(pr_der,'DER')
 
     def get_me_info(self):
         if self.me_info is None:
@@ -213,7 +222,11 @@ class myBot(wxpy.Bot):
             self.db.dict_to_table(d,'conversation_list')
             self.conversation_list_now = list()
         return self.conversation_list_now
-
+    def write_content(self,yxsid,data,passwd=None):
+        #data保存的数据格式 字典形式，包括Value:str,Format,Time,yxsid(两人对话时0代表自己，1代表对方，群聊时代表发送者的yxsid)
+        self.db.to_sql('Record_'+yxsid,data)
+    def read_content(self,idendity):
+        pass
     def setPath(self,path): #设置微信账号的信息存储路径
 
         def makedirs(path_dirs):
@@ -279,10 +292,12 @@ class myBot(wxpy.Bot):
         else:
             #检查是否之前已经获取过yxsid的publickey 并存在硬盘中
             key_path = self.path / "rsa_key"
-            public_key = list(key_path.glob(yxsid+'_publicrsa.picklersa'))
+            public_key = list(key_path.glob(yxsid+'_'+PUBLIC_KEY_FILE))
             if public_key:
                 #在文件夹中 读取public key
-                pu = pickle.load(open(public_key[0],'rb'))
+                pu_der = open(public_key[0], 'rb').read()
+                pu_der = encrypt.decode(pu_der,RSA_PUBLIC_KEY_FILE_PASSWD)
+                pu = encrypt._rsa.PublicKey.load_pkcs1(pu_der,'DER')
                 self.public_key_dict[yxsid] = pu 
                 return pu 
             else:
