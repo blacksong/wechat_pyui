@@ -336,6 +336,8 @@ class YTalkWidget(QtWidgets.QWidget):
             pos_width=width_w-sel_width
         elif self.identity is None:
             pos_width = (width_w - sel_width)//2
+        else:
+            pos_width = 0
         self.move(pos_width, y)
     def setMessage(self,e): # 绘制用户文字信息
         self.message_bubble = YSentenceBubble(self)

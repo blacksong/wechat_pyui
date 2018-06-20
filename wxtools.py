@@ -44,8 +44,12 @@ class mydb:
         self.cur=self.conn.cursor()
         self.table_columns=dict()
     def __del__(self):
+
+        self.commit()
         self.cur.close()
         self.conn.close()
+        print('sqlite3 has been closed')
+
     def dict_to_table(self,dic,table):
         a=[]
         for key,value in dic.items():
@@ -160,8 +164,9 @@ class myBot(wxpy.Bot):
         self.enable_sql()
         self.enable_yxsid()
     def enable_yxsid(self):#这是一个待开发的函数，目的是返回一个不变的id  目前以puid作为yxsid
-
+        
         puid_path = self.path / 'wxpy_puid.pkl'
+        print('puid path', puid_path )
         self.enable_puid(str(puid_path))
         self.yxsid = self.get_user_yxsid(self.self) #
 
@@ -223,10 +228,12 @@ class myBot(wxpy.Bot):
             self.conversation_list_now = list()
         return self.conversation_list_now
     def write_content(self,yxsid,data,passwd=None):
-        #data保存的数据格式 字典形式，包括Value:str,Format,Time,yxsid(两人对话时0代表自己，1代表对方，群聊时代表发送者的yxsid)
-        self.db.to_sql('Record_'+yxsid,data)
-    def read_content(self,idendity):
-        pass
+        #data保存的数据格式 字典形式，包括Value:str,Msg_type,Time,yxsid(两人对话时0代表自己，1代表对方，群聊时代表发送者的yxsid)
+        self.db.to_sql('Record_'+yxsid,[data])
+    def read_content(self,yxsid,time_before,nums):
+        print('yxsid'*20,yxsid,nums,time_before)
+        return self.db.cur.execute('SELECT yxsid,Value,Msg_type,Time FROM {0} WHERE Time<{1} ORDER BY Time DESC LIMIT {2};'.format('Record_'+yxsid,time_before,nums))
+
     def setPath(self,path): #设置微信账号的信息存储路径
 
         def makedirs(path_dirs):
@@ -337,11 +344,16 @@ class myBot(wxpy.Bot):
             friend.send(data_send)
             print('send',data_send)
             text_conversation = data
+            value_record = data
         else:
             text_conversation = '[Others]'
             friend.send('不支持的消息类型')
+            value_record = text_conversation
         # tags = ('yxsid', 'name', 'latest_time','unread_num', 'latest_user_name')
-        self.add_conversation({'yxsid':target['yxsid'],'text':text_conversation,'name':target['name'],'latest_user_name':'','unread_num':0,'latest_time':str(time.time())})#latest_user_name=''意味着最后说话的人是自己
+        time_index = str(time.time())
+        data_record = {'yxsid':'0','Value':value_record,'Time':time_index,'Msg_type':msg_type}
+        self.write_content(target['yxsid'],data_record)
+        self.add_conversation({'yxsid':target['yxsid'],'text':text_conversation,'name':target['name'],'latest_user_name':'','unread_num':0,'latest_time':time_index})#latest_user_name=''意味着最后说话的人是自己
         self.update_conversation()
         return True,None
 
@@ -364,10 +376,10 @@ class myBot(wxpy.Bot):
         #yxsid_send 发送msg的人
         yxsid_send = self.get_user_yxsid(msg.sender)
         yxsid = self.get_user_yxsid(msg.chat)
+
         receiver = self.message_dispatcher.get(yxsid)
 
         msg_type = msg.type#获取消息类型
-        print(msg_type)
         
         if msg_type == TEXT:
             content = msg.text
@@ -377,10 +389,12 @@ class myBot(wxpy.Bot):
             elif content.startswith(HEAD_ENCRYPT):#加密信息  需要解析后显示
                 content = self.decrypt_data(content,TEXT)
             text_conversation = content
+            value_record = text_conversation
         elif msg_type == PICTURE:
             content = str(self.path/msg.file_name)
             msg.get_file(content)
             text_conversation = '[图片]'
+            value_record = content
         elif msg_type == ATTACHMENT:
             if msg.file_name.endswith(SUFFIX_PUBLICKEY):#如果文件后缀为SUFFIX_PUBLICKEY则不显示该文件 该文件是公钥文件，，进行保存
                 self.save_publickey(msg)
@@ -389,13 +403,17 @@ class myBot(wxpy.Bot):
             print(filename)
             msg.get_file(filename)
             text_conversation = '[文件]'
+            value_record = filename
         else:
             content = 'None'
             text_conversation = '[消息]'
+            value_record = ''
         if receiver is not None:
             receiver(content, msg_type, yxsid_send)
         unread = 0
-
+        time_index = '{:.2f}'.format(time.time())
+        data_record = {'yxsid':yxsid_send,'Value':value_record,'Time':time_index,'Msg_type':msg_type}
+        self.write_content(yxsid,data_record)
         self.add_conversation({'yxsid': yxsid,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time())})        
         self.update_conversation()
     def update_user_info(self):
@@ -404,7 +422,7 @@ class myBot(wxpy.Bot):
             friends = self.friends()
     def write_back(self):
         self.db.to_sql('conversation_list',self.conversation_list_now,if_exists='replace')
-        self.db.commit()
+        del self.db
 
 if __name__=='__main__':
     # bot = myBot(cache_path=True)

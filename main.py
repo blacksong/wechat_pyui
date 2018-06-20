@@ -1,7 +1,6 @@
-import sys
-
+import sys,os
 from PyQt5.QtWidgets import QApplication ,QWidget
-
+from pathlib import Path
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from CoreWidget import *
 import chat_view
@@ -20,10 +19,16 @@ class Ui_Form:
         self.size = (w, h)
         self.bot=None #设置机器人变量 初始为None，登录后会有值，在welcomeFrame中进行赋值
         self.start_login(True)
+        self.chat_view_dict=dict()
+        Form.del_funs.append(self.close_chat)#关闭对话框 当关闭主程序的时候
 
     def start_login(self,cache):#进入登录界面
         w,h = self.size
-        self.welcome = WelcomeFrame.WelcomeFrame(cache)
+        cache = Path('./user_data/log_in_cache')
+        if not cache.is_dir():
+            os.makedirs(cache)
+        cache /= 'wx.pkl'
+        self.welcome = WelcomeFrame.WelcomeFrame(str(cache))
         t = self.welcome.setupUi(self.Form, 0, 0, w, h, father=self)
     def setupUi(self):
         Form = self.Form
@@ -135,6 +140,7 @@ class Ui_Form:
             self.view_active.setupUi(Bot = self.bot,user_info = value, me_info=self.bot.get_me_info())
             self.bot.message_dispatcher[value['yxsid']] = self.view_active.accept_callback
             self.view_active.show()
+            self.chat_view_dict[value['yxsid']] = self.view_active
         elif kind == 'LogOut':
             self.log_out()
         else:
@@ -241,13 +247,19 @@ class Ui_Form:
             icon = QtGui.QIcon()
             icon.addPixmap(QtGui.QPixmap(img)  )
             self.Button_4.setIcon(icon)
+    def close_chat(self):
+        for i in list(self.bot.message_dispatcher.keys()):
+            self.chat_view_dict[i].close()
 class myMainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('wechat')
+        self.del_funs = []
     def setBot(self,bot):
         self.bot=bot
     def closeEvent(self,e):
+        for fun in self.del_funs:
+            fun()
         self.bot.write_back()
 
 def main():

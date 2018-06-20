@@ -55,7 +55,21 @@ class Ui_Chat(QWidget):
 
 
         self.bot = Bot
-    
+
+        self.time_before = '{:.2f}'.format(9529456999.83)
+        self.insert_some_message(10)
+    def insert_some_message(self,nums):    
+        an = list(self.bot.read_content(self.user_info['yxsid'],time_before= self.time_before,nums = nums))
+        an.reverse()
+        ans = []
+        me_yxsid = self.me_info['yxsid']
+        for yxsid, value, msg_type, time_ in an:
+            if yxsid == '0' or yxsid == me_yxsid:
+                idendity = ME
+            else:
+                idendity = OTHER
+            ans.append((value, idendity, msg_type, time_))
+        self.insertMessage(ans)
     def resizeEvent(self,d):#根据窗口大小调整白色背景的大小以及发送键的位置
         size = self.size()
         self.blabel.resize(size)
@@ -128,14 +142,14 @@ class Ui_Chat(QWidget):
         self.encrypt_box.resize(60, 30)
         return send_widget
 
-    def encrypt_state(self, state):
+    def encrypt_state(self, state):#加密状态改变
         if state == Qt.Checked:
             self.is_encrypt = True
             self.addMessage('Enable RSA',None,SYSTEM_YXS)
         else:
             self.is_encrypt = False
             self.addMessage('Disable RSA',None,SYSTEM_YXS)
-
+        
     def addMessage(self,value:str,identity=OTHER,Format=TEXT): #value的值始终都为str类型
         button=YTalkWidget(self.scrollWidget_message)
         icon = self.icon_dict.get(identity)
@@ -144,12 +158,16 @@ class Ui_Chat(QWidget):
         button.show()
         self.autoSlideBar()
 
-    def insertMessage(self,value:str,identity=ME,Format=TEXT):#在对话前面插入历史对话信息
-        button = YTalkWidget(self.scrollWidget_message)
-        button.setContent(
-            'value_'+value, TEXT, self.icon_dict[identity], identity=identity)
-        self.scrollArea.insert_elements([button])
-        button.show()
+    def insertMessage(self,msgs:list):#在对话前面插入历史对话信息
+
+        def generate_element(msg):
+            value, identity, Format,Time = msg
+            button = YTalkWidget(self.scrollWidget_message)
+            button.setContent(value, Format, self.icon_dict[identity], identity=identity)
+            button.show()
+            return button
+        buttons = [generate_element(i) for i in msgs]
+        self.scrollArea.insert_elements(buttons)
         self.autoSlideBar()
     def autoSlideBar(self,pos='bottom'):
         if pos=='bottom':
@@ -208,13 +226,17 @@ class Ui_Chat(QWidget):
     def button_send_click(self,e):#发送消息
         msg_type=TEXT
         s=self.input_text.toPlainText()
+        self.input_text.setPlainText('')
         if  s:
-            succ,info = self.bot.send_data(s,msg_type,self.user_info,self.is_encrypt)
+            try:
+                succ,info = self.bot.send_data(s,msg_type,self.user_info,self.is_encrypt)
+            except:
+                succ,info = False,'Failed to send'
             if succ is False:
                 self.addMessage(info,None,SYSTEM_YXS)
+                self.input_text.setPlainText(s)
                 return
             self.addMessage(s,ME,TEXT)
-            self.input_text.setPlainText('')
         self.input_text.setFocus()
     def closeEvent(self,e):
         self.bot.message_dispatcher.pop(self.user_info['yxsid'])

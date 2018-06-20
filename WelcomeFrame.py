@@ -10,6 +10,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from CoreWidget import *
 import wxtools
+import os
 
 
 
@@ -55,6 +56,7 @@ class WelcomeFrame:
         s=QtGui.QImage('qrcode.png')
         self.QR_label.setPixmap(QtGui.QPixmap.fromImage(s))
         self.QR_label.show()
+        os.remove('qrcode.png')
 
     def login_callback(self,*t):
         print('login callback')
