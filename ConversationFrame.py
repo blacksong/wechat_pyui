@@ -115,11 +115,8 @@ class ConversationFrame(object):
                 latest_time.tm_year, latest_time.tm_mon, latest_time.tm_mday)
         return r_time
     def drawConversations(self):
-        print('draw'*8)
         conversation_list = self.getConversations()
-        print(conversation_list)
         for info in conversation_list:
-            print(info.keys())
             p1 = ConversationButton(self.scrollWidget_conversation)
             p1.setName(info,self)
             p1.setContent(info['img_path'],info['name'],info['text'],self.get_latest_time(info['latest_time']) ,self.conversation_width,self.conversation_height)

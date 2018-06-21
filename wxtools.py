@@ -58,7 +58,6 @@ class mydb:
             elif isinstance(value,float):
                 stype = 'double'
             else:
-                print(value)
                 stype = 'varchar({0})'.format(len(str(value))+2)
             a.append('{0} {1},'.format(str(key),stype))
         content = ''.join(a)
@@ -97,7 +96,6 @@ class mydb:
             v=','.join(v)
             v='('+v+')'
             s='insert into '+table+'('+t+') values'+v
-            # print(s)
             self.cur.execute(s)
     def select(self,table=None,columns=('*',),where='1=1',return_dict = False):
         c=','.join(columns)
@@ -411,9 +409,10 @@ class myBot(wxpy.Bot):
         if receiver is not None:
             receiver(content, msg_type, yxsid_send)
         unread = 0
-        print('\a','You receive a new message!' )
         time_index = '{:.2f}'.format(time.time())
         data_record = {'yxsid':yxsid_send,'Value':value_record,'Time':time_index,'Msg_type':msg_type}
+        print('\a','You receive a new message!',msg.chat)
+        print(data_record)
         self.write_content(yxsid,data_record)
         self.add_conversation({'yxsid': yxsid,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time())})        
         self.update_conversation()
