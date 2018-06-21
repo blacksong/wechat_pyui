@@ -98,6 +98,12 @@ class Ui_Form:
 
         self.active=1
         self.redirect()
+
+        self.timer = QtCore.QTimer(self.Form)
+        self.timer.timeout.connect(self.auto_run)
+        self.timer.start(120000)
+    def auto_run(self):
+        self.bot.write_auto()
     def redirect(self):
     	# self.button1_click(None)
         pass
@@ -258,9 +264,12 @@ class myMainWindow(QWidget):
     def setBot(self,bot):
         self.bot=bot
     def closeEvent(self,e):
-        for fun in self.del_funs:
-            fun()
-        self.bot.write_back()
+        try:
+            for fun in self.del_funs:
+                fun()
+            self.bot.write_back()
+        except:
+            pass
 
 def main():
     app = QApplication(sys.argv)

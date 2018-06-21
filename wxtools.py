@@ -62,7 +62,6 @@ class mydb:
                 stype = 'varchar({0})'.format(len(str(value))+2)
             a.append('{0} {1},'.format(str(key),stype))
         content = ''.join(a)
-        print(content)
         s='create table {table}({content})'.format(table = table,content=content[:-1])
         self.cur.execute(s)
     def table_exists(self,table):
@@ -90,7 +89,6 @@ class mydb:
             c2 = set(d.keys())
             g = c2-columns
             if g:
-                print(g)
                 columns.update(g)
                 for i in g:
                     self.cur.execute('alter table {table} add {column} varchar(3)'.format(table = table, column = i))
@@ -231,8 +229,11 @@ class myBot(wxpy.Bot):
         #data保存的数据格式 字典形式，包括Value:str,Msg_type,Time,yxsid(两人对话时0代表自己，1代表对方，群聊时代表发送者的yxsid)
         self.db.to_sql('Record_'+yxsid,[data])
     def read_content(self,yxsid,time_before,nums):
-        print('yxsid'*20,yxsid,nums,time_before)
-        return self.db.cur.execute('SELECT yxsid,Value,Msg_type,Time FROM {0} WHERE Time<{1} ORDER BY Time DESC LIMIT {2};'.format('Record_'+yxsid,time_before,nums))
+        try:
+            return self.db.cur.execute('SELECT yxsid,Value,Msg_type,Time FROM {0} WHERE Time<{1} ORDER BY Time DESC LIMIT {2};'.format('Record_'+yxsid,time_before,nums))
+        except Exception as e:
+            print(e)
+            return []
 
     def setPath(self,path): #设置微信账号的信息存储路径
 
@@ -281,7 +282,6 @@ class myBot(wxpy.Bot):
         d['imgmd5'] = self.get_user_md5(user)
         ftype = str(user)[1:].split(':')[0]
         if is_append:
-            print(ftype)
             if ftype == 'Group':
                 self.db.to_sql('group_info',[d])
             elif ftype == 'MP':
@@ -420,8 +420,11 @@ class myBot(wxpy.Bot):
         t = self.db.table_exists('friend_info')
         if not t:
             friends = self.friends()
-    def write_back(self):
+    def write_auto(self):
         self.db.to_sql('conversation_list',self.conversation_list_now,if_exists='replace')
+        self.db.commit()
+    def write_back(self):
+        self.write_auto()
         del self.db
 
 if __name__=='__main__':

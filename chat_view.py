@@ -151,9 +151,14 @@ class Ui_Chat(QWidget):
             self.addMessage('Disable RSA',None,SYSTEM_YXS)
         
     def addMessage(self,value:str,identity=OTHER,Format=TEXT): #value的值始终都为str类型
-        button=YTalkWidget(self.scrollWidget_message)
         icon = self.icon_dict.get(identity)
-        button.setContent(value,Format,icon,identity=identity)
+        button=YTalkWidget(self.scrollWidget_message)
+        try:
+            button.setContent(value,Format,icon,identity=identity)
+        except Exception as e:
+            print(e)
+            button.setContent('Cannot display this message\n{}'.format(value),TEXT,icon,identity=identity)
+
         self.scrollArea.append_element(button)
         button.show()
         self.autoSlideBar()
@@ -230,7 +235,8 @@ class Ui_Chat(QWidget):
         if  s:
             try:
                 succ,info = self.bot.send_data(s,msg_type,self.user_info,self.is_encrypt)
-            except:
+            except Exception as e:
+                print(e)
                 succ,info = False,'Failed to send'
             if succ is False:
                 self.addMessage(info,None,SYSTEM_YXS)

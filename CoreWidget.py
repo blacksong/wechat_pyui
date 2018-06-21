@@ -285,7 +285,6 @@ class YPictureBubble(QLabel):
                 w,h = (g.width(),g.height())
         if not is_gif:
             im = Image.open(image_name)
-            print(dir(im))
             w,h = im.size
 
             self.setPixmap(im.toqpixmap())
