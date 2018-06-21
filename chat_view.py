@@ -153,11 +153,7 @@ class Ui_Chat(QWidget):
     def addMessage(self,value:str,identity=OTHER,Format=TEXT): #value的值始终都为str类型
         icon = self.icon_dict.get(identity)
         button=YTalkWidget(self.scrollWidget_message)
-        try:
-            button.setContent(value,Format,icon,identity=identity)
-        except Exception as e:
-            print(e)
-            button.setContent('Cannot display this message\n{}'.format(value),TEXT,icon,identity=identity)
+        button.setContent(value,Format,icon,identity=identity)
 
         self.scrollArea.append_element(button)
         button.show()

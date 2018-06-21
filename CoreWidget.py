@@ -317,10 +317,17 @@ class YTalkWidget(QtWidgets.QWidget):
         if Format == TEXT:
             h=self.setMessage(value)
             self.message_bubble.resize(self.Yw,h)
-        elif Format == PICTURE:
-            h=self.setMessage_Picture(value)
+        elif Format == PICTURE:#显示表情或者图片
+            try:
+                h=self.setMessage_Picture(value)
+            except Exception as e:#表情不能正常显示时的处理方法
+                print(e)
+                h=self.setMessage('Cannot display this file:\n{}'.format(value))
+                self.message_bubble.resize(self.Yw,h)
         elif Format == SYSTEM_YXS:
             h=self.setMessage_System(value)
+        else:
+            h = 0
         self.resize(self.Yw,h)
     def setMessage_System(self,value):
         self.system_bubble = YSystemBubble(self)
