@@ -411,6 +411,7 @@ class myBot(wxpy.Bot):
         if receiver is not None:
             receiver(content, msg_type, yxsid_send)
         unread = 0
+        print('\a','You receive a new message!')
         time_index = '{:.2f}'.format(time.time())
         data_record = {'yxsid':yxsid_send,'Value':value_record,'Time':time_index,'Msg_type':msg_type}
         self.write_content(yxsid,data_record)
