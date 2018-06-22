@@ -486,6 +486,7 @@ class YInputText(QtWidgets.QTextEdit):
         super().paintEvent(d)
         self.statusConnect((self.d.size().height(),self.height(),self.d.isEmpty()))
 
+
 if __name__=='__main__':
     '''__debug__'''
     app = QApplication(sys.argv)

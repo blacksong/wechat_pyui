@@ -11,6 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from CoreWidget import *
 import wxtools
 import os
+from pathlib import Path
 
 
 
@@ -35,7 +36,7 @@ class LogInThread(QtCore.QThread):
 
 class WelcomeFrame:
     def __init__(self,cache=False):
-        self.cache = cache
+        self.cache = cache#存储登录信息路径的pkl文件
     def setupUi(self, Form,ox,oy,w,h,father=None):
         self.father_view=father
         self.Form=Form
@@ -74,6 +75,11 @@ class WelcomeFrame:
             self.bot.get_message(data)
         elif TYPE == 'FIRST':
             pass
+        p = Path(self.cache)
+        print(p.is_file(), '是否产生登录文件')
+        t = p.read_bytes()
+        yxsid = self.bot.get_user_yxsid(self.bot.self)
+        open(p.with_name(yxsid+'_wx.pkl'),'wb').write(t)
     def get_QRcode(self):
         print('jump to user frame')
         self.loginthread=LogInThread()

@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QApplication , QMainWindow,QWidget
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from CoreWidget import *
-import time
+import functions
 import os
 class ConversationButton(YDesignButton):
     def setContent(self,picture,name,content,time,w,h,color_background=None):
@@ -94,32 +94,12 @@ class ConversationFrame(object):
         self.scrollArea.setWidget(self.scrollWidget_conversation)
         self.drawConversations()
         
-    def get_latest_time(self,latest_time:str):
-        latest_time = time.localtime(float(latest_time))
-        now_time = time.localtime()
-
-        if latest_time.tm_year == now_time.tm_year:
-            if now_time.tm_yday - latest_time.tm_yday == 0:
-                r_time = '{0}:{1}'.format(latest_time.tm_hour, latest_time.tm_min)
-            elif now_time.tm_yday - latest_time.tm_yday == 1:
-                r_time = '昨天'
-            elif now_time.tm_yday - latest_time.tm_yday == 2:
-                r_time = '前天'
-            elif 2 < now_time.tm_yday - latest_time.tm_yday < 7:
-                chinese_week = '一二三四五六日'
-                r_time = '周{0}'.format(chinese_week[latest_time.tm_wday])
-            else:
-                r_time = '{0}月{1}日'.format(latest_time.tm_mon, latest_time.tm_mday)
-        else:
-            r_time = '{0}年{1}月{2}日'.format(
-                latest_time.tm_year, latest_time.tm_mon, latest_time.tm_mday)
-        return r_time
     def drawConversations(self):
         conversation_list = self.getConversations()
         for info in conversation_list:
             p1 = ConversationButton(self.scrollWidget_conversation)
             p1.setName(info,self)
-            p1.setContent(info['img_path'],info['name'],info['text'],self.get_latest_time(info['latest_time']) ,self.conversation_width,self.conversation_height)
+            p1.setContent(info['img_path'],info['name'],info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)
             self.scrollArea.append_element(p1)
             p1.show()
 

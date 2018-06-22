@@ -1,12 +1,13 @@
 import time
-def get_latest_time(latest_time: str):
-    latest_time = time.localtime(float(latest_time))
+def get_latest_time(latest_time: float,need_hours=False):
+    latest_time = time.localtime(latest_time)
     now_time = time.localtime()
-
+    is_hours = False
     if latest_time.tm_year == now_time.tm_year:
         if now_time.tm_yday - latest_time.tm_yday == 0:
             r_time = '{0}:{1}'.format(
                 latest_time.tm_hour, latest_time.tm_min)
+            is_hours = True
         elif now_time.tm_yday - latest_time.tm_yday == 1:
             r_time = '昨天'
         elif now_time.tm_yday - latest_time.tm_yday == 2:
@@ -20,4 +21,6 @@ def get_latest_time(latest_time: str):
     else:
         r_time = '{0}年{1}月{2}日'.format(
             latest_time.tm_year, latest_time.tm_mon, latest_time.tm_mday)
+    if need_hours and not is_hours:
+        r_time += ' {0}:{1}'.format(latest_time.tm_hour, latest_time.tm_min)
     return r_time

@@ -11,7 +11,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from PyQt5.QtCore import QThread, QTimer, pyqtSignal
 from CoreWidget import *
 import wxpy
-
+import functions
+import time
 
 class Ui_Chat(QWidget):
 
@@ -57,6 +58,8 @@ class Ui_Chat(QWidget):
         self.bot = Bot
 
         self.time_before = '{:.2f}'.format(9529456999.83)
+        self.time_latest = 0
+        self.time_pre = 0
         self.insert_some_message(100)
     def insert_some_message(self,nums):    
         an = list(self.bot.read_content(self.user_info['yxsid'],time_before= self.time_before,nums = nums))
@@ -150,7 +153,16 @@ class Ui_Chat(QWidget):
             self.is_encrypt = False
             self.addMessage('Disable RSA',None,SYSTEM_YXS)
         
-    def addMessage(self,value:str,identity=OTHER,Format=TEXT): #value的值始终都为str类型
+    def addMessage(self,value:str,identity=OTHER,Format=TEXT,Time=None): #value的值始终都为str类型
+        Time = time.time()
+        if Time - self.time_latest>300 and Time - self.time_pre>60:
+            time_button = YTalkWidget(self.scrollWidget_message)
+            Time_str = functions.get_latest_time(Time, True)
+            time_button.setContent(Time_str, SYSTEM_YXS, None, None)
+            time_button.show()
+            self.scrollArea.append_element(time_button)
+            self.time_latest = Time
+        self.time_pre = Time
         icon = self.icon_dict.get(identity)
         button=YTalkWidget(self.scrollWidget_message)
         button.setContent(value,Format,icon,identity=identity)
@@ -160,16 +172,32 @@ class Ui_Chat(QWidget):
         self.autoSlideBar()
 
     def insertMessage(self,msgs:list):#在对话前面插入历史对话信息
-
+        
         def generate_element(msg):
             value, identity, Format,Time = msg
             button = YTalkWidget(self.scrollWidget_message)
             button.setContent(value, Format, self.icon_dict[identity], identity=identity)
             button.show()
             return button
-        buttons = [generate_element(i) for i in msgs]
+        buttons = []
+        time_ = 0
+        time_last = 0
+        for i in msgs:
+            *_,Time = i
+            Time = float(Time)
+            if Time - time_ > 300 and Time - time_last>60:
+                time_ = Time
+                time_button = YTalkWidget(self.scrollWidget_message)
+                Time_str = functions.get_latest_time(time_,True)
+                time_button.setContent(Time_str,SYSTEM_YXS,None,None)
+                time_button.show()
+                buttons.append(time_button)
+            time_last = Time
+                
+            buttons.append(generate_element(i))
         self.scrollArea.insert_elements(buttons)
         self.autoSlideBar()
+        self.time_latest =max(self.time_latest, time_last)
     def autoSlideBar(self,pos='bottom'):
         if pos=='bottom':
             bottom=self.scrollArea.bottom-self.scrollArea.height()+10
@@ -228,7 +256,7 @@ class Ui_Chat(QWidget):
         msg_type=TEXT
         s=self.input_text.toPlainText()
         self.input_text.setPlainText('')
-        if  s:
+        if s:
             try:
                 succ,info = self.bot.send_data(s,msg_type,self.user_info,self.is_encrypt)
             except Exception as e:
