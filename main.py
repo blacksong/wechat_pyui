@@ -166,9 +166,7 @@ class Ui_Form:
     def button1_click(self,k):
         # k is False: 鼠标点击 吗
         img = None
-        print('s'*9,self.active)
         if self.active!=1:
-            print('active1'*8)
             img=data_path+"icon/button1_ok.jpg"
             self.release_button()
             self.active=1
@@ -176,7 +174,6 @@ class Ui_Form:
                 surface=ConversationFrame.ConversationFrame()
                 surface.setupUi(self.Form,*self.surface_rect,self)
                 surface.show()
-                print('show'*8)
                 self.surface_list[0]=surface 
             else:
                 self.surface_list[0].show()

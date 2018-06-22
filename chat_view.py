@@ -236,10 +236,6 @@ class Ui_Chat(QWidget):
             person = ME
         else:
             person = OTHER
-
-        if msg_type not in [TEXT,PICTURE]:
-            content = '不支持的消息类型，请在手机中查看：'+msg_type
-            msg_type = TEXT
         self.addMessage(content,person,msg_type)#显示消息
     
     def adjustInputTextSize(self,h_d):
