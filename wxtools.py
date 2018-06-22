@@ -403,7 +403,7 @@ class myBot(wxpy.Bot):
             msg.get_file(content)
             text_conversation = '[图片]'
             value_record = content
-        elif msg_type == ATTACHMENT:
+        elif msg_type == ATTACHMENT or msg_type == VIDEO:
             if msg.file_name.endswith(SUFFIX_PUBLICKEY):#如果文件后缀为SUFFIX_PUBLICKEY则不显示该文件 该文件是公钥文件，，进行保存
                 self.save_publickey(msg)
                 return
@@ -411,18 +411,26 @@ class myBot(wxpy.Bot):
             print(filename)
             msg.get_file(filename)
             content = filename
-            text_conversation = '[文件]'
+            if msg_type == ATTACHMENT:
+                text_conversation = '[文件]'
+            else:
+                text_conversation = '[视频]'
             value_record = filename
         else:
             content = 'None'
             text_conversation = '[消息]'
             value_record = ''
+
+        if msg_chat == 'Group':
+            yxsid_send_user = yxsid_member
+        else:
+            yxsid_send_user = yxsid_send
         if receiver is not None:
-            receiver(content, msg_type, yxsid_send)
+            receiver(content, msg_type, yxsid_send,yxsid_send_user)
         unread = 0
-        time_index = '{:.2f}'.format(time.time())
         if msg_chat == 'Group':
             yxsid_send = yxsid_member
+        time_index = '{:.2f}'.format(time.time())
         data_record = {'yxsid':yxsid_send,'Value':value_record,'Time':time_index,'Msg_type':msg_type}
         print('\a','You receive a new message!',msg.chat)
         print(data_record)

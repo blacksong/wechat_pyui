@@ -141,6 +141,9 @@ class Ui_Form:
         if kind == 'chat':
             print('chat',value)
             if value['yxsid'] in self.bot.message_dispatcher:
+                frame = self.chat_view_dict[value['yxsid']]
+                frame.showNormal()
+                frame.activateWindow()
                 return #保证一个窗口只被打开一次
             self.view_active=chat_view.Ui_Chat()
             self.view_active.setupUi(Bot = self.bot,user_info = value, me_info=self.bot.get_me_info())

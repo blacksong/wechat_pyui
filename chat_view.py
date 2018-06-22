@@ -169,32 +169,38 @@ class Ui_Chat(QWidget):
             time_button = None
         self.time_pre = Time
         return time_button
-    def addMessage(self,value:str,identity=OTHER,Format=TEXT,Time=None): #value的值始终都为str类型
+    def addMessage(self,value:str,identity=OTHER,Format=TEXT,Time=None,yxsid_send_user = None): #value的值始终都为str类型
         Time = time.time()
         time_button = self.generate_time_element(Time)
         if time_button is not None: 
             self.scrollArea.append_element(time_button)
         icon = self.icon_dict.get(identity)
         button=YTalkWidget(self.scrollWidget_message)
+        if self.is_group:
+            icon = self.get_icon_group(yxsid_send_user)
+        else:
+            icon = self.icon_dict[identity]
         button.setContent(value,Format,icon,identity=identity)
 
         self.scrollArea.append_element(button)
         button.show()
         self.autoSlideBar()
-
+    def get_icon_group(self,yxsid_send):
+        icon = self.members_info.get(yxsid_send)
+        if icon is None:
+            icon_path = self.bot.get_img_path(yxsid_send,self.user_info['yxsid'])
+            icon = QtGui.QIcon(icon_path)
+            self.members_info[yxsid_send]={'icon':icon}
+        else:
+            icon = icon['icon']
+        return icon
     def insertMessage(self,msgs:list):#在对话前面插入历史对话信息
         
         def generate_element(msg):
             yxsid_send,value, identity, Format,_ = msg
             button = YTalkWidget(self.scrollWidget_message)
             if self.is_group:
-                icon = self.members_info.get(yxsid_send)
-                if icon is None:
-                    icon_path = self.bot.get_img_path(yxsid_send,self.user_info['yxsid'])
-                    icon = QtGui.QIcon(icon_path)
-                    self.members_info[yxsid_send]={'icon':icon}
-                else:
-                    icon = icon['icon']
+                icon = self.get_icon_group(yxsid_send)
             else:
                 icon = self.icon_dict[identity]
             button.setContent(value, Format, icon, identity=identity)
@@ -230,13 +236,13 @@ class Ui_Chat(QWidget):
         B.setObjectName(objectname)
         if position is not None:B.setGeometry(QtCore.QRect(*position))
         if connect is not None:B.clicked.connect(connect)
-    def accept_callback(self,content,msg_type,yxsid_send):#yxsid_send本质是yxsid
+    def accept_callback(self,content,msg_type,yxsid_send,yxsid_send_user):#yxsid_send本质是yxsid
 
         if yxsid_send == self.me_info['yxsid']:#判断消息是自己从手机发出的还是别人发过来的
             person = ME
         else:
             person = OTHER
-        self.addMessage(content,person,msg_type)#显示消息
+        self.addMessage(content,person,msg_type,yxsid_send_user)#显示消息
     
     def adjustInputTextSize(self,h_d):
         return 
