@@ -125,7 +125,7 @@ class myBot(wxpy.Bot):
         self.contact_info_list = None
 
         self.public_key_dict = dict()
-    
+        self.hash_write_auto = 1#记录自动写入硬盘的hash值
     def enable_rsa(self):# 启用加密
 
         path_rsa_key = self.path / ('rsa_key')
@@ -450,9 +450,13 @@ class myBot(wxpy.Bot):
         else:
             return 2
     def write_auto(self):
+        h = hash(str(self.conversation_list_now))
+        if h == self.hash_write_auto:#无需写入
+            return
+        self.hash_write_auto = h
         self.db.to_sql('conversation_list',self.conversation_list_now,if_exists='replace')
         self.db.commit()
-    def write_back(self):
+    def write_back(self):#程序退出时调用
         self.write_auto()
         del self.db
 

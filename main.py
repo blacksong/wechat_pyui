@@ -102,8 +102,7 @@ class Ui_Form:
         self.timer = QtCore.QTimer(self.Form)
         self.timer.timeout.connect(self.auto_run)
         self.timer.start(120000)
-    def auto_run(self):
-        print('auto_write')
+    def auto_run(self):#间隔一段时间自动运行
         self.bot.write_auto()
     def redirect(self):
     	# self.button1_click(None)
