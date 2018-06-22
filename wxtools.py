@@ -407,6 +407,7 @@ class myBot(wxpy.Bot):
             filename = str(self.path/msg.file_name)
             print(filename)
             msg.get_file(filename)
+            content = filename
             text_conversation = '[文件]'
             value_record = filename
         else:

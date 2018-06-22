@@ -327,7 +327,8 @@ class YTalkWidget(QtWidgets.QWidget):
         elif Format == SYSTEM_YXS:
             h=self.setMessage_System(value)
         else:
-            h = 0
+            h = self.setMessage('不支持的消息类型，请在手机中查看：{}'.format(Format))
+            self.message_bubble.resize(self.Yw,h)
         self.resize(self.Yw,h)
     def setMessage_System(self,value):
         self.system_bubble = YSystemBubble(self)
