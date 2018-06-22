@@ -152,17 +152,22 @@ class Ui_Chat(QWidget):
         else:
             self.is_encrypt = False
             self.addMessage('Disable RSA',None,SYSTEM_YXS)
-        
-    def addMessage(self,value:str,identity=OTHER,Format=TEXT,Time=None): #value的值始终都为str类型
-        Time = time.time()
-        if Time - self.time_latest>300 and Time - self.time_pre>60:
+    def generate_time_element(self,Time):
+        if Time - self.time_latest > 300 and Time - self.time_pre > 60:
             time_button = YTalkWidget(self.scrollWidget_message)
             Time_str = functions.get_latest_time(Time, True)
             time_button.setContent(Time_str, SYSTEM_YXS, None, None)
             time_button.show()
-            self.scrollArea.append_element(time_button)
             self.time_latest = Time
+        else:
+            time_button = None
         self.time_pre = Time
+        return time_button
+    def addMessage(self,value:str,identity=OTHER,Format=TEXT,Time=None): #value的值始终都为str类型
+        Time = time.time()
+        time_button = self.generate_time_element(Time)
+        if time_button is not None: 
+            self.scrollArea.append_element(time_button)
         icon = self.icon_dict.get(identity)
         button=YTalkWidget(self.scrollWidget_message)
         button.setContent(value,Format,icon,identity=identity)
@@ -180,24 +185,20 @@ class Ui_Chat(QWidget):
             button.show()
             return button
         buttons = []
-        time_ = 0
-        time_last = 0
+        time_latest, time_pre = self.time_latest,self.time_pre
         for i in msgs:
             *_,Time = i
             Time = float(Time)
-            if Time - time_ > 300 and Time - time_last>60:
-                time_ = Time
-                time_button = YTalkWidget(self.scrollWidget_message)
-                Time_str = functions.get_latest_time(time_,True)
-                time_button.setContent(Time_str,SYSTEM_YXS,None,None)
-                time_button.show()
+            time_button = self.generate_time_element(Time)
+            if time_button is not None:
                 buttons.append(time_button)
-            time_last = Time
                 
             buttons.append(generate_element(i))
+        self.time_latest, self.time_pre = time_latest, time_pre
+
         self.scrollArea.insert_elements(buttons)
         self.autoSlideBar()
-        self.time_latest =max(self.time_latest, time_last)
+        self.time_latest =max(self.time_latest, Time)
     def autoSlideBar(self,pos='bottom'):
         if pos=='bottom':
             bottom=self.scrollArea.bottom-self.scrollArea.height()+10
