@@ -197,7 +197,11 @@ class myBot(wxpy.Bot):
                     d['name']=i['name']
                     break
             else:
-                d['name']='None'
+                user = self.senders.get(yxsid)
+                if user is None:
+                    d['name']='None'
+                else:
+                    d['name'] = user.raw['NickName']
         for i in self.conversation_list_now:
             if i['yxsid'] == yxsid:
                 i.update(d)
@@ -369,6 +373,7 @@ class myBot(wxpy.Bot):
             sender.send_file(str(self.publicfile))
     def get_message(self,msg):#处理收到的消息
         #yxsid_send 发送msg的人
+        print(msg.create_time)
         if self.get_user_type(msg.chat)==3:
             print('公众号消息')
             return
@@ -432,13 +437,13 @@ class myBot(wxpy.Bot):
                     friend = self.senders[group_yxsid]
                     for member in friend.members:
                         if self.get_user_yxsid(member) == yxsid:
-                            break 
+                            print(self.get_user_yxsid(member),'sdadf')
                     friend = member
                 else:
                     friend = self.senders[yxsid]
                 friend.get_avatar(str(p))
             except Exception as e:
-                print('Error:\n',e)
+                print('Error: get_img_path\n',e)
                 p = self.path.parent.with_name('wechat_data') / 'icon' / 'system_icon.jpg'
         return str(p)
     def get_user_type(self,user):# 1-friend 2-group 3-mp(公众号)
