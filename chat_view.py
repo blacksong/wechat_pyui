@@ -16,9 +16,15 @@ import time
 
 class Ui_Chat(QWidget):
 
-    def setupUi(self,Bot ,user_info:dict ,me_info:dict ):
+    def setupUi(self,Bot ,user_info:dict ,me_info:dict):
         Form = self
         self.Form=self
+        self.members_info = dict() #群消息时存储群成员信息的字典
+        if Bot.get_user_type(Bot.senders[user_info['yxsid']])==2:
+            self.is_group = True#该对话是否是群对话
+        else:
+            self.is_group = False
+        print('群对话',self.is_group)
         self.resize(520,520)
         self.isback=False
         self.blabel = QLabel(self)
@@ -71,7 +77,7 @@ class Ui_Chat(QWidget):
                 idendity = ME
             else:
                 idendity = OTHER
-            ans.append((value, idendity, msg_type, time_))
+            ans.append((yxsid,value, idendity, msg_type, time_))
         self.insertMessage(ans)
     def resizeEvent(self,d):#根据窗口大小调整白色背景的大小以及发送键的位置
         size = self.size()
@@ -179,13 +185,24 @@ class Ui_Chat(QWidget):
     def insertMessage(self,msgs:list):#在对话前面插入历史对话信息
         
         def generate_element(msg):
-            value, identity, Format,Time = msg
+            yxsid_send,value, identity, Format,_ = msg
             button = YTalkWidget(self.scrollWidget_message)
-            button.setContent(value, Format, self.icon_dict[identity], identity=identity)
+            if self.is_group:
+                icon = self.members_info.get(yxsid_send)
+                if icon is None:
+                    icon_path = self.bot.get_img_path(yxsid_send,self.user_info['yxsid'])
+                    icon = QtGui.QIcon(icon_path)
+                    self.members_info[yxsid_send]={'icon':icon}
+                else:
+                    icon = icon['icon']
+            else:
+                icon = self.icon_dict[identity]
+            button.setContent(value, Format, icon, identity=identity)
             button.show()
             return button
         buttons = []
         time_latest, time_pre = self.time_latest,self.time_pre
+        Time = 0
         for i in msgs:
             *_,Time = i
             Time = float(Time)

@@ -152,7 +152,7 @@ class myBot(wxpy.Bot):
     def get_me_info(self):
         if self.me_info is None:
             yxsid = self.get_user_yxsid(self.self)
-            self.me_info = {'yxsid': yxsid, 'name': self.self.raw['NickName'], 'img_path': str(self.avatar_path/(yxsid+'.jpg'))}
+            self.me_info = {'yxsid': yxsid, 'name': self.self.raw['NickName'], 'img_path': self.get_img_path(yxsid)}
         return self.me_info
     def setTransPassword(self,password):
         self.TransPassword = password
@@ -183,15 +183,14 @@ class myBot(wxpy.Bot):
     def contact_list(self):
         tags = ('yxsid', 'NickName', 'RemarkName')
         t = self.db.select('friend_info', tags)+self.db.select('group_info', tags) 
-        info_list = [{'yxsid': yxsid, 'name': (RemarkName if RemarkName else NickName), 'img_path': str(
-            self.avatar_path / (yxsid+'.jpg'))} for yxsid, NickName, RemarkName in t]
+        info_list = [{'yxsid': yxsid, 'name': (RemarkName if RemarkName else NickName), 'img_path': self.get_img_path(yxsid)} for yxsid, NickName, RemarkName in t]
         self.contact_info_list = info_list
         return info_list
     def add_conversation(self,d):
         if self.contact_info_list is None:
             self.contact_info_list = self.contact_list()
         yxsid = d['yxsid']
-        d['img_path'] = str(self.avatar_path / (d['yxsid']+'.jpg'))
+        d['img_path'] =  self.get_img_path(d['yxsid'])
         if not d.get('name'):
             for i in self.contact_info_list:
                 if i['yxsid'] == yxsid:
@@ -214,7 +213,7 @@ class myBot(wxpy.Bot):
         elif self.db.table_exists('conversation_list'):
             t = self.db.select('conversation_list', tags, return_dict=True)
             for i in t:
-                i['img_path'] = str(self.avatar_path / (i['yxsid']+'.jpg'))
+                i['img_path'] = self.get_img_path(i['yxsid'])
             self.conversation_list_now = t
             self.conversation_list_now.sort(key=lambda x: x['latest_time'])
             self.conversation_list_now.reverse()
@@ -372,9 +371,14 @@ class myBot(wxpy.Bot):
             sender.send_file(str(self.publicfile))
     def get_message(self,msg):#处理收到的消息
         #yxsid_send 发送msg的人
-        if msg.chat.raw['MemberCount']==0 and not msg.chat.is_friend:
+        if self.get_user_type(msg.chat)==3:
             print('公众号消息')
             return
+        if msg.chat.raw['MemberCount']==0:
+            msg_chat = 'Friend'
+        else:
+            msg_chat = 'Group'
+            yxsid_member = self.get_user_yxsid(msg.member)
         yxsid_send = self.get_user_yxsid(msg.sender)
         yxsid = self.get_user_yxsid(msg.chat)
 
@@ -413,16 +417,39 @@ class myBot(wxpy.Bot):
             receiver(content, msg_type, yxsid_send)
         unread = 0
         time_index = '{:.2f}'.format(time.time())
+        if msg_chat == 'Group':
+            yxsid_send = yxsid_member
         data_record = {'yxsid':yxsid_send,'Value':value_record,'Time':time_index,'Msg_type':msg_type}
         print('\a','You receive a new message!',msg.chat)
         print(data_record)
         self.write_content(yxsid,data_record)
         self.add_conversation({'yxsid': yxsid,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time())})        
         self.update_conversation()
-    def update_user_info(self):
-        t = self.db.table_exists('friend_info')
-        if not t:
-            friends = self.friends()
+    def get_img_path(self,yxsid,group_yxsid=None):
+        p = self.avatar_path/(yxsid+'.jpg')
+        if not p.is_file():
+            try:
+                if group_yxsid is not None:
+                    friend = self.senders[group_yxsid]
+                    for member in friend.members:
+                        if self.get_user_yxsid(member) == yxsid:
+                            break 
+                    friend = member
+                else:
+                    friend = self.senders[yxsid]
+                friend.get_avatar(str(p))
+            except Exception as e:
+                print('Error:\n',e)
+                p = self.path.parent.with_name('wechat_data') / 'icon' / 'system_icon.jpg'
+        return str(p)
+    def get_user_type(self,user):# 1-friend 2-group 3-mp(公众号)
+        if user.raw['MemberCount']==0:
+            if user.is_friend:
+                return 1
+            else:
+                return 3
+        else:
+            return 2
     def write_auto(self):
         self.db.to_sql('conversation_list',self.conversation_list_now,if_exists='replace')
         self.db.commit()
