@@ -103,6 +103,7 @@ class Ui_Form:
         self.timer.timeout.connect(self.auto_run)
         self.timer.start(120000)
     def auto_run(self):
+        print('auto_write')
         self.bot.write_auto()
     def redirect(self):
     	# self.button1_click(None)
