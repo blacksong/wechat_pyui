@@ -372,7 +372,7 @@ class myBot(wxpy.Bot):
             sender.send_file(str(self.publicfile))
     def get_message(self,msg):#处理收到的消息
         #yxsid_send 发送msg的人
-        if msg.chat.raw['ContactFlag'] == 3:
+        if msg.chat.raw['MemberCount']==0 and not msg.chat.is_friend:
             print('公众号消息')
             return
         yxsid_send = self.get_user_yxsid(msg.sender)

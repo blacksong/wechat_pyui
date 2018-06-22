@@ -73,10 +73,11 @@ class WelcomeFrame:
             self.father_view.show()
         elif TYPE == 'MSG':
             self.bot.get_message(data)
+            return
         elif TYPE == 'FIRST':
             pass
         p = Path(self.cache)
-        print(p.is_file(), '是否产生登录文件')
+        print(p.is_file(), '是否产生登录文件?')
         t = p.read_bytes()
         yxsid = self.bot.get_user_yxsid(self.bot.self)
         open(p.with_name(yxsid+'_wx.pkl'),'wb').write(t)
