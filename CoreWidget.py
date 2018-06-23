@@ -310,6 +310,9 @@ class YTalkWidget(QtWidgets.QWidget):
         self.pic_qsize=QtCore.QSize(80/90*CRITERION,80/90*CRITERION)
         self.min_height=104/90*CRITERION
     def setContent(self,value,Format,icon_name,identity):
+        if Format == NOTE:
+            Format = SYSTEM_YXS
+            identity = None
         self.identity=identity
         self.Format = Format
         if identity in (ME,OTHER):

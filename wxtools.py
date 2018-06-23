@@ -422,10 +422,16 @@ class myBot(wxpy.Bot):
             else:
                 text_conversation = '[视频]'
             value_record = filename
+        elif msg_type == NOTE:
+            text_conversation = msg.text 
+            value_record = text_conversation
+            content = text_conversation
         else:
             content = 'None'
             text_conversation = '[消息]'
             value_record = ''
+            print(msg.text)
+            print(dir(msg))
 
         if msg_chat == 'Group':
             yxsid_send_user = yxsid_member
