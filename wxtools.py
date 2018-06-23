@@ -374,17 +374,23 @@ class myBot(wxpy.Bot):
     def get_message(self,msg):#处理收到的消息
         #yxsid_send 发送msg的人
         print(msg.create_time)
-        if self.get_user_type(msg.chat)==3:
+        type_ = self.get_user_type(msg.chat)
+        if type_ == 3:
             print('公众号消息')
             return
-        if msg.chat.raw['MemberCount']==0:
+        elif type_ == 1:
             msg_chat = 'Friend'
-        else:
+        elif type_ == 2:
             msg_chat = 'Group'
             yxsid_member = self.get_user_yxsid(msg.member)
+        else:
+            print('Error:\n',self.get_message)
+            return
         yxsid_send = self.get_user_yxsid(msg.sender)
         yxsid = self.get_user_yxsid(msg.chat)
-
+        if yxsid not in self.senders:
+            print('增加群聊天',msg.chat)
+            self.senders[yxsid] = msg.chat
         receiver = self.message_dispatcher.get(yxsid)
 
         msg_type = msg.type#获取消息类型
@@ -432,7 +438,7 @@ class myBot(wxpy.Bot):
             yxsid_send = yxsid_member
         time_index = '{:.2f}'.format(time.time())
         data_record = {'yxsid':yxsid_send,'Value':value_record,'Time':time_index,'Msg_type':msg_type}
-        print('\a','You receive a new message!',msg.chat)
+        print('\a','You receive a new message!',msg.chat,msg_type)
         print(data_record)
         self.write_content(yxsid,data_record)
         self.add_conversation({'yxsid': yxsid,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time())})        
