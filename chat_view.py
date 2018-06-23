@@ -242,7 +242,9 @@ class Ui_Chat(QWidget):
             person = ME
         else:
             person = OTHER
-        self.addMessage(content,person,msg_type,yxsid_send_user)#显示消息
+        print('yxsid_send_user', yxsid_send_user)
+        self.addMessage(content, person, msg_type,
+                        yxsid_send_user=yxsid_send_user)  # 显示消息
     
     def adjustInputTextSize(self,h_d):
         return 
