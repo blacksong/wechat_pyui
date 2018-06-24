@@ -169,14 +169,14 @@ class Ui_Chat(QWidget):
             time_button = None
         self.time_pre = Time
         return time_button
-    def addMessage(self,value:str,identity=OTHER,Format=TEXT,Time=None,yxsid_send_user = None): #value的值始终都为str类型
+    def addMessage(self,value:str,identity=OTHER,Format=TEXT,yxsid_send_user = None): #value的值始终都为str类型
         Time = time.time()
         time_button = self.generate_time_element(Time)
         if time_button is not None: 
             self.scrollArea.append_element(time_button)
         icon = self.icon_dict.get(identity)
         button=YTalkWidget(self.scrollWidget_message)
-        if self.is_group:
+        if self.is_group and identity == OTHER:
             icon = self.get_icon_group(yxsid_send_user)
         else:
             icon = self.icon_dict[identity]
