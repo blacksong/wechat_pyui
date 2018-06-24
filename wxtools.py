@@ -334,6 +334,8 @@ class myBot(wxpy.Bot):
             return data  
 
     def send_data(self,data,msg_type,target,is_encrypt=True):
+        if target['yxsid'] not in self.senders:
+            return False,"Group is not in the list"
         friend = self.senders[target['yxsid']]
         if msg_type == TEXT:
             if is_encrypt:

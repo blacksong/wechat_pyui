@@ -20,10 +20,14 @@ class Ui_Chat(QWidget):
         Form = self
         self.Form=self
         self.members_info = dict() #群消息时存储群成员信息的字典
-        if Bot.get_user_type(Bot.senders[user_info['yxsid']])==2:
-            self.is_group = True#该对话是否是群对话
+        if user_info['yxsid'] in Bot.senders:
+            if Bot.get_user_type(Bot.senders[user_info['yxsid']])==2:
+                self.is_group = True#该对话是否是群对话
+            else:
+                self.is_group = False
         else:
-            self.is_group = False
+            print('No user')
+            self.is_group = True
         print('群对话',self.is_group)
         self.resize(520,520)
         self.isback=False
@@ -174,12 +178,14 @@ class Ui_Chat(QWidget):
         time_button = self.generate_time_element(Time)
         if time_button is not None: 
             self.scrollArea.append_element(time_button)
-        icon = self.icon_dict.get(identity)
         button=YTalkWidget(self.scrollWidget_message)
-        if self.is_group and identity == OTHER:
-            icon = self.get_icon_group(yxsid_send_user)
+        if identity is not None:
+            if self.is_group and identity == OTHER:
+                icon = self.get_icon_group(yxsid_send_user)
+            else:
+                icon = self.icon_dict[identity]
         else:
-            icon = self.icon_dict[identity]
+            icon = None
         button.setContent(value,Format,icon,identity=identity)
 
         self.scrollArea.append_element(button)
