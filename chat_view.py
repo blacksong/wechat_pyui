@@ -192,6 +192,8 @@ class Ui_Chat(QWidget):
         button.show()
         self.autoSlideBar()
     def get_icon_group(self,yxsid_send):
+        if yxsid_send == '0':
+            return self.icon_dict[ME]
         icon = self.members_info.get(yxsid_send)
         if icon is None:
             icon_path = self.bot.get_img_path(yxsid_send,self.user_info['yxsid'])
@@ -294,6 +296,7 @@ class Ui_Chat(QWidget):
                 self.addMessage(info,None,SYSTEM_YXS)
                 self.input_text.setPlainText(s)
                 return
+            print(self.me_info)
             self.addMessage(s,ME,TEXT)
         self.input_text.setFocus()
     def closeEvent(self,e):
