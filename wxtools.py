@@ -159,6 +159,7 @@ class myBot(wxpy.Bot):
     def set_init(self):#登录成功之后运行的第一个函数
         self.enable_sql()
         self.enable_yxsid()
+        self.get_senders()
     def enable_yxsid(self):#这是一个待开发的函数，目的是返回一个不变的id  目前以puid作为yxsid
         
         puid_path = self.path / 'wxpy_puid.pkl'
@@ -288,9 +289,10 @@ class myBot(wxpy.Bot):
             else:
                 self.db.to_sql('friend_info', [d])
 
-    def auto_run(self):#微信机器人启动后自动后台运行的程序
-        print('auto_run')
+    def get_senders(self):#微信机器人启动后自动后台运行的程序
+        print('get_senders')
         self.senders = {self.get_user_yxsid(s): s for s in self.friends()+self.groups()}
+        print('It is OK!')
     def get_public_key(self,yxsid):#返回用户publick key
         #检查是否读取过yxsid的public key
         if yxsid in self.public_key_dict:

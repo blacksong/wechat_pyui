@@ -32,7 +32,7 @@ class LogInThread(QtCore.QThread):
             bot.first_run()
         
         self.trigger.emit((bot, 'BOT'))
-        bot.auto_run()
+        # bot.auto_run()
 
 class WelcomeFrame:
     def __init__(self,cache=False):
