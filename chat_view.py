@@ -282,21 +282,32 @@ class Ui_Chat(QWidget):
         self.labelLine.setGeometry(gt)
 
     def button_send_click(self,e):#发送消息
-        msg_type=TEXT
         s=self.input_text.toPlainText()
         self.input_text.setPlainText('')
-        if s:
-            try:
-                succ,info = self.bot.send_data(s,msg_type,self.user_info,self.is_encrypt)
-            except Exception as e:
-                print(e)
-                succ,info = False,'Failed to send'
-            if succ is False:
-                self.addMessage(info,None,SYSTEM_YXS)
-                self.input_text.setPlainText(s)
-                return
-            print(self.me_info)
-            self.addMessage(s,ME,TEXT)
+        if s.strip().startswith('file:///'):
+            data_path = s.strip()[8:]
+            suffix = data_path.split('.')[-1].lower()
+            if suffix in ('jpg','png','jpeg','gif'):
+                msg_type = PICTURE 
+            elif suffix in ('mp4','mkv','flv','avi'):
+                msg_type = VIDEO 
+            else:
+                msg_type = ATTACHMENT
+            s = data_path
+        else:
+            msg_type = TEXT
+
+        try:
+            succ,info = self.bot.send_data(s,msg_type,self.user_info,self.is_encrypt)
+        except Exception as e:
+            print(e)
+            succ,info = False,'Failed to send'
+        if not succ:
+            self.addMessage(info,None,SYSTEM_YXS)
+            self.input_text.setPlainText(s)
+            return
+        print(self.me_info)
+        self.addMessage(s,ME,msg_type)
         self.input_text.setFocus()
     def closeEvent(self,e):
         self.bot.message_dispatcher.pop(self.user_info['yxsid'])

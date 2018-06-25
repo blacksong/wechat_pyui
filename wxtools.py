@@ -351,7 +351,11 @@ class myBot(wxpy.Bot):
         if target['yxsid'] not in self.senders:
             return False,"Group is not in the list"
         friend = self.senders[target['yxsid']]
-        if msg_type == TEXT:
+        if msg_type == ATTACHMENT:
+            friend.send_file(data)
+            text_conversation = '[文件]'
+            content = data
+        elif msg_type == TEXT:
             if is_encrypt:
                 data_send = self.encrypt_data(data,msg_type,target['yxsid'])
                 if data_send is None:
@@ -359,13 +363,17 @@ class myBot(wxpy.Bot):
             else:
                 data_send = data
             friend.send(data_send)
-            print('send',data_send)
             text_conversation = data
             content = data
-        else:
-            text_conversation = '[Others]'
-            friend.send('不支持的消息类型')
-            content = text_conversation
+        elif msg_type == PICTURE:
+            text_conversation = '[图片]'
+            content = data
+            friend.send_image(data)
+        elif msg_type == VIDEO:
+            text_conversation = '[视频]'
+            content = data  
+            friend.send_video(data)
+        print('send',content)
         # tags = ('yxsid', 'name', 'latest_time','unread_num', 'latest_user_name')
         time_index = str(time.time())
         data_record = {'yxsid':'0','Value':content,'Time':time_index,'Msg_type':msg_type}
@@ -392,12 +400,10 @@ class myBot(wxpy.Bot):
 
     def get_message(self,msg,file_path=None):#处理收到的消息
         #yxsid_send 发送msg的人
-        print(msg.create_time)
         type_ = self.get_user_type(msg.chat)
         if type_ == 3:
             print('公众号消息')
             return
-        
         elif type_ == 1:
             msg_chat = 'Friend'
         elif type_ == 2:
@@ -424,7 +430,7 @@ class myBot(wxpy.Bot):
                 content = self.decrypt_data(content,TEXT)
             text_conversation = content
         elif msg_type == PICTURE:
-            content = str(self.path/msg.file_name)
+            content = str(self.path/(yxsid+msg.file_name))
             if not file_path:
                 msg.get_file(content)
             else:
@@ -439,6 +445,7 @@ class myBot(wxpy.Bot):
             if msg.file_name.endswith(SUFFIX_PUBLICKEY):#如果文件后缀为SUFFIX_PUBLICKEY则不显示该文件 该文件是公钥文件，，进行保存
                 self.save_publickey(msg)
                 return
+
             filename = str(self.path/msg.file_name)
             if not file_path:
                 msg.get_file(filename)

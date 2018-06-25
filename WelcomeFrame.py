@@ -26,11 +26,12 @@ class LogInThread(QtCore.QThread):
         bot.set_init()
         @bot.register(except_self=False)
         def get_message(msg):
-            print(bot.path)
+            filename = None
             if msg.type in (PICTURE,VIDEO,ATTACHMENT):
                 filename = bot.path / msg.file_name
                 msg.get_file(str(filename))
-            self.trigger.emit((msg,'MSG',str(filename)))
+                filename = str(filename)
+            self.trigger.emit((msg,'MSG',filename))
 
         if bot.is_first:
             bot.first_run()
