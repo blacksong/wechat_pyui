@@ -461,7 +461,8 @@ class myBot(wxpy.Bot):
                     friend = self.senders[group_yxsid]
                     for member in friend.members:
                         if self.get_user_yxsid(member) == yxsid:
-                            print(self.get_user_yxsid(member),'sdadf')
+                            print('get avatar',self.get_user_yxsid(member))
+                            break
                     friend = member
                 else:
                     friend = self.senders[yxsid]
@@ -492,6 +493,7 @@ class myBot(wxpy.Bot):
 if __name__=='__main__':
     # bot = myBot(cache_path=True)
     # print(t)
-    x = myBot(True)
-    x.path = Path('./')
-    x.enable_rsa()
+    # x = myBot(True)
+    # x.path = Path('./')
+    # x.enable_rsa()
+    pass
