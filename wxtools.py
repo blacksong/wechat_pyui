@@ -182,14 +182,14 @@ class myBot(wxpy.Bot):
 
     def get_user_yxsid(self,user):#user_data is a dict, like {yxsid:(md5,puid,avamd5)}
         # md5 = self.get_user_md5(user)
-        remark_name = user.raw.get('remark_name')
-        if remark_name:
-            m = hashlib.md5()
-            m.update(remark_name.encode('utf8'))
-            yxsid = m.hexdigest()[:8]
-        else:
-            yxsid = user.puid
-        return yxsid
+        # remark_name = user.raw.get('remark_name')
+        # if remark_name:
+        #     m = hashlib.md5()
+        #     m.update(remark_name.encode('utf8'))
+        #     yxsid = m.hexdigest()[:8]
+        # else:
+        #     yxsid = user.puid
+        return user.puid
     def contact_list(self):
         tags = ('yxsid', 'NickName', 'RemarkName')
         t = self.db.select('friend_info', tags)+self.db.select('group_info', tags) 
