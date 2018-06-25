@@ -191,9 +191,9 @@ class myBot(wxpy.Bot):
         #     yxsid = user.puid
         return user.puid
     def contact_list(self):
-        tags = ('yxsid', 'NickName', 'RemarkName')
+        tags = ('yxsid', 'NickName', 'RemarkName','PYInitial','RemarkPYInitial')
         t = self.db.select('friend_info', tags)+self.db.select('group_info', tags) 
-        info_list = [{'yxsid': yxsid, 'name': (RemarkName if RemarkName else NickName), 'img_path': self.get_img_path(yxsid)} for yxsid, NickName, RemarkName in t]
+        info_list = [{'yxsid': yxsid, 'name': (RemarkName if RemarkName else NickName), 'img_path': self.get_img_path(yxsid),'PYInitial':PYI,'RemarkPYInitial':RPYI} for yxsid, NickName, RemarkName,PYI,RPYI in t]
         self.contact_info_list = info_list
         return info_list
     def add_conversation(self,d):

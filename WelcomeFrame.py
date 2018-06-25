@@ -50,7 +50,7 @@ class WelcomeFrame:
         self.QR_label.setScaledContents(True)
         self.QR_label.setGeometry(int(w/6), int(w/3), int(w/6*4), int(w/6*4))
         self.QR_label.hide()
-        self.get_QRcode()
+        # self.get_QRcode()
 
     def qr_callback(self, uuid, status, qrcode):
         open('qrcode.png','wb').write(qrcode)

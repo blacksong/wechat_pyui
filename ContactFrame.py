@@ -36,7 +36,8 @@ class ContactFrame(object):
     def drawContacts(self,contacts=None,label=None):#创建联系人列表
         # self.con=[]
         w = self.scrollWidget_contact.width()
-
+        keys = lambda user:user['RemarkPYInitial'] if user['RemarkPYInitial'] else user['PYInitial']
+        contacts.sort(key = keys)
         for i in contacts:
             name=i['name']
             img=i['img_path']
