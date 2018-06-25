@@ -164,7 +164,7 @@ class Ui_Chat(QWidget):
             self.addMessage('Disable RSA',None,SYSTEM_YXS)
     def generate_time_element(self,Time):
         if Time - self.time_latest > 300 and Time - self.time_pre > 60:
-            time_button = YTalkWidget(self.scrollWidget_message)
+            time_button = YTalkWidget(self.scrollWidget_message,self.bot)
             Time_str = functions.get_latest_time(Time, True)
             time_button.setContent(Time_str, SYSTEM_YXS, None, None)
             time_button.show()
@@ -178,7 +178,7 @@ class Ui_Chat(QWidget):
         time_button = self.generate_time_element(Time)
         if time_button is not None: 
             self.scrollArea.append_element(time_button)
-        button=YTalkWidget(self.scrollWidget_message)
+        button=YTalkWidget(self.scrollWidget_message,self.bot)
         if identity is not None:
             if self.is_group and identity == OTHER:
                 icon = self.get_icon_group(yxsid_send_user)
@@ -206,7 +206,7 @@ class Ui_Chat(QWidget):
         
         def generate_element(msg):
             yxsid_send,value, identity, Format,_ = msg
-            button = YTalkWidget(self.scrollWidget_message)
+            button = YTalkWidget(self.scrollWidget_message,self.bot)
             if self.is_group:
                 icon = self.get_icon_group(yxsid_send)
             else:

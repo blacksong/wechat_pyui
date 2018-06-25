@@ -13,12 +13,12 @@ import sys
 from pathlib import Path
 import re
 from PIL import Image
+from os.path import getsize
 from wxpy import TEXT, PICTURE, MAP, VIDEO, CARD, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
 SYSTEM_YXS = 'SYSTEM_YXS'
 global_font=QtGui.QFont()
 global_font.setFamily('SimHei')
 
-myrobot=['GIFMAKER']
 
 #宏定义值
 AUTO_PUSH=1
@@ -302,9 +302,10 @@ class YTalkWidget(QtWidgets.QWidget):
     other_rect_topleft=(120/90*CRITERION,12/90*CRITERION)
     max_size=250/90*CRITERION
     min_size=104/90*CRITERION
-    def __init__(self,d=None):
+    def __init__(self,d=None,Bot = None):
         super().__init__(d)
         self.Yw=d.width()
+        self.bot = Bot
         self.pos_me=(self.Yw-110/90*CRITERION,12/90*CRITERION)
         self.pos_other=(30/90*CRITERION,12/90*CRITERION)
         self.pic_qsize=QtCore.QSize(80/90*CRITERION,80/90*CRITERION)
@@ -360,6 +361,23 @@ class YTalkWidget(QtWidgets.QWidget):
             pos=self.pos_other
         self.figure_button.setGeometry(*pos,80/90*CRITERION,80/90*CRITERION)
     def setMessage_Picture(self,value):
+        def get_thumbnail(value):
+            if getsize(value)<1024*200 or value.split('.')[-1].lower() == 'gif':
+                return value
+            p = Path(value)
+            name_thum = 'thum_'+p.name
+            path_thum = self.bot.thumbnail_path / name_thum
+            if not path_thum.exists():
+                img = Image.open(p)
+                w,h = img.size
+                if w>h:
+                    rate = w/150
+                else:
+                    rate = h/150
+                img.thumbnail((w//rate,h//rate))
+                img.save(path_thum)
+            return str(path_thum)
+        value = get_thumbnail(value)
         self.picture_bubble = YPictureBubble(self)#定义显示图片的组件
         self.picture_bubble.setPicture(value)
         if self.identity is ME:

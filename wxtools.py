@@ -256,6 +256,10 @@ class myBot(wxpy.Bot):
         if not self.avatar_path.exists():
             makedirs(self.avatar_path)
             self.is_first = True
+        self.thumbnail_path = self.path / 'thumbnail'
+        if not self.thumbnail_path.exists():
+            self.thumbnail_path.mkdir()
+
         self.db = mydb(sql.connect(
             str(self.path / 'wechat_data.db'), check_same_thread=False))
         self.enable_rsa()
