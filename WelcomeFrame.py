@@ -26,7 +26,11 @@ class LogInThread(QtCore.QThread):
         bot.set_init()
         @bot.register(except_self=False)
         def get_message(msg):
-            self.trigger.emit((msg,'MSG'))
+            print(bot.path)
+            if msg.type in (PICTURE,VIDEO,ATTACHMENT):
+                filename = bot.path / msg.file_name
+                msg.get_file(str(filename))
+            self.trigger.emit((msg,'MSG',str(filename)))
 
         if bot.is_first:
             bot.first_run()
@@ -63,7 +67,10 @@ class WelcomeFrame:
         print('login callback')
 
     def bot_callback(self,callback_data):
-        data, TYPE = callback_data
+        if len(callback_data) == 2:
+            data, TYPE = callback_data
+        else:
+            data, TYPE, file_path= callback_data
         if TYPE == 'BOT':
             self.bot=data
             self.father_view.bot = self.bot
@@ -72,7 +79,7 @@ class WelcomeFrame:
             self.father_view.setupUi()
             self.father_view.show()
         elif TYPE == 'MSG':
-            self.bot.get_message(data)
+            self.bot.get_message(data,file_path)
             return
         elif TYPE == 'FIRST':
             pass

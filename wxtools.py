@@ -8,6 +8,7 @@ import yxspkg_encrypt as encrypt
 import os
 import asyncio
 import base64
+from threading import Thread
 from os.path import getsize
 from wxpy import TEXT, PICTURE, MAP, VIDEO, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
 '''
@@ -388,13 +389,15 @@ class myBot(wxpy.Bot):
             sender = self.senders[yxsid]
             print('send file', str(self.publicfile))
             sender.send_file(str(self.publicfile))
-    def get_message(self,msg):#处理收到的消息
+
+    def get_message(self,msg,file_path=None):#处理收到的消息
         #yxsid_send 发送msg的人
         print(msg.create_time)
         type_ = self.get_user_type(msg.chat)
         if type_ == 3:
             print('公众号消息')
             return
+        
         elif type_ == 1:
             msg_chat = 'Friend'
         elif type_ == 2:
@@ -403,14 +406,14 @@ class myBot(wxpy.Bot):
         else:
             print('Error:\n',self.get_message)
             return
+        msg_type = msg.type#获取消息类型
+
         yxsid_send = self.get_user_yxsid(msg.sender)
         yxsid = self.get_user_yxsid(msg.chat)
         if yxsid not in self.senders:
             print('增加群聊天',msg.chat)
             self.senders[yxsid] = msg.chat
         receiver = self.message_dispatcher.get(yxsid)
-
-        msg_type = msg.type#获取消息类型
         
         if msg_type == TEXT:
             content = msg.text
@@ -422,7 +425,10 @@ class myBot(wxpy.Bot):
             text_conversation = content
         elif msg_type == PICTURE:
             content = str(self.path/msg.file_name)
-            msg.get_file(content)
+            if not file_path:
+                msg.get_file(content)
+            else:
+                os.rename(file_path,content)
             if getsize(content) == 0:
                 os.remove(content)
                 msg_type = TEXT 
@@ -434,8 +440,11 @@ class myBot(wxpy.Bot):
                 self.save_publickey(msg)
                 return
             filename = str(self.path/msg.file_name)
+            if not file_path:
+                msg.get_file(filename)
+            else:
+                os.rename(file_path,filename)
             print(filename)
-            msg.get_file(filename)
             content = filename
             if msg_type == ATTACHMENT:
                 text_conversation = '[文件]'

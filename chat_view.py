@@ -232,7 +232,6 @@ class Ui_Chat(QWidget):
         self.time_latest =max(self.time_latest, Time)
     def autoSlideBar(self,pos='bottom'):
         if pos=='bottom':
-            bottom=self.scrollArea.bottom-self.scrollArea.height()+10
             self.bar.setValue(self.scrollArea.bottom)
         
     def setButton(self,B,I,pw,ph,objectname,position=None,connect=None):

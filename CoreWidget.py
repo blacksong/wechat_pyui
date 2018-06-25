@@ -12,9 +12,12 @@ from PyQt5.QtGui import QTextDocument,QPalette,QBrush,QColor,QFontMetrics,QPaint
 import sys
 from pathlib import Path
 import re
+import os
 from PIL import Image
 from os.path import getsize
+import yxspkg_songzviewer as ysv
 from wxpy import TEXT, PICTURE, MAP, VIDEO, CARD, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
+from multiprocessing import Process as Thread
 SYSTEM_YXS = 'SYSTEM_YXS'
 global_font=QtGui.QFont()
 global_font.setFamily('SimHei')
@@ -37,8 +40,6 @@ class YButton(QtWidgets.QPushButton):
         super().__init__(d)
     def tt(self):
         pass
-
-
 
 class YScrollArea(QtWidgets.QScrollArea):
     def __init__(self,*d,**k):
@@ -311,6 +312,8 @@ class YTalkWidget(QtWidgets.QWidget):
         self.pic_qsize=QtCore.QSize(80/90*CRITERION,80/90*CRITERION)
         self.min_height=104/90*CRITERION
     def setContent(self,value,Format,icon_name,identity):
+        self.Format = Format 
+        self.value = value
         if Format == NOTE:
             Format = SYSTEM_YXS
             identity = None
@@ -329,6 +332,13 @@ class YTalkWidget(QtWidgets.QWidget):
             h = self.setMessage('不支持的消息类型，请在手机中查看：{}'.format(Format))
             self.message_bubble.resize(self.Yw,h)
         self.resize(self.Yw,h)
+    def mouseDoubleClickEvent(self,e): 
+        print('double click')
+        if self.Format == PICTURE:
+            thread = Thread(target=ysv.main,args = (self.value,))
+            thread.start()
+        elif self.Format == VIDEO:
+            os.system('ffplay -i "{}"'.format(self.value))
     def setMessage_System(self,value):
         self.system_bubble = YSystemBubble(self)
         self.system_bubble.setMessage(value,None)
