@@ -5,8 +5,10 @@ import sqlite3 as sql
 import hashlib
 import sys
 import yxspkg_encrypt as encrypt
+import os
 import asyncio
 import base64
+from os.path import getsize
 from wxpy import TEXT, PICTURE, MAP, VIDEO, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
 '''
 TEXT = 'Text'
@@ -180,7 +182,14 @@ class myBot(wxpy.Bot):
 
     def get_user_yxsid(self,user):#user_data is a dict, like {yxsid:(md5,puid,avamd5)}
         # md5 = self.get_user_md5(user)
-        return user.puid
+        remark_name = user.raw.get('remark_name')
+        if remark_name:
+            m = hashlib.md5()
+            m.update(remark_name.encode('utf8'))
+            yxsid = m.hexdigest()[:8]
+        else:
+            yxsid = user.puid
+        return yxsid
     def contact_list(self):
         tags = ('yxsid', 'NickName', 'RemarkName')
         t = self.db.select('friend_info', tags)+self.db.select('group_info', tags) 
@@ -347,14 +356,14 @@ class myBot(wxpy.Bot):
             friend.send(data_send)
             print('send',data_send)
             text_conversation = data
-            value_record = data
+            content = data
         else:
             text_conversation = '[Others]'
             friend.send('不支持的消息类型')
-            value_record = text_conversation
+            content = text_conversation
         # tags = ('yxsid', 'name', 'latest_time','unread_num', 'latest_user_name')
         time_index = str(time.time())
-        data_record = {'yxsid':'0','Value':value_record,'Time':time_index,'Msg_type':msg_type}
+        data_record = {'yxsid':'0','Value':content,'Time':time_index,'Msg_type':msg_type}
         self.write_content(target['yxsid'],data_record)
         self.add_conversation({'yxsid':target['yxsid'],'text':text_conversation,'name':target['name'],'latest_user_name':'','unread_num':0,'latest_time':time_index})#latest_user_name=''意味着最后说话的人是自己
         self.update_conversation()
@@ -407,12 +416,15 @@ class myBot(wxpy.Bot):
             elif content.startswith(HEAD_ENCRYPT):#加密信息  需要解析后显示
                 content = self.decrypt_data(content,TEXT)
             text_conversation = content
-            value_record = text_conversation
         elif msg_type == PICTURE:
             content = str(self.path/msg.file_name)
             msg.get_file(content)
+            if getsize(content) == 0:
+                os.remove(content)
+                msg_type = TEXT 
+                content = '[收到了一个表情，请在手机上查看]'
+
             text_conversation = '[图片]'
-            value_record = content
         elif msg_type == ATTACHMENT or msg_type == VIDEO:
             if msg.file_name.endswith(SUFFIX_PUBLICKEY):#如果文件后缀为SUFFIX_PUBLICKEY则不显示该文件 该文件是公钥文件，，进行保存
                 self.save_publickey(msg)
@@ -425,15 +437,12 @@ class myBot(wxpy.Bot):
                 text_conversation = '[文件]'
             else:
                 text_conversation = '[视频]'
-            value_record = filename
         elif msg_type == NOTE:
             text_conversation = msg.text 
-            value_record = text_conversation
             content = text_conversation
         else:
             content = 'None'
             text_conversation = '[消息]'
-            value_record = ''
             print(msg.text)
             print(dir(msg))
 
@@ -447,7 +456,7 @@ class myBot(wxpy.Bot):
         if msg_chat == 'Group':
             yxsid_send = yxsid_member
         time_index = '{:.2f}'.format(time.time())
-        data_record = {'yxsid':yxsid_send,'Value':value_record,'Time':time_index,'Msg_type':msg_type}
+        data_record = {'yxsid':yxsid_send,'Value':content,'Time':time_index,'Msg_type':msg_type}
         print('\a','You receive a new message!',msg.chat,msg_type)
         print(data_record)
         self.write_content(yxsid,data_record)
@@ -455,21 +464,28 @@ class myBot(wxpy.Bot):
         self.update_conversation()
     def get_img_path(self,yxsid,group_yxsid=None):
         p = self.avatar_path/(yxsid+'.jpg')
+        default_img= self.path.parent.with_name('wechat_data') / 'icon' / 'system_icon.jpg'
         if not p.is_file():
             try:
                 if group_yxsid is not None:
                     friend = self.senders[group_yxsid]
-                    for member in friend.members:
+                    for member in friend:
                         if self.get_user_yxsid(member) == yxsid:
                             print('get avatar',self.get_user_yxsid(member))
                             break
+                    else:
+                        member = None
                     friend = member
                 else:
                     friend = self.senders[yxsid]
-                friend.get_avatar(str(p))
+
+                if friend is not None:
+                    friend.get_avatar(str(p))
+                else:
+                    p = default_img
             except Exception as e:
                 print('Error: get_img_path\n',e)
-                p = self.path.parent.with_name('wechat_data') / 'icon' / 'system_icon.jpg'
+                p = default_img
         return str(p)
     def get_user_type(self,user):# 1-friend 2-group 3-mp(公众号)
         if user.raw['MemberCount']==0:

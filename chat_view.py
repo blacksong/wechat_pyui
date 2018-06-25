@@ -81,7 +81,7 @@ class Ui_Chat(QWidget):
                 idendity = ME
             else:
                 idendity = OTHER
-            ans.append((yxsid,yxsid+value, idendity, msg_type, time_))
+            ans.append((yxsid,value, idendity, msg_type, time_))
         self.insertMessage(ans)
     def resizeEvent(self,d):#根据窗口大小调整白色背景的大小以及发送键的位置
         size = self.size()

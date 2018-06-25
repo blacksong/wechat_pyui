@@ -321,12 +321,7 @@ class YTalkWidget(QtWidgets.QWidget):
             h=self.setMessage(value)
             self.message_bubble.resize(self.Yw,h)
         elif Format == PICTURE:#显示表情或者图片
-            try:
-                h=self.setMessage_Picture(value)
-            except Exception as e:#表情不能正常显示时的处理方法
-                print(e)
-                h=self.setMessage('[收到了一个表情，请在手机上查看]')
-                self.message_bubble.resize(self.Yw,h)
+            h=self.setMessage_Picture(value)
         elif Format == SYSTEM_YXS:
             h=self.setMessage_System(value)
         else:
