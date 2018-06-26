@@ -17,7 +17,6 @@ from PIL import Image
 from os.path import getsize
 import yxspkg_songzviewer as ysv
 from wxpy import TEXT, PICTURE, MAP, VIDEO, CARD, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
-from multiprocessing import Process as Thread
 SYSTEM_YXS = 'SYSTEM_YXS'
 global_font=QtGui.QFont()
 global_font.setFamily('SimHei')
@@ -335,8 +334,7 @@ class YTalkWidget(QtWidgets.QWidget):
     def mouseDoubleClickEvent(self,e): 
         print('double click')
         if self.Format == PICTURE:
-            thread = Thread(target=ysv.main,args = (self.value,))
-            thread.start()
+            self._display = ysv.GifPreview(name=self.value)
         elif self.Format == VIDEO:
             os.system('ffplay -i "{}"'.format(self.value))
     def setMessage_System(self,value):
