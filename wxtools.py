@@ -376,7 +376,7 @@ class myBot(wxpy.Bot):
         else:
             return data  
 
-    def send_data(self,data,msg_type,target,is_encrypt=True):
+    def send_data(self,data,msg_type,target,is_encrypt=True,update_con = True):
         if target['yxsid'] not in self.senders:
             return False,"Group is not in the list"
         friend = self.senders[target['yxsid']]
@@ -406,12 +406,19 @@ class myBot(wxpy.Bot):
         # tags = ('yxsid', 'name', 'latest_time','unread_num', 'latest_user_name')
         time_index = str(time.time())
         data_record = {'yxsid':'0','Value':content,'Time':time_index,'Msg_type':msg_type}
-        self.write_content(target['yxsid'],data_record)
-        self.add_conversation({'yxsid':target['yxsid'],'text':text_conversation,'name':target['name'],'latest_user_name':'','unread_num':0,'latest_time':time_index})#latest_user_name=''意味着最后说话的人是自己
-        self.update_conversation()
-        return True,None
-
         
+        cons = {'yxsid':target['yxsid'],'text':text_conversation,'name':target['name'],'latest_user_name':'','unread_num':0,'latest_time':time_index}
+        info = (target['yxsid'],data_record,cons)
+        if update_con:
+            self.async_update_conversation(info)
+        return True,info
+
+    def async_update_conversation(self,args):
+        yxsid,data_record,cons = args
+        self.write_content(yxsid,data_record)
+        self.add_conversation(cons)#latest_user_name=''意味着最后说话的人是自己
+        self.update_conversation()
+
     def save_publickey(self,msg):
         filename = msg.file_name
         yxsid = self.get_user_yxsid(msg.sender)

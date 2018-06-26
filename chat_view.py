@@ -14,6 +14,19 @@ import wxpy
 import functions
 import time
 
+class async_send(QThread):
+    trigger = pyqtSignal(tuple)
+    def __init__(self,target,args=tuple()):
+        super().__init__()
+        self.target = target
+        self.args = args
+    def run(self):
+        try:
+            succ,info = self.target(*self.args,update_con = False)
+        except Exception as e:
+            print(e)
+            succ,info = False,'Failed to send'
+        self.trigger.emit((succ,info,self.args))
 class Ui_Chat(QWidget):
 
     def setupUi(self,Bot ,user_info:dict ,me_info:dict):
@@ -292,22 +305,25 @@ class Ui_Chat(QWidget):
             if suffix in ('jpg','png','jpeg','gif'):
                 msg_type = PICTURE 
             elif suffix in ('mp4','mkv','flv','avi'):
-                msg_type = VIDEO 
+                msg_type = VIDEO
             else:
                 msg_type = ATTACHMENT
             s = data_path
         else:
             msg_type = TEXT
-
-        try:
-            succ,info = self.bot.send_data(s,msg_type,self.user_info,self.is_encrypt)
-        except Exception as e:
-            print(e)
-            succ,info = False,'Failed to send'
+        self.asyncSend = async_send(self.bot.send_data,(s,msg_type,self.user_info,self.is_encrypt))
+        self.asyncSend.trigger.connect(self.send_callback)
+        self.asyncSend.start()
+        
+    def send_callback(self,args):
+        print(args)
+        succ,info,args_ = args
+        s,msg_type,*_ = args_
         if not succ:
             self.addMessage(info,None,SYSTEM_YXS)
             self.input_text.setPlainText(s)
             return
+        self.bot.async_update_conversation(info)
         print(self.me_info)
         self.addMessage(s,ME,msg_type)
         self.input_text.setFocus()

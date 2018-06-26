@@ -18,6 +18,7 @@ from os.path import getsize
 import yxspkg_songzviewer as ysv
 from wxpy import TEXT, PICTURE, MAP, VIDEO, CARD, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
 from multiprocessing import Process
+import imageio
 SYSTEM_YXS = 'SYSTEM_YXS'
 global_font=QtGui.QFont()
 global_font.setFamily('SimHei')
@@ -292,14 +293,15 @@ class YPictureBubble(QLabel):
             w,h = im.size
 
             self.setPixmap(im.toqpixmap())
+        
         if w>=h and w>max_width:
             ratio = max_width/w
         elif h>w and h>max_width:
             ratio = max_width/h
         else:
             ratio = 1
-        self.resize(int(w*ratio),int(h*ratio))
-
+        w,h = int(w*ratio),int(h*ratio)
+        self.resize(w,h)
 
 class YTalkWidget(QtWidgets.QWidget):
     obj_name={ME:'me',OTHER:'other'}
@@ -331,6 +333,24 @@ class YTalkWidget(QtWidgets.QWidget):
             h=self.setMessage_Picture(value)
         elif Format == SYSTEM_YXS:
             h=self.setMessage_System(value)
+        elif Format == VIDEO:
+            video_path = Path(self.value)
+            path_video_cache = self.bot.thumbnail_path / ('thumbnail_'+video_path.name)
+            path_video_cache = path_video_cache.with_suffix('.jpg')
+
+            if not path_video_cache.is_file():
+                reader = imageio.get_reader(self.value)
+                img = reader.get_next_data()
+                reader.close()
+                img = Image.fromarray(img)
+                w,h = img.size 
+                if w>h:
+                    rate = w/150
+                else:
+                    rate = h/150
+                img.thumbnail((w//rate,h//rate))
+                img.save(path_video_cache)
+            h = self.setMessage_Picture(str(path_video_cache),is_video=True)
         else:
             h = self.setMessage('不支持的消息类型，请在手机中查看：{}'.format(Format))
             self.message_bubble.resize(self.Yw,h)
@@ -373,9 +393,9 @@ class YTalkWidget(QtWidgets.QWidget):
         else:
             pos=self.pos_other
         self.figure_button.setGeometry(*pos,80/90*CRITERION,80/90*CRITERION)
-    def setMessage_Picture(self,value):
+    def setMessage_Picture(self,value,is_video=False):
         def get_thumbnail(value):
-            if getsize(value)<1024*200 or value.split('.')[-1].lower() == 'gif':
+            if getsize(value)<1024*100 or value.split('.')[-1].lower() == 'gif':
                 return value
             p = Path(value)
             name_thum = 'thum_'+p.name
@@ -399,7 +419,19 @@ class YTalkWidget(QtWidgets.QWidget):
             pic_width = self.pic_qsize.width()
             pos = self.pos_other[0]+5+pic_width,self.pos_other[1]
         self.picture_bubble.move(*pos)
-        return self.picture_bubble.height()
+        w,h = self.picture_bubble.width(),self.picture_bubble.height()
+        if is_video:
+            self.display_label = QLabel(self)
+            self.display_label.setStyleSheet('QWidget{background-color:rgba(0,0,0,0)}')
+            self.display_label.setScaledContents(True)
+            display_path = self.bot.path.parent.with_name('wechat_data') / 'icon' /'video.png'
+            pixmap = Image.open(display_path).toqpixmap()
+            # pixmap.fill(Qt.transparent)
+            self.display_label.setPixmap(pixmap)
+            w0,h0 = pos
+            size = 50
+            self.display_label.setGeometry(w0+(w-size)//2,h0+(h-size)//2,size,size)
+        return h
 
 
 
