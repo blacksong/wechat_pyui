@@ -9,7 +9,9 @@ import os
 import asyncio
 import base64
 from threading import Thread
+from collections import defaultdict
 from os.path import getsize
+import pickle
 from wxpy import TEXT, PICTURE, MAP, VIDEO, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
 '''
 TEXT = 'Text'
@@ -45,7 +47,8 @@ class mydb:
     def __init__(self,conn):
         self.conn=conn
         self.cur=self.conn.cursor()
-        self.table_columns=dict()
+        self.has_table = defaultdict(lambda :None)
+
     def __del__(self):
 
         self.commit()
@@ -67,8 +70,12 @@ class mydb:
         s='create table {table}({content})'.format(table = table,content=content[:-1])
         self.cur.execute(s)
     def table_exists(self,table):
+        if self.has_table[table]:
+            return True
+        print('check table',table)
         result = self.cur.execute("select * from sqlite_master where name='{name}' ".format(name=table)).fetchall()
         if result:
+            self.has_table[table] = True
             return True
         else:
             return False
@@ -76,7 +83,7 @@ class mydb:
         self.conn.commit()
     def to_sql(self,table,data,if_exists='append'):
         result = self.table_exists(table)
-        
+
         if not result:
             print('without ',table)
             self.dict_to_table(data[0],table)
@@ -125,8 +132,8 @@ class myBot(wxpy.Bot):
         self.conversation_list_now=None
         self.message_dispatcher=dict()
         self.is_first=False
-        self.contact_info_list = None
-
+        self.contact_info_dict = None
+        # self.puid_to_yxsid = dict()#{puid:yxsid}
         self.public_key_dict = dict()
         self.hash_write_auto = 1#记录自动写入硬盘的hash值
     def enable_rsa(self):# 启用加密
@@ -168,6 +175,13 @@ class myBot(wxpy.Bot):
         puid_path = self.path / 'wxpy_puid.pkl'
         print('puid path', puid_path )
         self.enable_puid(str(puid_path))
+        yxsid_path = self.path / 'wxpy_yxsid.pkl'
+        self.yxsid_path = yxsid_path
+        if yxsid_path.is_file():
+            self.yxsid_puid,self.yxsid_md5,self.yxsid_yxsid = pickle.load(open(yxsid_path,'rb'))
+        else:
+            self.yxsid_puid,self.yxsid_md5,self.yxsid_yxsid =list(),list(),list()
+
         self.yxsid = self.get_user_yxsid(self.self) #
 
     def enable_sql(self):
@@ -179,34 +193,48 @@ class myBot(wxpy.Bot):
         m=hashlib.md5()
         for i in ('Signature','RemarkName','Province','Sex','NickName','City'):
             m.update(str(raw_data[i]).encode('utf8'))
-        return m.hexdigest()
+        return m.hexdigest()[:15]
 
     def get_user_yxsid(self,user):#user_data is a dict, like {yxsid:(md5,puid,avamd5)}
-        # md5 = self.get_user_md5(user)
-        # remark_name = user.raw.get('remark_name')
-        # if remark_name:
-        #     m = hashlib.md5()
-        #     m.update(remark_name.encode('utf8'))
-        #     yxsid = m.hexdigest()[:8]
-        # else:
-        #     yxsid = user.puid
-        return user.puid
-    def contact_list(self):
-        tags = ('yxsid', 'NickName', 'RemarkName','PYInitial','RemarkPYInitial')
-        t = self.db.select('friend_info', tags)+self.db.select('group_info', tags) 
-        info_list = [{'yxsid': yxsid, 'name': (RemarkName if RemarkName else NickName), 'img_path': self.get_img_path(yxsid),'PYInitial':PYI,'RemarkPYInitial':RPYI} for yxsid, NickName, RemarkName,PYI,RPYI in t]
-        self.contact_info_list = info_list
-        return info_list
+        puid = user.puid
+        ymd5 = self.get_user_md5(user)
+        
+        if puid in self.yxsid_puid:
+            n = self.yxsid_puid.index(puid)
+            self.yxsid_md5[n] = ymd5
+            return self.yxsid_yxsid[n]
+        elif ymd5 in self.yxsid_md5:
+            n = self.yxsid_md5.index(ymd5)
+            self.yxsid_puid[n] = puid
+            return self.yxsid_yxsid[n]
+        else:#新成员
+            self.yxsid_puid.append(puid)
+            self.yxsid_md5.append(ymd5)
+            if ymd5 in self.yxsid_yxsid:
+                print('warning ! yxsid is existed!')
+                ymd5 += '1'
+            self.yxsid_yxsid.append(ymd5)
+            return ymd5 
+    def contact_dict(self):
+        if self.contact_info_dict:
+            return self.contact_info_dict
+        tags = ('yxsid', 'NickName', 'RemarkName','PYInitial','RemarkPYInitial','md5','imgmd5','user_type','puid')
+        t = self.db.select('friend_info', tags, return_dict=True)+self.db.select('group_info', tags, return_dict=True) 
+        for i in t:
+            i['name']=i['RemarkName'] if i['RemarkName'] else i['NickName']
+            i['img_path'] = self.get_img_path(i['yxsid'])
+        info_dict = {i['yxsid']:i for i in t}
+        self.contact_info_dict = info_dict
+        return self.contact_info_dict
     def add_conversation(self,d):
-        if self.contact_info_list is None:
-            self.contact_info_list = self.contact_list()
+
+        self.contact_dict()
         yxsid = d['yxsid']
-        d['img_path'] =  self.get_img_path(d['yxsid'])
+        d['img_path'] =  self.get_img_path(yxsid)
         if not d.get('name'):
-            for i in self.contact_info_list:
-                if i['yxsid'] == yxsid:
-                    d['name']=i['name']
-                    break
+
+            if yxsid in self.contact_info_dict:
+                d['name'] = self.contact_info_dict[yxsid]['name']
             else:
                 user = self.senders.get(yxsid)
                 if user is None:
@@ -265,48 +293,49 @@ class myBot(wxpy.Bot):
             str(self.path / 'wechat_data.db'), check_same_thread=False))
         self.enable_rsa()
     def first_run(self):
-        if not self.db.table_exists('friend_info'):
-            friends = self.friends()
-            groups = self.groups()
-            mps = self.mps()
-            for i in friends+groups+mps:
-                self.update_user_info_one(i,is_append=True)
-        self.db.commit()
+        #创建储存联系人信息的表
         self.get_avatar_all()
+        self.db.commit()
 
-    async def get_avatar_one(self,user,name):
+    async def get_avatar_one(self,user):
         print(user)
         loop = asyncio.get_event_loop()
         fu = loop.run_in_executor(None,user.get_avatar)
         im = await fu
+        self.update_user_info_one(user,is_append=True,img = im)
+        name = self.avatar_path / (self.get_user_yxsid(user)+'.jpg')
         open(name,'wb').write(im)
 
     def get_avatar_all(self):#下载头像
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        tasks = [self.get_avatar_one(user,self.avatar_path / (self.get_user_yxsid(user)+'.jpg')) for user in self.friends()+self.groups()]
+        tasks = [self.get_avatar_one(user) for user in self.get_senders().values()]
         loop.run_until_complete(asyncio.wait(tasks))
         loop.close()
 
-    def update_user_info_one(self,user,is_append):
+    def update_user_info_one(self,user,is_append,img = None):
         d=user.raw
         d['md5']=self.get_user_md5(user)
         d['yxsid'] = self.get_user_yxsid(user)
         d['puid'] = user.puid 
         d['imgmd5'] = self.get_user_md5(user)
-        ftype = str(user)[1:].split(':')[0]
-        if is_append:
-            if ftype == 'Group':
-                self.db.to_sql('group_info',[d])
-            elif ftype == 'MP':
-                self.db.to_sql('mp_info',[d])
-            else:
-                self.db.to_sql('friend_info', [d])
+        ftype = self.get_user_type(user)
+        d['user_type'] = ftype
+
+        if ftype == 2:
+            self.db.to_sql('group_info',[d])
+        elif ftype == 3:
+            self.db.to_sql('mp_info',[d])
+        else:
+            self.db.to_sql('friend_info', [d])
 
     def get_senders(self):#微信机器人启动后自动后台运行的程序
+        if self.senders:
+            return self.senders
         print('get_senders')
         self.senders = {self.get_user_yxsid(s): s for s in self.friends()+self.groups()}
         print('It is OK!')
+        return self.senders
     def get_public_key(self,yxsid):#返回用户publick key
         #检查是否读取过yxsid的public key
         if yxsid in self.public_key_dict:
@@ -524,6 +553,8 @@ class myBot(wxpy.Bot):
         self.db.commit()
     def write_back(self):#程序退出时调用
         self.write_auto()
+        datas = (self.yxsid_puid,self.yxsid_md5,self.yxsid_yxsid)
+        pickle.dump(datas,open(self.yxsid_path,'wb'))
         del self.db
 
 if __name__=='__main__':

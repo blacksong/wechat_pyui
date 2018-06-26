@@ -32,9 +32,10 @@ class ContactFrame(object):
         # self.scrollWidget_contact.setMinimumSize(QtCore.QSize(Form.width(), Form.height()))
         
     def get_contacts(self):
-        return self.bot.contact_list()
+        return self.bot.contact_dict()
     def drawContacts(self,contacts=None,label=None):#创建联系人列表
         # self.con=[]
+        contacts = list(contacts.values())
         w = self.scrollWidget_contact.width()
         keys = lambda user:user['RemarkPYInitial'] if user['RemarkPYInitial'] else user['PYInitial']
         contacts.sort(key = keys)
