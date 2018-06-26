@@ -42,7 +42,7 @@ class DiscoverFrame(object):
             self.setButton(p1,None,self.conversation_width,self.conversation_height,i,(0,n*self.conversation_height,self.conversation_width,self.conversation_height))
             self.con.append(p1)
     def goto_view(self,name):
-        #跳转到conversation的内容界面
+        return
         self.father_view.goto_view('chat',name)
     def getDiscover(self):
         dirname='discover/'

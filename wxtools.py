@@ -192,7 +192,7 @@ class myBot(wxpy.Bot):
         raw_data = user.raw
         m=hashlib.md5()
         for i in ('Signature','RemarkName','Province','Sex','NickName','City'):
-            m.update(str(raw_data[i]).encode('utf8'))
+            m.update(str(raw_data.get(i,i)).encode('utf8'))
         return m.hexdigest()[:15]
 
     def get_user_yxsid(self,user):#user_data is a dict, like {yxsid:(md5,puid,avamd5)}

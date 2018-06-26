@@ -26,8 +26,8 @@ class MeFrame:
         self.scrollWidget_discover = YWidget()
         self.scrollArea.setWidget(self.scrollWidget_discover)
         self.circle=FunctionButton(self.scrollWidget_discover)
-        self.circle.setContent('discover/1.jpg','GIF MAKER',pos=(0,0.3*CRITERION))       
-        self.circle.setName('GIFMAKER',self)
+        self.circle.setContent('discover/1.jpg','退出登录',pos=(0,0.3*CRITERION))       
+        self.circle.setName('退出登录',self)
         # self.circle.clicked.connect(self.log_out)
 
     def goto_view(self,name):
