@@ -49,8 +49,10 @@ class YScrollArea(QtWidgets.QScrollArea):
         self.setWidgetResizable(True)
         self.bottom = 0
         self.widgets = list()
-    def mouseMoveEvent(self,e):
-        print(e.x(),e.y(),'Ms')
+        self.bar=self.verticalScrollBar()
+    def wheelEvent(self,e):
+        super().wheelEvent(e)
+        
     def mousePressEvent(self,e):
         print(e.x(),e.y(),'Ps')
     def mouseReleaseEvent(self,e):
@@ -271,7 +273,7 @@ class YPictureBubble(QLabel):
         self.parent_widget = widget
         self.setScaledContents(True)
     def setPicture(self,image_name):
-        # image_name = "/home/yxs/E/pythonAPP/pyqt5_wechat/wechat_pyui-master/wechat_data/63a9f0ea7bb98050796b649e85481845/180422-002650.gif"
+
         self.filename = image_name
         max_width = 300
         is_gif = False

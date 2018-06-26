@@ -283,6 +283,8 @@ class Ui_Chat(QWidget):
 
     def button_send_click(self,e):#发送消息
         s=self.input_text.toPlainText()
+        if not s.strip():
+            return
         self.input_text.setPlainText('')
         if s.strip().startswith('file:///'):
             data_path = s.strip()[8:]
