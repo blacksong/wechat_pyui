@@ -396,12 +396,17 @@ class YTalkWidget(QtWidgets.QWidget):
         self.figure_button.setGeometry(*pos,80/90*CRITERION,80/90*CRITERION)
     def setMessage_Picture(self,value,is_video=False):
         def get_thumbnail(value):
-            if getsize(value)<1024*100 or value.split('.')[-1].lower() == 'gif':
-                return value
             p = Path(value)
             name_thum = 'thum_'+p.name
             path_thum = self.bot.thumbnail_path / name_thum
-            if not path_thum.exists():
+
+            if path_thum.exists():
+                return str(path_thum)
+            else:
+                if not p.exists():
+                    return str(self.bot.path.parent.with_name('wechat_data') / 'icon' / 'error.jpg')
+                if getsize(value)<1024*100 or value.split('.')[-1].lower() == 'gif':
+                    return value
                 img = Image.open(p)
                 w,h = img.size
                 if w>h:
@@ -410,7 +415,7 @@ class YTalkWidget(QtWidgets.QWidget):
                     rate = h/150
                 img.thumbnail((w//rate,h//rate))
                 img.save(path_thum)
-            return str(path_thum)
+                return str(path_thum)
         value = get_thumbnail(value)
         self.picture_bubble = YPictureBubble(self)#定义显示图片的组件
         self.picture_bubble.setPicture(value)
