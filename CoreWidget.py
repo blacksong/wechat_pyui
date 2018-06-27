@@ -17,7 +17,7 @@ from PIL import Image
 from os.path import getsize
 import yxspkg_songzviewer as ysv
 from wxpy import TEXT, PICTURE, MAP, VIDEO, CARD, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
-from multiprocessing import Process
+import video_player
 import imageio
 SYSTEM_YXS = 'SYSTEM_YXS'
 global_font=QtGui.QFont()
@@ -360,8 +360,9 @@ class YTalkWidget(QtWidgets.QWidget):
         if self.Format == PICTURE:
             self._display = ysv.GifPreview(name=self.value)
         elif self.Format == VIDEO:
-            thread = Process(target = os.system,args = ('ffplay -i "{}"'.format(self.value),))
-            thread.start()
+            self._play = video_player.Player([self.value])
+            self._play.show()
+            self._play.player.play()
     def setMessage_System(self,value):
         self.system_bubble = YSystemBubble(self)
         self.system_bubble.setMessage(value,None)

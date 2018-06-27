@@ -402,8 +402,6 @@ class myBot(wxpy.Bot):
             text_conversation = '[视频]'
             content = data  
             friend.send_video(data)
-        print('send',content)
-        # tags = ('yxsid', 'name', 'latest_time','unread_num', 'latest_user_name')
         time_index = str(time.time())
         data_record = {'yxsid':'0','Value':content,'Time':time_index,'Msg_type':msg_type}
         

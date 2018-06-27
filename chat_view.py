@@ -316,7 +316,7 @@ class Ui_Chat(QWidget):
         self.asyncSend.start()
         
     def send_callback(self,args):
-        print(args)
+        print('send',args)
         succ,info,args_ = args
         s,msg_type,*_ = args_
         if not succ:
@@ -324,7 +324,6 @@ class Ui_Chat(QWidget):
             self.input_text.setPlainText(s)
             return
         self.bot.async_update_conversation(info)
-        print(self.me_info)
         self.addMessage(s,ME,msg_type)
         self.input_text.setFocus()
     def closeEvent(self,e):
