@@ -357,10 +357,14 @@ class YTalkWidget(QtWidgets.QWidget):
         self.resize(self.Yw,h)
     def mouseDoubleClickEvent(self,e): 
         print('double click')
+        if not Path(self.value).exists():
+            value = str(self.bot.path.parent.with_name('wechat_data') / 'icon' / 'error.jpg')
+        else:
+            value = self.value
         if self.Format == PICTURE:
-            self._display = ysv.GifPreview(name=self.value)
+            self._display = ysv.GifPreview(name=value)
         elif self.Format == VIDEO:
-            self._play = video_player.Player([self.value])
+            self._play = video_player.Player([value])
             self._play.show()
             self._play.player.play()
     def setMessage_System(self,value):
