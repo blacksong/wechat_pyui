@@ -468,7 +468,8 @@ class myBot(wxpy.Bot):
             if not file_path:
                 msg.get_file(content)
             else:
-                os.rename(file_path,content)
+                if not Path(content).is_file():
+                    os.rename(file_path,content)
             if getsize(content) == 0:
                 os.remove(content)
                 msg_type = TEXT 
