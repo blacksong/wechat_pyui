@@ -499,7 +499,10 @@ class Player(QWidget):
 
         self.addToPlaylist(playlist)
 
-
+    def closeEvent(self,e):
+        pass
+        print('close')
+        self.player.stop()
     def open(self):
         fileNames, _ = QFileDialog.getOpenFileNames(self, "Open Files")
         self.addToPlaylist(fileNames)
