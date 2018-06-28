@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QApplication ,QWidget
 from pathlib import Path
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from CoreWidget import *
+import CoreWidget
 import chat_view
 import ConversationFrame,MeFrame,ContactFrame,DiscoverFrame
 import WelcomeFrame

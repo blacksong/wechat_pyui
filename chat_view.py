@@ -175,6 +175,7 @@ class Ui_Chat(QWidget):
         else:
             self.is_encrypt = False
             self.addMessage('Disable RSA',None,SYSTEM_YXS)
+
     def generate_time_element(self,Time):
         if Time - self.time_latest > 300 and Time - self.time_pre > 60:
             time_button = YTalkWidget(self.scrollWidget_message,self.bot)
@@ -245,7 +246,7 @@ class Ui_Chat(QWidget):
         self.time_latest =max(self.time_latest, Time)
     def autoSlideBar(self,pos='bottom'):
         if pos=='bottom':
-            self.bar.setValue(self.scrollArea.bottom)
+            self.bar.setValue(self.scrollArea.bottom+10)
         
     def setButton(self,B,I,pw,ph,objectname,position=None,connect=None):
         if I is not None:

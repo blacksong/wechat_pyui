@@ -6,7 +6,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QWidget, QSlider, QApplication,QMainWindow,
-                             QHBoxLayout, QVBoxLayout,QLabel)
+                             QHBoxLayout, QVBoxLayout,QLabel,QFrame)
 from PyQt5.QtCore import Qt,QPoint,QRect
 from PyQt5.QtGui import QTextDocument,QPalette,QBrush,QColor,QFontMetrics,QPainter,QPen,QImage,QPixmap,QMovie
 import sys
@@ -276,7 +276,6 @@ class YPictureBubble(QLabel):
         self.parent_widget = widget
         self.setScaledContents(True)
     def setPicture(self,image_name):
-
         self.filename = image_name
         max_width = 300
         is_gif = False
@@ -351,6 +350,8 @@ class YTalkWidget(QtWidgets.QWidget):
                 img.thumbnail((w//rate,h//rate))
                 img.save(path_video_cache)
             h = self.setMessage_Picture(str(path_video_cache),is_video=True)
+        elif Format == ATTACHMENT:
+            h = self.setMessage_Attachment(self.value)
         else:
             h = self.setMessage('不支持的消息类型，请在手机中查看：{}'.format(Format))
             self.message_bubble.resize(self.Yw,h)
@@ -398,6 +399,43 @@ class YTalkWidget(QtWidgets.QWidget):
         else:
             pos=self.pos_other
         self.figure_button.setGeometry(*pos,80/90*CRITERION,80/90*CRITERION)
+    def setMessage_Attachment(self,value):#定义显示附件的组件
+        self.attachment_bubble = QLabel(self)
+        
+        self.attachment_bubble.setFrameShape(QFrame.Box)
+        self.attachment_bubble.setStyleSheet('QLabel{border-width:1px;border-style:solid;border-color:rgb(150,180,140);background-color:rgb(250,250,250)}')
+
+        self.attachment_bubble.resize(int(5.5*CRITERION),int(1.5*CRITERION))
+        if self.identity is ME:
+            pos = self.pos_me[0]-self.attachment_bubble.width()-5,self.pos_me[1]
+        else:
+            pic_width = self.pic_qsize.width()
+            pos = self.pos_other[0]+5+pic_width,self.pos_other[1]
+        self.attachment_bubble.move(*pos)
+
+        icon_path = self.bot.path.parent.with_name('wechat_data') / 'icon' / 'icon_file_red.jpg'
+        self.file_icon = QLabel(self)
+        self.file_icon.setScaledContents(True)
+        pixmap = Image.open(icon_path).toqpixmap()
+        self.file_icon.setPixmap(pixmap)
+        w0,h0 = pos
+        width = self.attachment_bubble.width()
+        size = 50
+        self.file_icon.setGeometry(w0+width-size*1.3,h0+0.2*CRITERION,size,size)
+
+        bias = int(0.2*CRITERION)
+
+        file_size = getsize(value)
+        if file_size < 1024:
+            fsize = '\n{}B'.format(file_size)
+        elif file_size < 1024*1024:
+            fsize = '\n{:.2f}KB'.format(file_size/1024)
+        else:
+            fsize = '\n{:.2f}KB'.format(file_size/1024/1024)
+        self.text_label = QLabel(Path(self.value).name+fsize ,self)
+        self.text_label.setGeometry(w0+bias,h0+bias,width - size * 2.3 - bias, CRITERION)
+
+        return self.attachment_bubble.height()+10
     def setMessage_Picture(self,value,is_video=False):
         def get_thumbnail(value):
             p = Path(value)
