@@ -319,6 +319,7 @@ class YTalkWidget(QtWidgets.QWidget):
         self.pos_other=(30/90*CRITERION,12/90*CRITERION)
         self.pic_qsize=QtCore.QSize(80/90*CRITERION,80/90*CRITERION)
         self.min_height=104/90*CRITERION
+        self.lable_geometry = None #显示消息widget的geometry
     def setContent(self,value,Format,icon_name,identity):
         self.Format = Format 
         self.value = value
@@ -361,7 +362,12 @@ class YTalkWidget(QtWidgets.QWidget):
             h = self.setMessage('不支持的消息类型，请在手机中查看：{}\n{}'.format(Format,value))
         self.resize(self.Yw,h)
     def mouseDoubleClickEvent(self,e): 
-        if e.buttons() == Qt.LeftButton:
+        if e.buttons() == Qt.LeftButton and self.lable_geometry:
+            g = self.lable_geometry
+            x,y,w,h = g.x(),g.y(),g.width(),g.height()
+            m_x, m_y = e.x(),e.y()
+            if not (x < m_x <x+w and y<m_y<y+h):
+                return #点击不在区域内
             print('open a file')
             if self.Format in (PICTURE,VIDEO):
                 if not Path(self.value).exists():
@@ -456,7 +462,7 @@ class YTalkWidget(QtWidgets.QWidget):
             text = value[n+1:]
         self.text_label = QLabel(text ,self)
         self.text_label.setGeometry(w0+bias,h0+bias,width - size * 2.3 - bias, CRITERION)
-
+        self.lable_geometry = self.attachment_bubble.geometry()
         return self.attachment_bubble.height()+10
     def setMessage_Picture(self,value,is_video=False):
         def get_thumbnail(value):
@@ -501,6 +507,7 @@ class YTalkWidget(QtWidgets.QWidget):
             w0,h0 = pos
             size = 50
             self.display_label.setGeometry(w0+(w-size)//2,h0+(h-size)//2,size,size)
+        self.lable_geometry = self.picture_bubble.geometry()
         return h
 
 
