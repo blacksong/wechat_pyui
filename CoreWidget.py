@@ -107,11 +107,14 @@ class YWidget(QtWidgets.QWidget):
     def __init__(self,*d,**k):
         super().__init__(*d,**k)
     def mouseMoveEvent(self,e):
-        print(e.x(),e.y(),'M')
+        # print(e.x(),e.y(),'M')
+        pass
     def mousePressEvent(self,e):
-        print(e.x(),e.y(),'P')
+        # print(e.x(),e.y(),'P')
+        pass
     def mouseReleaseEvent(self,e):
-        print(e.x(),e.y(),'R')
+        # print(e.x(),e.y(),'R')
+        pass
 
 class YTextButton(QtWidgets.QPushButton):
     position_dict={'center':Qt.AlignCenter,'left':Qt.AlignLeft,'hcenter':Qt.AlignHCenter,'vcenter':Qt.AlignVCenter,'justify':Qt.AlignJustify}
@@ -360,21 +363,24 @@ class YTalkWidget(QtWidgets.QWidget):
             self.message_bubble.resize(self.Yw,h)
         self.resize(self.Yw,h)
     def mouseDoubleClickEvent(self,e): 
-        print('double click')
-        if self.Format in (PICTURE,VIDEO):
-            if not Path(self.value).exists():
-                value = str(self.bot.path.parent.with_name('wechat_data') / 'icon' / 'error.jpg')
-            else:
-                value = self.value
-        if self.Format == PICTURE:
-            self._display = ysv.GifPreview(name=value)
-        elif self.Format == VIDEO:
-            self._play = video_player.Player([value])
-            self._play.show()
-            self._play.player.play()
-        elif self.Format == SHARING:
-            url = self.value.split()[0]
-            webbrowser.open(url)
+        if e.buttons() == Qt.LeftButton:
+            print('open a file')
+            if self.Format in (PICTURE,VIDEO):
+                if not Path(self.value).exists():
+                    value = str(self.bot.path.parent.with_name('wechat_data') / 'icon' / 'error.jpg')
+                else:
+                    value = self.value
+            if self.Format == PICTURE:
+                self._display = ysv.GifPreview(name=value)
+            elif self.Format == VIDEO:
+                self._play = video_player.Player([value])
+                self._play.show()
+                self._play.player.play()
+            elif self.Format == SHARING:
+                url = self.value.split()[0]
+                webbrowser.open(url)
+        else:
+            pass
     def setMessage_System(self,value):
         self.system_bubble = YSystemBubble(self)
         self.system_bubble.setMessage(value,None)

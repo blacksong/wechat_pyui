@@ -105,15 +105,16 @@ class Ui_Chat(QWidget):
         self.Button_send.move(size.width()-self.Button_send.width()-20,0)
         self.encrypt_box.move(size.width()-self.Button_send.width()-80,0)
 
-    def click_name(self,*d):
+    def click_name(self,*d):#点击用户名响应函数
         print('press name button')
-    def set_title(self):
+    def set_title(self):#设置对话框的标题
+        size_title = 250,40
         title = QWidget()
         title.setMaximumHeight(40)
         title.setMinimumHeight(40)
         p=YTextButton(title)
-        p.setTextIcon(self.user_info['name'],(255,255,255),(10,10,10),(150,40),position='left')
-        p.resize(150,40)
+        p.setTextIcon(self.user_info['name'],(255,255,255),(10,10,10),size_title,position='left')
+        p.resize(*size_title)
         p.clicked.connect(self.click_name)
         p.move(20,10)
         return title

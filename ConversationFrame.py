@@ -68,7 +68,8 @@ class ConversationButton(YDesignButton):
         
     def mouseReleaseEvent(self,e):
         self.setContent(self.Ypicture,self.Yname,self.Ycontent,self.Ytime,self.Yw,self.Yh,self.color_background)
-        self.father_surface.goto_view(self.user_info)
+        if e.button() == Qt.LeftButton:
+            self.father_surface.goto_view(self.user_info)
     def setName(self,user_info,father):
         self.user_info=user_info
         self.father_surface=father
