@@ -331,7 +331,6 @@ class YTalkWidget(QtWidgets.QWidget):
             self.setPic(icon_name,self.obj_name[identity])
         if Format == TEXT:
             h=self.setMessage(value)
-            self.message_bubble.resize(self.Yw,h)
         elif Format == PICTURE:#显示表情或者图片
             h=self.setMessage_Picture(value)
         elif Format == SYSTEM_YXS:
@@ -360,7 +359,6 @@ class YTalkWidget(QtWidgets.QWidget):
             h = self.setMessage_Attachment(value,is_sharing = True)
         else:
             h = self.setMessage('不支持的消息类型，请在手机中查看：{}\n{}'.format(Format,value))
-            self.message_bubble.resize(self.Yw,h)
         self.resize(self.Yw,h)
     def mouseDoubleClickEvent(self,e): 
         if e.buttons() == Qt.LeftButton:
@@ -400,7 +398,9 @@ class YTalkWidget(QtWidgets.QWidget):
     def setMessage(self,e): # 绘制用户文字信息
         self.message_bubble = YSentenceBubble(self)
         self.message_bubble.setMessage(e,self.identity)
-        return self.message_bubble.window_height
+        h = self.message_bubble.window_height
+        self.message_bubble.resize(self.Yw,h)
+        return h+2
 
     def setPic(self,icon_name,oname): #绘制用户头像
         self.figure_button=YButton(self)
@@ -621,12 +621,4 @@ class YInputText(QtWidgets.QTextEdit):
 
 if __name__=='__main__':
     '''__debug__'''
-    app = QApplication(sys.argv)
-    qmain = QMainWindow()
-    a = YTalkWidget(qmain)
-    icon = QtGui.QIcon()
-    icon.addPixmap(QtGui.QPixmap('I'))
-    a.setContent('/home/yxs/E/pythonAPP/pyqt5_wechat/wechat_pyui-master/wechat_data/63a9f0ea7bb98050796b649e85481845/180421-105405.png',PICTURE,icon,OTHER)
-    
-    qmain.show()
-    app.exec_()
+    pass
