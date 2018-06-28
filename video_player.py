@@ -220,9 +220,11 @@ class PlayerControls(QWidget):
             self.playerState = state
 
             if state == QMediaPlayer.StoppedState:
+                
                 self.stopButton.setEnabled(False)
                 self.playButton.setIcon(
                         self.style().standardIcon(QStyle.SP_MediaPlay))
+                self.playClicked()
             elif state == QMediaPlayer.PlayingState:
                 self.stopButton.setEnabled(True)
                 self.playButton.setIcon(
@@ -500,7 +502,6 @@ class Player(QWidget):
         self.addToPlaylist(playlist)
 
     def closeEvent(self,e):
-        pass
         print('close')
         self.player.stop()
     def open(self):
@@ -689,9 +690,9 @@ if __name__ == '__main__':
 
     import sys
 
-    app = QApplication(sys.argv)
+    # app = QApplication(sys.argv)
 
-    player = Player(['C:/Users/blacksong/Videos/1.mp4'])
-    player.show()
+    # player = Player(['1.mp4'])
+    # player.show()
 
-    sys.exit(app.exec_())
+    # sys.exit(app.exec_())

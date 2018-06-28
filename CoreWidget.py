@@ -379,6 +379,7 @@ class YTalkWidget(QtWidgets.QWidget):
             elif self.Format == VIDEO:
                 self._play = video_player.Player([value])
                 self._play.show()
+                self._play.resize(700,600)
                 self._play.player.play()
             elif self.Format == SHARING:
                 url = self.value.split()[0]
