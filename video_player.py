@@ -51,7 +51,7 @@ from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QFileDialog,
         QFormLayout, QHBoxLayout, QLabel, QListView, QMessageBox, QPushButton,
         QSizePolicy, QSlider, QStyle, QToolButton, QVBoxLayout, QWidget)
 
-_globals = dict()
+_globals = {'quit':False}
 class VideoWidget(QVideoWidget):
 
     def __init__(self, parent=None):
@@ -224,7 +224,7 @@ class PlayerControls(QWidget):
                 self.stopButton.setEnabled(False)
                 self.playButton.setIcon(
                         self.style().standardIcon(QStyle.SP_MediaPlay))
-                if not _globals.get('quit'):
+                if not _globals['quit']:
                     self.playClicked()
             elif state == QMediaPlayer.PlayingState:
                 self.stopButton.setEnabled(True)
@@ -694,7 +694,7 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
 
-    player = Player(['1.mp4'])
+    player = Player(['C:/Users/blacksong/Videos/1.mp4'])
     player.show()
 
     sys.exit(app.exec_())
