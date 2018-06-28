@@ -495,6 +495,9 @@ class myBot(wxpy.Bot):
         elif msg_type == NOTE:
             text_conversation = msg.text 
             content = text_conversation
+        elif msg_type == SHARING:
+            content = msg.url+' '+msg.text
+            text_conversation = '[链接]'
         else:
             content = 'None'
             text_conversation = '[消息]'

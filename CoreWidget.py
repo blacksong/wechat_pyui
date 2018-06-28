@@ -19,6 +19,7 @@ import yxspkg_songzviewer as ysv
 from wxpy import TEXT, PICTURE, MAP, VIDEO, CARD, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
 import video_player
 import imageio
+import webbrowser
 SYSTEM_YXS = 'SYSTEM_YXS'
 global_font=QtGui.QFont()
 global_font.setFamily('SimHei')
@@ -333,12 +334,12 @@ class YTalkWidget(QtWidgets.QWidget):
         elif Format == SYSTEM_YXS:
             h=self.setMessage_System(value)
         elif Format == VIDEO:
-            video_path = Path(self.value)
+            video_path = Path(value)
             path_video_cache = self.bot.thumbnail_path / ('thumbnail_'+video_path.name)
             path_video_cache = path_video_cache.with_suffix('.jpg')
 
             if not path_video_cache.is_file():
-                reader = imageio.get_reader(self.value)
+                reader = imageio.get_reader(value)
                 img = reader.get_next_data()
                 reader.close()
                 img = Image.fromarray(img)
@@ -351,23 +352,29 @@ class YTalkWidget(QtWidgets.QWidget):
                 img.save(path_video_cache)
             h = self.setMessage_Picture(str(path_video_cache),is_video=True)
         elif Format == ATTACHMENT:
-            h = self.setMessage_Attachment(self.value)
+            h = self.setMessage_Attachment(value)
+        elif Format == SHARING:
+            h = self.setMessage_Attachment(value,is_sharing = True)
         else:
-            h = self.setMessage('不支持的消息类型，请在手机中查看：{}'.format(Format))
+            h = self.setMessage('不支持的消息类型，请在手机中查看：{}\n{}'.format(Format,value))
             self.message_bubble.resize(self.Yw,h)
         self.resize(self.Yw,h)
     def mouseDoubleClickEvent(self,e): 
         print('double click')
-        if not Path(self.value).exists():
-            value = str(self.bot.path.parent.with_name('wechat_data') / 'icon' / 'error.jpg')
-        else:
-            value = self.value
+        if self.Format in (PICTURE,VIDEO):
+            if not Path(self.value).exists():
+                value = str(self.bot.path.parent.with_name('wechat_data') / 'icon' / 'error.jpg')
+            else:
+                value = self.value
         if self.Format == PICTURE:
             self._display = ysv.GifPreview(name=value)
         elif self.Format == VIDEO:
             self._play = video_player.Player([value])
             self._play.show()
             self._play.player.play()
+        elif self.Format == SHARING:
+            url = self.value.split()[0]
+            webbrowser.open(url)
     def setMessage_System(self,value):
         self.system_bubble = YSystemBubble(self)
         self.system_bubble.setMessage(value,None)
@@ -399,7 +406,9 @@ class YTalkWidget(QtWidgets.QWidget):
         else:
             pos=self.pos_other
         self.figure_button.setGeometry(*pos,80/90*CRITERION,80/90*CRITERION)
-    def setMessage_Attachment(self,value):#定义显示附件的组件
+    def setMessage_Sharing(self,value):
+        return self.setMessage_Attachment(value,True)
+    def setMessage_Attachment(self,value,is_sharing = False):#定义显示附件的组件
         self.attachment_bubble = QLabel(self)
         
         self.attachment_bubble.setFrameShape(QFrame.Box)
@@ -412,8 +421,10 @@ class YTalkWidget(QtWidgets.QWidget):
             pic_width = self.pic_qsize.width()
             pos = self.pos_other[0]+5+pic_width,self.pos_other[1]
         self.attachment_bubble.move(*pos)
-
-        icon_path = self.bot.path.parent.with_name('wechat_data') / 'icon' / 'icon_file_red.jpg'
+        if is_sharing:
+            icon_path = self.bot.path.parent.with_name('wechat_data') / 'icon' / 'icon_sharing.jpg'
+        else:
+            icon_path = self.bot.path.parent.with_name('wechat_data') / 'icon' / 'icon_file_red.jpg'
         self.file_icon = QLabel(self)
         self.file_icon.setScaledContents(True)
         pixmap = Image.open(icon_path).toqpixmap()
@@ -425,14 +436,19 @@ class YTalkWidget(QtWidgets.QWidget):
 
         bias = int(0.2*CRITERION)
 
-        file_size = getsize(value)
-        if file_size < 1024:
-            fsize = '\n{}B'.format(file_size)
-        elif file_size < 1024*1024:
-            fsize = '\n{:.2f}KB'.format(file_size/1024)
+        if not is_sharing:
+            file_size = getsize(value)
+            if file_size < 1024:
+                fsize = '\n{}B'.format(file_size)
+            elif file_size < 1024*1024:
+                fsize = '\n{:.2f}KB'.format(file_size/1024)
+            else:
+                fsize = '\n{:.2f}KB'.format(file_size/1024/1024)
+            text = Path(self.value).name+fsize
         else:
-            fsize = '\n{:.2f}KB'.format(file_size/1024/1024)
-        self.text_label = QLabel(Path(self.value).name+fsize ,self)
+            n = value.find(' ')
+            text = value[n+1:]
+        self.text_label = QLabel(text ,self)
         self.text_label.setGeometry(w0+bias,h0+bias,width - size * 2.3 - bias, CRITERION)
 
         return self.attachment_bubble.height()+10
