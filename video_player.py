@@ -382,7 +382,7 @@ class Player(QWidget):
 
     def __init__(self, playlist, parent=None):
         super(Player, self).__init__(parent)
-
+        _globals['quit']=False
         self.colorDialog = None
         self.trackInfo = ""
         self.statusInfo = ""
@@ -694,7 +694,7 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
 
-    player = Player(['C:/Users/blacksong/Videos/1.mp4'])
+    player = Player(['1.mp4'])
     player.show()
 
     sys.exit(app.exec_())
