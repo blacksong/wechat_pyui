@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 import re
 import os
+import subprocess
 from PIL import Image
 from os.path import getsize
 import yxspkg_songzviewer as ysv
@@ -377,10 +378,13 @@ class YTalkWidget(QtWidgets.QWidget):
             if self.Format == PICTURE:
                 self._display = ysv.GifPreview(name=value)
             elif self.Format == VIDEO:
-                self._play = video_player.Player([value])
-                self._play.show()
-                self._play.resize(700,600)
-                self._play.player.play()
+                if sys.platform.startswith('linux'):
+                    subprocess.call(['vlc',value])
+                else:
+                    self._play = video_player.Player([value])
+                    self._play.show()
+                    self._play.resize(700,600)
+                    self._play.player.play()
             elif self.Format == SHARING:
                 url = self.value.split()[0]
                 webbrowser.open(url)
