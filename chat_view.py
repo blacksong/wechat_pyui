@@ -83,6 +83,7 @@ class Ui_Chat(QWidget):
         self.time_before = '{:.2f}'.format(9529456999.83)
         self.time_latest = 0
         self.time_pre = 0
+        self.at_bottom = True
         self.insert_some_message(100)
     def insert_some_message(self,nums):    
         an = list(self.bot.read_content(self.user_info['yxsid'],time_before= self.time_before,nums = nums))
@@ -188,7 +189,7 @@ class Ui_Chat(QWidget):
             time_button = None
         self.time_pre = Time
         return time_button
-    def addMessage(self,value:str,identity=OTHER,Format=TEXT,yxsid_send_user = None): #value的值始终都为str类型
+    def addMessage(self,value:str,identity=OTHER,Format=TEXT,yxsid_send_user = None,is_slided=True): #value的值始终都为str类型
         Time = time.time()
         time_button = self.generate_time_element(Time)
         if time_button is not None: 
@@ -203,9 +204,15 @@ class Ui_Chat(QWidget):
             icon = None
         button.setContent(value,Format,icon,identity=identity)
 
+        bar_value = self.bar.value()#计算bar的大小和位置，
+        bar_height = self.scrollWidget_message.height()
+        scroll_height = self.scrollArea.height()
+
         self.scrollArea.append_element(button)
         button.show()
-        self.autoSlideBar()
+
+        if is_slided or bar_height - bar_value - scroll_height < 0.2 * scroll_height:
+            self.autoSlideBar()
     def get_icon_group(self,yxsid_send):
         if yxsid_send == '0':
             return self.icon_dict[ME]
@@ -247,7 +254,7 @@ class Ui_Chat(QWidget):
         self.time_latest =max(self.time_latest, Time)
     def autoSlideBar(self,pos='bottom'):
         if pos=='bottom':
-            self.bar.setValue(self.scrollArea.bottom+10)
+            self.bar.setValue(self.scrollArea.bottom)
         
     def setButton(self,B,I,pw,ph,objectname,position=None,connect=None):
         if I is not None:
@@ -266,7 +273,7 @@ class Ui_Chat(QWidget):
             person = OTHER
         print('yxsid_send_user', yxsid_send_user)
         self.addMessage(content, person, msg_type,
-                        yxsid_send_user=yxsid_send_user)  # 显示消息
+                        yxsid_send_user=yxsid_send_user,is_slided=False)  # 显示消息
     
     def adjustInputTextSize(self,h_d):
         return 

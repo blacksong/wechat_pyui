@@ -20,6 +20,8 @@ from wxpy import TEXT, PICTURE, MAP, VIDEO, CARD, NOTE, SHARING, RECORDING, ATTA
 import video_player
 import imageio
 import webbrowser
+import subprocess
+from multiprocessing import Process
 SYSTEM_YXS = 'SYSTEM_YXS'
 global_font=QtGui.QFont()
 global_font.setFamily('SimHei')
@@ -377,10 +379,14 @@ class YTalkWidget(QtWidgets.QWidget):
             if self.Format == PICTURE:
                 self._display = ysv.GifPreview(name=value)
             elif self.Format == VIDEO:
-                self._play = video_player.Player([value])
-                self._play.show()
-                self._play.resize(700,600)
-                self._play.player.play()
+                if sys.platform.startswith('linux'):
+                    p = Process(target = subprocess.call,args=(['vlc',value],))
+                    p.start()
+                else:
+                    self._play = video_player.Player([value])
+                    self._play.show()
+                    self._play.resize(700,600)
+                    self._play.player.play()
             elif self.Format == SHARING:
                 url = self.value.split()[0]
                 webbrowser.open(url)
