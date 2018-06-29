@@ -322,7 +322,8 @@ class YTalkWidget(QtWidgets.QWidget):
         self.pic_qsize=QtCore.QSize(80/90*CRITERION,80/90*CRITERION)
         self.min_height=104/90*CRITERION
         self.lable_geometry = None #显示消息widget的geometry
-    def setContent(self,value,Format,icon_name,identity):
+        self.message_label = None
+    def setContent(self,value,Format,icon_name,identity,user_name_yxsid=None):
         self.Format = Format 
         self.value = value
         if Format == NOTE:
@@ -362,6 +363,19 @@ class YTalkWidget(QtWidgets.QWidget):
             h = self.setMessage_Attachment(value,is_sharing = True)
         else:
             h = self.setMessage('不支持的消息类型，请在手机中查看：{}\n{}'.format(Format,value))
+        if False and identity is OTHER:
+            dh = 15
+            h += dh
+            pos = self.message_label.pos()
+            x,y = pos.x(), pos.y()
+            if Format == TEXT:
+                pic_width = self.pic_qsize.width()
+                name_x = self.pos_other[0]+5+pic_width
+            else:
+                name_x = x
+            self.name_label = QLabel(user_name,self)
+            self.message_label.move(x,y+dh)
+            self.name_label.move(name_x,y)
         self.resize(self.Yw,h)
     def mouseDoubleClickEvent(self,e): 
         if e.buttons() == Qt.LeftButton and self.lable_geometry:
@@ -394,6 +408,7 @@ class YTalkWidget(QtWidgets.QWidget):
             pass
     def setMessage_System(self,value):
         self.system_bubble = YSystemBubble(self)
+        self.message_label = self.system_bubble
         self.system_bubble.setMessage(value,None)
         w = (self.Yw - self.system_bubble.width()) // 2
         self.system_bubble.move(w,2)
@@ -410,6 +425,7 @@ class YTalkWidget(QtWidgets.QWidget):
         self.move(pos_width, y)
     def setMessage(self,e): # 绘制用户文字信息
         self.message_bubble = YSentenceBubble(self)
+        self.message_label = self.message_bubble
         self.message_bubble.setMessage(e,self.identity)
         h = self.message_bubble.window_height
         self.message_bubble.resize(self.Yw,h)
@@ -429,6 +445,7 @@ class YTalkWidget(QtWidgets.QWidget):
         return self.setMessage_Attachment(value,True)
     def setMessage_Attachment(self,value,is_sharing = False):#定义显示附件的组件
         self.attachment_bubble = QLabel(self)
+        self.message_label = self.attachment_bubble
         
         self.attachment_bubble.setFrameShape(QFrame.Box)
         self.attachment_bubble.setStyleSheet('QLabel{border-width:1px;border-style:solid;border-color:rgb(150,180,140);background-color:rgb(250,250,250)}')
@@ -495,6 +512,7 @@ class YTalkWidget(QtWidgets.QWidget):
                 return str(path_thum)
         value = get_thumbnail(value)
         self.picture_bubble = YPictureBubble(self)#定义显示图片的组件
+        self.message_label = self.picture_bubble
         self.picture_bubble.setPicture(value)
         if self.identity is ME:
             pos = self.pos_me[0]-self.picture_bubble.width()-5,self.pos_me[1]

@@ -202,7 +202,8 @@ class Ui_Chat(QWidget):
                 icon = self.icon_dict[identity]
         else:
             icon = None
-        button.setContent(value,Format,icon,identity=identity)
+
+        button.setContent(value,Format,icon,identity=identity,user_name_yxsid = yxsid_send_user)
 
         bar_value = self.bar.value()#计算bar的大小和位置，
         bar_height = self.scrollWidget_message.height()
@@ -233,7 +234,7 @@ class Ui_Chat(QWidget):
                 icon = self.get_icon_group(yxsid_send)
             else:
                 icon = self.icon_dict[identity]
-            button.setContent(value, Format, icon, identity=identity)
+            button.setContent(value, Format, icon, identity=identity,user_name_yxsid = yxsid_send)
             button.show()
             return button
         buttons = []
