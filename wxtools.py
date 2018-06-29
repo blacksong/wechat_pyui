@@ -546,7 +546,9 @@ class myBot(wxpy.Bot):
                 p = default_img
         return str(p)
     def get_user_type(self,user):# 1-friend 2-group 3-mp(公众号)
-        if user.raw['MemberCount']==0:
+        membercount = user.raw.get('MemberCount',None)
+        if membercount is None:return 3
+        if membercount==0:
             if user.is_friend:
                 return 1
             else:
