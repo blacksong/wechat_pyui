@@ -196,6 +196,8 @@ class myBot(wxpy.Bot):
         return m.hexdigest()[:15]
 
     def get_user_yxsid(self,user):#user_data is a dict, like {yxsid:(md5,puid,avamd5)}
+        if user.user_name == 'filehelper':
+            return 'filehelper'
         puid = user.puid
         ymd5 = self.get_user_md5(user)
         
@@ -235,6 +237,8 @@ class myBot(wxpy.Bot):
 
             if yxsid in self.contact_info_dict:
                 d['name'] = self.contact_info_dict[yxsid]['name']
+            elif yxsid == 'filehelper':
+                d['name']='文件传输助手'
             else:
                 user = self.senders.get(yxsid)
                 if user is None:
@@ -521,6 +525,8 @@ class myBot(wxpy.Bot):
         self.add_conversation({'yxsid': yxsid,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time())})        
         self.update_conversation()
     def get_img_path(self,yxsid,group_yxsid=None):
+        if yxsid == 'filehelper':
+            return str(self.path.parent.with_name('wechat_data') /'icon'/'filehelper.jpg')
         p = self.avatar_path/(yxsid+'.jpg')
         default_img= self.path.parent.with_name('wechat_data') / 'icon' / 'system_icon.jpg'
         if not p.is_file():
@@ -546,6 +552,8 @@ class myBot(wxpy.Bot):
                 p = default_img
         return str(p)
     def get_user_type(self,user):# 1-friend 2-group 3-mp(公众号)
+        if user.user_name == 'filehelper':
+            return 1
         membercount = user.raw.get('MemberCount',None)
         if membercount is None:return 3
         if membercount==0:
