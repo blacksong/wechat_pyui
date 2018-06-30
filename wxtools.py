@@ -440,6 +440,7 @@ class myBot(wxpy.Bot):
     def get_message(self,msg,file_path=None):#处理收到的消息
         #yxsid_send 发送msg的人
         type_ = self.get_user_type(msg.chat)
+        print(msg.text)
         if type_ == 3:
             print('公众号消息')
             return
@@ -473,10 +474,12 @@ class myBot(wxpy.Bot):
             if not file_path:
                 msg.get_file(content)
             else:
-                if not Path(content).is_file():
+                if not Path(content).is_file() and Path(file_path).exists():
                     os.rename(file_path,content)
-            if getsize(content) == 0:
-                os.remove(content)
+            is_existed = Path(content).is_file()
+            if not is_existed or getsize(content) == 0:
+                if is_existed:
+                    os.remove(content)
                 msg_type = TEXT 
                 content = '[收到了一个表情，请在手机上查看]'
 

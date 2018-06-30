@@ -25,10 +25,11 @@ class LogInThread(QtCore.QThread):
         bot = wxtools.myBot(cache_path=self.father.cache,qr_callback = self.father.qr_callback,login_callback=self.father.login_callback)
         bot.set_init()
         @bot.register(except_self=False)
-        def get_message(msg):
+        def get_message(msg,index_file = [1]):
             filename = None
             if msg.type in (PICTURE,VIDEO,ATTACHMENT):
-                filename = bot.path / msg.file_name
+                filename = bot.path /(str(index_file[0]) + msg.file_name)
+                index_file[0]+=1
                 msg.get_file(str(filename))
                 filename = str(filename)
             self.trigger.emit((msg,'MSG',filename))
