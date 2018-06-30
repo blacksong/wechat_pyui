@@ -13,6 +13,10 @@ from CoreWidget import *
 import wxpy
 import functions
 import time
+import sys 
+from pathlib import Path
+
+platform = sys.platform
 
 class async_send(QThread):
     trigger = pyqtSignal(tuple)
@@ -305,12 +309,27 @@ class Ui_Chat(QWidget):
         self.labelLine.setGeometry(gt)
 
     def button_send_click(self,e):#发送消息
+        def is_file(text):
+            if Path(text.strip()).is_file():
+                return text.strip()
+                
+            if platform.startswith('win'):
+                if text.strip().startswith('file:///'):
+                    return text.strip()[8:]
+                else:
+                    return False 
+            elif platform.startswith('linux'):
+                if text.strip().startswith('file://'):
+                    return text.strip()[7:]
+                else:
+                    return False
         s=self.input_text.toPlainText()
         if not s.strip():
             return
         self.input_text.setPlainText('')
-        if s.strip().startswith('file:///'):
-            data_path = s.strip()[8:]
+        fs = is_file(s)
+        if fs:
+            data_path = fs
             suffix = data_path.split('.')[-1].lower()
             if suffix in ('jpg','png','jpeg','gif'):
                 msg_type = PICTURE 
