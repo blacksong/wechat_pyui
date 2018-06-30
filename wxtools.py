@@ -339,6 +339,7 @@ class myBot(wxpy.Bot):
         print('get_senders')
         self.senders = {self.get_user_yxsid(s): s for s in self.friends()+self.groups()}
         print('It is OK!')
+        self.senders['filehelper']=self.file_helper
         return self.senders
     def get_public_key(self,yxsid):#返回用户publick key
         #检查是否读取过yxsid的public key
