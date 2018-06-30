@@ -482,8 +482,9 @@ class myBot(wxpy.Bot):
                     os.remove(content)
                 msg_type = TEXT 
                 content = '[收到了一个表情，请在手机上查看]'
-
-            text_conversation = '[图片]'
+                text_conversation = content
+            else:
+                text_conversation = '[图片]'
         elif msg_type == ATTACHMENT or msg_type == VIDEO:
             if msg.file_name.endswith(SUFFIX_PUBLICKEY):#如果文件后缀为SUFFIX_PUBLICKEY则不显示该文件 该文件是公钥文件，，进行保存
                 self.save_publickey(msg)
