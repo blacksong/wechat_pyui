@@ -473,7 +473,10 @@ class YTalkWidget(QtWidgets.QWidget):
         bias = int(0.2*CRITERION)
 
         if not is_sharing:
-            file_size = getsize(value)
+            if Path(value).is_file():
+                file_size = getsize(value)
+            else:
+                file_size = 0
             if file_size < 1024:
                 fsize = '\n{}B'.format(file_size)
             elif file_size < 1024*1024:
