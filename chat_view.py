@@ -310,17 +310,18 @@ class Ui_Chat(QWidget):
 
     def button_send_click(self,e):#发送消息
         def is_file(text):
-            if Path(text.strip()).is_file():
-                return text.strip()
+            text = text.strip()
+            if text.startswith('/') and Path(text).is_file():
+                return text
                 
             if platform.startswith('win'):
-                if text.strip().startswith('file:///'):
-                    return text.strip()[8:]
+                if text.startswith('file:///'):
+                    return text[8:]
                 else:
                     return False 
             elif platform.startswith('linux'):
-                if text.strip().startswith('file://'):
-                    return text.strip()[7:]
+                if text.startswith('file://'):
+                    return text[7:]
                 else:
                     return False
         s=self.input_text.toPlainText()

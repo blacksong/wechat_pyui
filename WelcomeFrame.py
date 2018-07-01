@@ -104,13 +104,14 @@ class WelcomeFrame:
         self.get_QRcode()
     def saved_log_in(self):
         if self.cache_select is not None:
+            print('used',str(self.cache_select))
             t1 = self.cache.stat().st_mtime 
             t2 = self.cache_select.stat().st_mtime
             if abs(t2-t1)>10:
-                pp = self.cache.with_name('sdsd')
-                os.rename(self.cache,pp)
-                os.rename(self.cache_select,self.cache)
-                os.rename(pp,self.cache_select)
+                pp = self.cache.with_name('sdsd.pkl')
+                self.cache.rename(pp)
+                self.cache_select.rename(self.cache)
+                pp.rename(self.cache_select)
         self.get_QRcode()
     def qr_callback(self, uuid, status, qrcode):
         open('qrcode.png','wb').write(qrcode)
