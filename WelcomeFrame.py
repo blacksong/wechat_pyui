@@ -107,7 +107,10 @@ class WelcomeFrame:
             t1 = self.cache.stat().st_mtime 
             t2 = self.cache_select.stat().st_mtime
             if abs(t2-t1)>10:
-                self.cache.write_bytes(self.cache_select.read_bytes())
+                pp = self.cache.with_name('sdsd')
+                os.rename(self.cache,pp)
+                os.rename(self.cache_select,self.cache)
+                os.rename(pp,self.cache_select)
         self.get_QRcode()
     def qr_callback(self, uuid, status, qrcode):
         open('qrcode.png','wb').write(qrcode)
