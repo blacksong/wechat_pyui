@@ -430,7 +430,7 @@ class myBot(wxpy.Bot):
         filename = Path(yxsid+'_'+filename)
         filename = self.rsa_path /filename
         print('saving public key',filename)
-        if file_path:
+        if file_path and (not filename.exists()):
             os.rename(file_path,filename)
             return
         msg.get_file(str(filename))
