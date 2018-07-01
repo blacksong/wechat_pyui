@@ -302,11 +302,13 @@ class myBot(wxpy.Bot):
         self.db.commit()
 
     async def get_avatar_one(self,user):
+        if user.user_name == 'filehelper':
+            return
         print(user)
         loop = asyncio.get_event_loop()
         fu = loop.run_in_executor(None,user.get_avatar)
         im = await fu
-        self.update_user_info_one(user,is_append=True,img = im)
+        self.update_user_info_one(user,is_append=True,img = im)#更新用户数据信息
         name = self.avatar_path / (self.get_user_yxsid(user)+'.jpg')
         open(name,'wb').write(im)
 

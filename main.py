@@ -23,17 +23,13 @@ class Ui_Form:
         self.chat_view_dict=dict()
         Form.del_funs.append(self.close_chat)#关闭对话框 当关闭主程序的时候
 
-    def start_login(self,state):#进入登录界面
+    def start_login(self,state=None):#进入登录界面 
         w,h = self.size
-        cache = Path('./user_data/log_in_cache')
-        if not cache.is_dir():
-            os.makedirs(cache)
-        cache /= 'wx.pkl'
-        
-        if not state and cache.is_file():
-            os.remove(cache)
-        state = cache
-        self.welcome = WelcomeFrame.WelcomeFrame(state)
+        # cache相当于设置了整个用户数据文件的存储位置
+        cache = Path('./user_data/log_in_cache') / 'wx.pkl'  
+        if not cache.parent.exists():
+            os.makedirs(cache.parent)
+        self.welcome = WelcomeFrame.WelcomeFrame(cache)
         t = self.welcome.setupUi(self.Form, 0, 0, w, h, father=self)
     def setupUi(self):
         Form = self.Form
