@@ -139,9 +139,7 @@ class myBot(wxpy.Bot):
         self.hash_write_auto = 1#记录自动写入硬盘的hash值
     def enable_rsa(self):# 启用加密
 
-        path_rsa_key = self.path / ('rsa_key')
-        if not path_rsa_key.is_dir():
-            path_rsa_key.mkdir()
+        path_rsa_key = self.rsa_path
         self.publicfile = path_rsa_key / PUBLIC_KEY_FILE
         self.privatefile = path_rsa_key / PRIVATE_KEY_FILE
         if (not self.publicfile.is_file()) or (not self.privatefile.is_file()):
@@ -280,19 +278,20 @@ class myBot(wxpy.Bot):
 
     def setPath(self,path): #设置微信账号的信息存储路径
 
-        def makedirs(path_dirs):
-            if not path_dirs.exists():
-                makedirs(path_dirs.parent)
-                path_dirs.mkdir()
-
         self.path = Path(path)
         self.avatar_path = self.path / 'avatar'
         if not self.avatar_path.exists():
-            makedirs(self.avatar_path)
+            self.avatar_path.mkdir(parents=True)
             self.is_first = True
+
         self.thumbnail_path = self.path / 'thumbnail'
-        if not self.thumbnail_path.exists():
-            self.thumbnail_path.mkdir()
+        self.video_path = self.path / 'videos'
+        self.image_path = self.path / 'images'
+        self.rsa_path = self.path / 'rsa_key'
+        self.attachment_path = self.path / 'attachments'
+        for epath in [self.video_path,self.image_path,self.thumbnail_path,self.rsa_path,self.attachment_path]:
+            if not epath.exists():
+                epath.mkdir()
 
         self.db = mydb(sql.connect(
             str(self.path / 'wechat_data.db'), check_same_thread=False))
@@ -350,7 +349,7 @@ class myBot(wxpy.Bot):
             return self.public_key_dict[yxsid]
         else:
             #检查是否之前已经获取过yxsid的publickey 并存在硬盘中
-            key_path = self.path / "rsa_key"
+            key_path = self.rsa_path
             public_key = list(key_path.glob(yxsid+'_'+PUBLIC_KEY_FILE))
             if public_key:
                 #在文件夹中 读取public key
@@ -425,12 +424,15 @@ class myBot(wxpy.Bot):
         self.add_conversation(cons)#latest_user_name=''意味着最后说话的人是自己
         self.update_conversation()
 
-    def save_publickey(self,msg):
+    def save_publickey(self,msg,file_path):
         filename = msg.file_name
         yxsid = self.get_user_yxsid(msg.sender)
         filename = Path(yxsid+'_'+filename)
-        filename = self.path / 'rsa_key' /filename
+        filename = self.rsa_path /filename
         print('saving public key',filename)
+        if file_path:
+            os.rename(file_path,filename)
+            return
         msg.get_file(str(filename))
     def system_message(self,content,yxsid):
         print('system-message',content)
@@ -473,7 +475,7 @@ class myBot(wxpy.Bot):
                 content = self.decrypt_data(content,TEXT)
             text_conversation = content
         elif msg_type == PICTURE:
-            content = str(self.path/(yxsid+msg.file_name))
+            content = str(self.image_path /(yxsid+msg.file_name))
             if not file_path:
                 msg.get_file(content)
             else:
@@ -490,20 +492,23 @@ class myBot(wxpy.Bot):
                 text_conversation = '[图片]'
         elif msg_type == ATTACHMENT or msg_type == VIDEO:
             if msg.file_name.endswith(SUFFIX_PUBLICKEY):#如果文件后缀为SUFFIX_PUBLICKEY则不显示该文件 该文件是公钥文件，，进行保存
-                self.save_publickey(msg)
+                self.save_publickey(msg,file_path)
                 return
 
-            filename = str(self.path/msg.file_name)
+            if msg_type == VIDEO:
+                epath = self.video_path
+                text_conversation = '[视频]'
+            else:
+                text_conversation = '[文件]'
+                epath = self.attachment_path
+            filename = str(epath/msg.file_name)
             if not file_path:
                 msg.get_file(filename)
             else:
                 os.rename(file_path,filename)
             print(filename)
             content = filename
-            if msg_type == ATTACHMENT:
-                text_conversation = '[文件]'
-            else:
-                text_conversation = '[视频]'
+                
         elif msg_type == NOTE:
             text_conversation = msg.text 
             content = text_conversation
