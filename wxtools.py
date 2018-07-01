@@ -123,6 +123,7 @@ class mydb:
 class myBot(wxpy.Bot):
     def __init__(self,*d,**kargs):
         super().__init__(*d,**kargs)
+        self.cache_path = kargs.get('cache_path')
         self.TransPassword = None
         self.SavePassword = None
         #发生消息传送时更新对话页面的显示内容
@@ -582,6 +583,18 @@ class myBot(wxpy.Bot):
         datas = (self.yxsid_puid,self.yxsid_md5,self.yxsid_yxsid)
         pickle.dump(datas,open(self.yxsid_path,'wb'))
         del self.db
+    def dump_login_status(self,cache_path=None):#保存登陆信息
+        super().dump_login_status(self.cache_path)
+
+        p = Path(self.cache_path)
+        t = p.read_bytes()
+        yxsid = self.yxsid
+        open(p.with_name(yxsid+'_wx.pkl'),'wb').write(t)
+        img_name = p.with_name(yxsid+'_'+self.self.name+'.jpg')
+        if not img_name.is_file():
+            img_data = (self.avatar_path / (yxsid+'.jpg')).read_bytes()
+            img_name.write_bytes(img_data)
+
 
 if __name__=='__main__':
     # bot = myBot(cache_path=True)

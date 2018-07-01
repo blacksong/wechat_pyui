@@ -47,8 +47,9 @@ class WelcomeFrame:
         self.users_login=self.get_users_login()
         self.cache_select = None
     def get_users_login(self):
-        users = [str(i.name).replace('.jpg','') for i in self.cache.parent.glob('*.jpg')]
-        users = [i.split('_') for i in users]
+        users = [str(i.name).replace('.jpg','').split('_') for i in self.cache.parent.glob('*.jpg')]
+        fun_sort = lambda x:0 - Path(self.cache.with_name(x[0]+'_wx.pkl')).stat().st_mtime
+        users.sort(key = fun_sort)
         return users
     def setupUi(self, Form,ox,oy,w,h,father=None):
         self.father_view=father
@@ -132,13 +133,13 @@ class WelcomeFrame:
             return
         elif TYPE == 'FIRST':
             pass
-        p = Path(self.cache)
-        print(p.is_file(), '是否产生登录文件?')
-        t = p.read_bytes()
-        yxsid = self.bot.get_user_yxsid(self.bot.self)
-        open(p.with_name(yxsid+'_wx.pkl'),'wb').write(t)
-        img_name = p.with_name(yxsid+'_'+self.bot.self.name+'.jpg')
-        self.bot.self.get_avatar(img_name)
+        # p = Path(self.cache)
+        # print(p.is_file(), '是否产生登录文件?')
+        # t = p.read_bytes()
+        # yxsid = self.bot.get_user_yxsid(self.bot.self)
+        # open(p.with_name(yxsid+'_wx.pkl'),'wb').write(t)
+        # img_name = p.with_name(yxsid+'_'+self.bot.self.name+'.jpg')
+        # self.bot.self.get_avatar(img_name)
     def get_QRcode(self):
         print('jump to user frame')
         self.loginthread=LogInThread()
