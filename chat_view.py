@@ -15,6 +15,7 @@ import functions
 import time
 import sys 
 from pathlib import Path
+from os import path as path_
 
 platform = sys.platform
 
@@ -311,7 +312,7 @@ class Ui_Chat(QWidget):
     def button_send_click(self,e):#发送消息
         def is_file(text):
             text = text.strip()
-            if text.startswith('/') and Path(text).is_file():
+            if path_.exists(text):
                 return text
                 
             if platform.startswith('win'):
@@ -329,7 +330,7 @@ class Ui_Chat(QWidget):
             return
         self.input_text.setPlainText('')
         fs = is_file(s)
-        if fs:
+        if fs and path_.exists(fs):
             data_path = fs
             suffix = data_path.split('.')[-1].lower()
             if suffix in ('jpg','png','jpeg','gif'):
