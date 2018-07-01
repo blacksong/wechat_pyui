@@ -104,7 +104,10 @@ class WelcomeFrame:
         self.get_QRcode()
     def saved_log_in(self):
         if self.cache_select is not None:
-            self.cache.write_bytes(self.cache_select.read_bytes())
+            t1 = self.cache.stat().st_mtime 
+            t2 = self.cache_select.stat().st_mtime
+            if abs(t2-t1)>10:
+                self.cache.write_bytes(self.cache_select.read_bytes())
         self.get_QRcode()
     def qr_callback(self, uuid, status, qrcode):
         open('qrcode.png','wb').write(qrcode)
