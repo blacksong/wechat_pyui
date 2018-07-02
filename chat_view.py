@@ -366,7 +366,7 @@ class Ui_Mobile(Ui_Chat):
         self.at_bottom = True
 
         self.icon_other=QtGui.QIcon(self.user_info['img_path'])
-        self.icon_me=QtGui.QIcon(self.user_info['img_path'])
+        self.icon_me=QtGui.QIcon(self.me_info['img_path'])
         self.icon_dict={ME:self.icon_me,OTHER:self.icon_other}
         #底边栏的高度
 

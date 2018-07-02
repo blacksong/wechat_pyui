@@ -5,7 +5,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from CoreWidget import *
 import CoreWidget
 import chat_view
-# import chat_view_mobile
 import ConversationFrame,MeFrame,ContactFrame,DiscoverFrame
 import WelcomeFrame
 data_path = './wechat_data/'
@@ -157,6 +156,8 @@ class Ui_Form:
             else:
                 self.view_active_in=chat_view.Ui_Mobile()
                 self.view_active_in.setupUi(self.Form,self.size[0],self.size[1],self,value,self.bot)
+                self.bot.message_dispatcher[value['yxsid']
+                                            ] = self.view_active_in.accept_callback
                 self.view_active_in.show()
         elif kind == 'LogOut':
             self.log_out()
@@ -262,8 +263,8 @@ class Ui_Form:
             icon.addPixmap(QtGui.QPixmap(img)  )
             self.Button_4.setIcon(icon)
     def close_chat(self):
-        for i in list(self.bot.message_dispatcher.keys()):
-            self.chat_view_dict[i].close()
+        for i in self.chat_view_dict.values():
+            i.close()
 class myMainWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -276,12 +277,13 @@ class myMainWindow(QWidget):
     def closeEvent(self,e):
         try:
             self.ui.timer.stop()
+            print('timer stop')
             for fun in self.del_funs:
-                fun()
+                print(fun.__name__)
+                # fun()
             self.bot.write_back()
-        except:
-            pass
-        
+        except Exception as e:
+            print('Error 0:',e)
         sys.exit()
 
 def main():
