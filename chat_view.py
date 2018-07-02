@@ -33,11 +33,24 @@ class async_send(QThread):
             succ,info = False,'Failed to send'
         self.trigger.emit((succ,info,self.args))
 class Ui_Chat(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.scrollWidget_message_size= 200,70
+        self.scrollWidget_message_bottom = 0
+
+        self.is_encrypt = False
+        self.isback=False
+        self.time_before = '{:.2f}'.format(9529456999.83)
+        self.time_latest = 0
+        self.time_pre = 0
+        self.at_bottom = True
+        self.members_info = dict() #群消息时存储群成员信息的字典
+
     def setupUi(self,Bot ,user_info:dict,father):
         Form = self
         self.father = father
         self.Form=self
-        self.members_info = dict() #群消息时存储群成员信息的字典
+        
         if user_info['yxsid'] in Bot.senders:
             if Bot.get_user_type(Bot.senders[user_info['yxsid']])==2:
                 self.is_group = True#该对话是否是群对话
@@ -48,7 +61,6 @@ class Ui_Chat(QWidget):
             self.is_group = True
         print('群对话',self.is_group)
         self.resize(520,520)
-        self.isback=False
         self.blabel = QLabel(self)
         self.blabel.setStyleSheet('QWidget{background-color:rgb(255,255,255)}')
         self.max_text_height=2.5*CRITERION
@@ -73,22 +85,12 @@ class Ui_Chat(QWidget):
         self.send_widget = self.set_send()
         layout.addWidget(self.send_widget)
 
-        self.scrollWidget_message_size= 200,70
-        self.scrollWidget_message_bottom = 0
-
-        self.is_encrypt = False
-
-        
         self.setLayout(layout)
         self.show()
 
 
         self.bot = Bot
 
-        self.time_before = '{:.2f}'.format(9529456999.83)
-        self.time_latest = 0
-        self.time_pre = 0
-        self.at_bottom = True
         self.insert_some_message(100)
     def insert_some_message(self,nums):    
         an = list(self.bot.read_content(self.user_info['yxsid'],time_before= self.time_before,nums = nums))
@@ -334,3 +336,179 @@ class Ui_Chat(QWidget):
         self.bot.message_dispatcher.pop(self.user_info['yxsid'])
         self.father.chat_view_dict.pop(self.user_info['yxsid'])
         self.destroy()
+
+class Ui_Mobile(Ui_Chat):
+    def setupUi(self, Form,w,h,view,user_info,Bot,ox=0,oy=0):
+        #view:上一个view，value：该对话的信息，ox，oy是该界面显示的位置左上角的坐标，默认为0，0
+
+        self.Form=Form
+        if user_info['yxsid'] in Bot.senders:
+            if Bot.get_user_type(Bot.senders[user_info['yxsid']])==2:
+                self.is_group = True#该对话是否是群对话
+            else:
+                self.is_group = False
+        else:
+            print('No user')
+            self.is_group = True
+        print('群对话',self.is_group)
+        self.config_path = str(Bot.path.parent.with_name('wechat_data'))
+        self.size=(w,h)
+        self.bot = Bot
+        self.isback=False
+        self.view_last=view #用于返回上一个界面的变量
+        self.max_text_height=2.5*CRITERION
+        self.user_info=user_info #识别信息
+        self.me_info = Bot.get_me_info()
+        self.is_encrypt = False
+        self.change_button=0 #用来判断是否要改变发送和功能按钮的逻辑变量
+        #判断是要运行程序的计算器人  还是对话
+
+        self.at_bottom = True
+
+        self.icon_other=QtGui.QIcon(self.user_info['img_path'])
+        self.icon_me=QtGui.QIcon(self.user_info['img_path'])
+        self.icon_dict={ME:self.icon_me,OTHER:self.icon_other}
+        #底边栏的高度
+
+        tw1,tw2=int(100/720*w+0.2),int((100+520)/720*w+0.2)
+        ph=CRITERION
+        ph_top=ph
+
+        self.Button_back = QtWidgets.QPushButton(Form)
+        self.setButton(self.Button_back,self.config_path+"/icon/back.jpg",tw1,ph,'Button_back',(ox, oy,tw1,ph),self.button_back_click)
+
+        self.Button_title = YTextButton(Form)
+        self.Button_title.setTextIcon(' {0}'.format(user_info['name']),(60,60,65),(255,255,255),(tw2-tw1,ph),'vcenter')
+        self.setButton(self.Button_title,None,tw2-tw1,ph,'Button_title',(ox+tw1,oy,tw2-tw1,ph),self.button_title_click)
+
+        self.Button_info = QtWidgets.QPushButton(Form)
+        self.setButton(self.Button_info,self.config_path+"/icon/contact_info.jpg",w-tw2,ph,'Button_info',(ox+tw2,oy,w-tw2,ph),self.button_info_click)
+        
+        self.line_width=1
+        ph=100/1280*h
+        pw1,pw2,pw3=ph,w-2*ph,w-ph
+
+        self.labelBackground=QtWidgets.QLabel(Form)
+        
+        self.labelBackground.setStyleSheet('QWidget{background-color:rgb(237,237,237)}')
+        self.labelBackground.setGeometry(ox,oy+h-ph,w,ph)
+        self.labelBackground_top=oy+h-ph
+
+        self.Button_speak = YButton(Form)
+        self.setButton(self.Button_speak,self.config_path+"/icon/speak.jpg",pw1,ph,'Button_speak',(ox,oy+h-ph,pw1,ph),self.button_info_click)
+
+        self.Button_emotion = YButton(Form)
+        self.setButton(self.Button_emotion,self.config_path+"/icon/emotion.jpg",pw3-pw2,ph,'Button_emotion',(ox+pw2,oy+h-ph,pw3-pw2,ph),self.button_info_click)
+
+        self.Button_send = YButton(Form)
+        self.setButton(self.Button_send,self.config_path+"/icon/send.jpg",w-pw3,ph,'Button_function',(ox+pw3,oy+h-ph,w-pw3,ph),self.button_send_click)
+       
+        self.Button_function = YButton(Form)
+        self.setButton(self.Button_function,self.config_path+"/icon/function_plus.jpg",w-pw3,ph,'Button_function',(ox+pw3,oy+h-ph,w-pw3,ph),self.button_info_click)
+        
+
+        self.input_text=YInputText(Form)
+        pp=ph*0.2
+        self.input_text.setGeometry( ox+pw1+pp , oy+h-ph+pp , pw2-pw1-pp*2 , ph-pp*2 )
+        self.input_text.setStatusConnect(self.textStatus)
+        self.input_text_top=oy+h-ph+pp
+        self.input_text_height=self.input_text.document().size().height()
+
+        self.labelButton=QtWidgets.QLabel(Form)
+        self.textStatus('NOFOCUS')
+        self.labelButton.setGeometry( ox+pw1+pp , oy+h-pp+2 , pw2-pw1-pp*2 , self.line_width )
+        
+        self.labelLine=QtWidgets.QLabel(Form)
+        self.labelLine.setStyleSheet('QWidget{background-color:rgb(200,200,200)}')
+        self.labelLine.setGeometry(ox,oy+h-ph,w,self.line_width)
+
+        self.labelLine_top=oy+h-ph  #输入部分的顶部不能比该值小
+        print(self.labelLine.geometry())
+
+
+        self.scrollArea = YScrollArea(Form)
+        self.bar=self.scrollArea.verticalScrollBar()
+        self.scrollArea.setGeometry(QtCore.QRect(0, ph_top, w, h-ph_top-ph-1))
+        self.scrollArea_bottom=ph_top+h-ph_top-ph-1
+
+        self.scrollArea.setStyleSheet("border:none;")
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollWidget_message = YWidget()#显示对话的Widget
+        self.scrollWidget_message.setGeometry(QtCore.QRect(0, 0, w, h-ph_top-ph))
+        # self.scrollWidget_message.setMinimumSize(QtCore.QSize(w, h-ph_top-ph-5))
+        self.scrollWidget_message_size=w, h-ph_top-ph
+        self.scrollWidget_message_bottom=0  #显示信息最底部的位置
+
+        self.scrollWidget_message.setObjectName("scrollWidget_message")
+        # self.pushButton1 = QtWidgets.QPushButton(self.scrollWidget_message)
+        # self.pushButton1.setGeometry(QtCore.QRect(40, 30, 92, 36))
+        
+        self.scrollArea.setWidget(self.scrollWidget_message)
+
+        self.Buttons=[self.Button_send,self.Button_back,self.labelLine,self.labelBackground,self.Button_title,self.Button_info,self.scrollArea,self.Button_speak,
+        self.Button_emotion,self.Button_function,self.labelButton,self.input_text]
+        self.insert_some_message(100)
+    def hide(self):
+        for i in self.Buttons:
+            i.hide()
+    def show(self):
+        for i in self.Buttons:
+            i.show()
+    def button_back_click(self):
+        print('back')
+        self.isback=True
+        self.hide()
+        self.view_last.show()
+    def button_title_click(self):
+        print('title')
+        pass
+    def button_text_click(self):
+        if self.input_text is not None:
+            return
+    def button_info_click(self):
+        print('info')
+        pass
+    def textStatus(self,f):
+        if self.isback:return
+        if f=='FOCUS':
+            self.labelButton.setStyleSheet('QWidget{background-color:rgb(100,200,90)}') 
+            print(self.input_text.d.isEmpty(),'FOCUS')
+        elif f=='NOFOCUS':
+            self.labelButton.setStyleSheet('QWidget{background-color:rgb(200,200,200)}')
+        else:
+            h_d,h_t,isEmpty=f 
+            if h_d!=h_t and h_d<self.max_text_height:
+                self.adjustInputTextSize(h_d)
+            if isEmpty:
+                self.Button_function.show()
+                self.Button_send.hide()
+            else:
+                self.Button_send.show()
+                self.Button_function.hide()
+    def adjustInputTextSize(self,h_d):
+        if h_d<=self.input_text_height:
+            init_value=True 
+        else:
+            init_value=False
+        g=self.input_text.geometry()
+        p=g.bottom()-h_d
+        if init_value:p=self.input_text_top
+        g.setTop(p)
+        self.input_text.setGeometry(g)
+        
+        gs=self.scrollArea.geometry()
+        if init_value:p=self.scrollArea_bottom+4
+        gs.setBottom(p-4)
+        self.scrollArea.setGeometry(gs)
+        self.autoSlideBar()
+
+        gg=self.labelBackground.geometry()
+        if init_value:p=self.labelBackground_top+2 
+        gg.setTop(p-2)
+        self.labelBackground.setGeometry(gg)
+
+        gt=self.labelLine.geometry()
+        if init_value:p=self.labelLine_top+3
+        gt.moveTo(QtCore.QPoint(gt.x(),p-3))
+        self.labelLine.setGeometry(gt)
+

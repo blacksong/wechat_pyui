@@ -5,7 +5,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from CoreWidget import *
 import CoreWidget
 import chat_view
-import chat_view_mobile
+# import chat_view_mobile
 import ConversationFrame,MeFrame,ContactFrame,DiscoverFrame
 import WelcomeFrame
 data_path = './wechat_data/'
@@ -142,7 +142,7 @@ class Ui_Form:
     def goto_view(self,kind,value):#功能跳转，调度
         if kind == 'chat':
             print('chat',value)
-            if value.get('single',True):
+            if value.get('single',False):
                 
                 if value['yxsid'] in self.bot.message_dispatcher:
                     frame = self.chat_view_dict[value['yxsid']]
@@ -155,7 +155,7 @@ class Ui_Form:
                 view_active.show()
                 self.chat_view_dict[value['yxsid']] = view_active
             else:
-                self.view_active_in=chat_view_mobile.Ui_Chat()
+                self.view_active_in=chat_view.Ui_Mobile()
                 self.view_active_in.setupUi(self.Form,self.size[0],self.size[1],self,value,self.bot)
                 self.view_active_in.show()
         elif kind == 'LogOut':
