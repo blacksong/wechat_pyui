@@ -141,13 +141,14 @@ class Ui_Form:
     def goto_view(self,kind,value):#功能跳转，调度
         if kind == 'chat':
             print('chat',value)
-            if value.get('single',False):
+            value,is_window = value
+            if value['yxsid'] in self.chat_view_dict:
+                frame = self.chat_view_dict[value['yxsid']]
+                frame.showNormal()
+                frame.activateWindow()
+                return  # 保证一个窗口只被打开一次
                 
-                if value['yxsid'] in self.bot.message_dispatcher:
-                    frame = self.chat_view_dict[value['yxsid']]
-                    frame.showNormal()
-                    frame.activateWindow()
-                    return #保证一个窗口只被打开一次
+            if is_window:
                 view_active=chat_view.Ui_Chat()
                 view_active.setupUi(Bot = self.bot,user_info = value, father = self)
                 self.bot.message_dispatcher[value['yxsid']] = view_active.accept_callback

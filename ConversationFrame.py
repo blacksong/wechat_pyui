@@ -65,11 +65,12 @@ class ConversationButton(YDesignButton):
         qp.drawText(pos[0],pos[1],200,40,QtCore.Qt.AlignLeft,text)
     def mousePressEvent(self,e):
         self.setContent(self.Ypicture,self.Yname,self.Ycontent,self.Ytime,self.Yw,self.Yh,self.color_film)
-        
+
     def mouseReleaseEvent(self,e):
         self.setContent(self.Ypicture,self.Yname,self.Ycontent,self.Ytime,self.Yw,self.Yh,self.color_background)
         if e.button() == Qt.LeftButton:
-            self.father_surface.goto_view(self.user_info)
+            self.father_surface.goto_view(
+                (self.user_info, False))  # True代表打开一个新窗口
     def setName(self,user_info,father):
         self.user_info=user_info
         self.father_surface=father

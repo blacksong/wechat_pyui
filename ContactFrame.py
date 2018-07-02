@@ -49,7 +49,7 @@ class ContactFrame(object):
 
     def goto_view(self,name):
         #跳转到conversation的内容界面
-        self.father_view.goto_view('chat',name)
+        self.father_view.goto_view('chat',(name,False))
     # def getDiscover(self):
     #     dirname='discover/'
     #     self.conversation_list=[dirname+i for i in os.listdir(dirname)]

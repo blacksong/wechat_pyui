@@ -113,7 +113,7 @@ class Ui_Chat(QWidget):
         self.Button_send.move(size.width()-self.Button_send.width()-20,0)
         self.encrypt_box.move(size.width()-self.Button_send.width()-80,0)
 
-    def click_name(self,*d):#点击用户名响应函数
+    def click_name(self,d):#点击用户名响应函数
         print('press name button')
     def set_title(self):#设置对话框的标题
         size_title = 250,40
@@ -460,8 +460,8 @@ class Ui_Mobile(Ui_Chat):
         self.hide()
         self.view_last.show()
     def button_title_click(self):
-        print('title')
-        pass
+        self.button_back_click()
+        self.view_last.goto_view('chat',(self.user_info,True))
     def button_text_click(self):
         if self.input_text is not None:
             return
