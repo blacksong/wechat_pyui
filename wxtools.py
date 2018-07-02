@@ -157,6 +157,7 @@ class myBot(wxpy.Bot):
             pr_der = encrypt.decode(pr_der,RSA_PUBLIC_KEY_FILE_PASSWD)
             self.public_key = encrypt._rsa.PublicKey.load_pkcs1(pu_der,'DER')
             self.private_key = encrypt._rsa.PrivateKey.load_pkcs1(pr_der,'DER')
+        self.public_key_id = '{:04d}'.format(self.public_key.n % 10000)
 
     def get_me_info(self):
         if self.me_info is None:
@@ -356,27 +357,32 @@ class myBot(wxpy.Bot):
                 pu_der = open(public_key[0], 'rb').read()
                 pu_der = encrypt.decode(pu_der,RSA_PUBLIC_KEY_FILE_PASSWD)
                 pu = encrypt._rsa.PublicKey.load_pkcs1(pu_der,'DER')
-                self.public_key_dict[yxsid] = pu 
-                return pu 
+                public_key_id = '{:04d}'.format(pu.n % 10000)
+                self.public_key_dict[yxsid] = pu , public_key_id
+                return pu , public_key_id
             else:
                 #通过网络获取对方的public key
                 sender = self.senders[yxsid]
                 sender.send(ASK_FOR_PUBLIC_KEY)
-                return None
+                return None,None
     def encrypt_data(self,data,msg_type,yxsid):#加密消息
-        public_key = self.get_public_key(yxsid) 
+        public_key, public_key_id = self.get_public_key(yxsid) 
         if public_key is None:
             print('no public key')
             return
         if msg_type == TEXT:
             data = encrypt.rsaencode(data.encode('utf8'),public_key)
             data = base64.b64encode(data).decode('utf8')
-            return HEAD_ENCRYPT + data
+            return HEAD_ENCRYPT+ public_key_id + data
         else:
             return data
     def decrypt_data(self,data,msg_type):#解密消息
         if msg_type == TEXT:
-            data = data[len(HEAD_ENCRYPT):]
+            head_length = len(HEAD_ENCRYPT)
+            public_key_id = data[head_length:head_length+4]
+            if public_key_id != self.public_key_id:
+                return False #加密所使用的密钥错误
+            data = data[head_length+4:] #4代表public_key_id 的长度
             data = base64.b64decode(data.encode('utf8'))
             data = encrypt.rsadecode(data,self.private_key)
             return data.decode('utf8')
