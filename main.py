@@ -5,6 +5,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from CoreWidget import *
 import CoreWidget
 import chat_view
+import chat_view_mobile
 import ConversationFrame,MeFrame,ContactFrame,DiscoverFrame
 import WelcomeFrame
 data_path = './wechat_data/'
@@ -141,16 +142,22 @@ class Ui_Form:
     def goto_view(self,kind,value):#功能跳转，调度
         if kind == 'chat':
             print('chat',value)
-            if value['yxsid'] in self.bot.message_dispatcher:
-                frame = self.chat_view_dict[value['yxsid']]
-                frame.showNormal()
-                frame.activateWindow()
-                return #保证一个窗口只被打开一次
-            view_active=chat_view.Ui_Chat()
-            view_active.setupUi(Bot = self.bot,user_info = value, me_info=self.bot.get_me_info(),father = self)
-            self.bot.message_dispatcher[value['yxsid']] = view_active.accept_callback
-            view_active.show()
-            self.chat_view_dict[value['yxsid']] = view_active
+            if value.get('single',True):
+                
+                if value['yxsid'] in self.bot.message_dispatcher:
+                    frame = self.chat_view_dict[value['yxsid']]
+                    frame.showNormal()
+                    frame.activateWindow()
+                    return #保证一个窗口只被打开一次
+                view_active=chat_view.Ui_Chat()
+                view_active.setupUi(Bot = self.bot,user_info = value, father = self)
+                self.bot.message_dispatcher[value['yxsid']] = view_active.accept_callback
+                view_active.show()
+                self.chat_view_dict[value['yxsid']] = view_active
+            else:
+                self.view_active_in=chat_view_mobile.Ui_Chat()
+                self.view_active_in.setupUi(self.Form,self.size[0],self.size[1],self,value,self.bot)
+                self.view_active_in.show()
         elif kind == 'LogOut':
             self.log_out()
         else:
@@ -267,8 +274,8 @@ class myMainWindow(QWidget):
     def setUi(self,ui):
         self.ui = ui
     def closeEvent(self,e):
-        self.ui.timer.stop()
         try:
+            self.ui.timer.stop()
             for fun in self.del_funs:
                 fun()
             self.bot.write_back()

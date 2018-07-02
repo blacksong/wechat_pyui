@@ -10,32 +10,62 @@ import sys
 from PyQt5.QtWidgets import QApplication , QMainWindow,QWidget
 
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
-
+from os import path as path_
 from CoreWidget import *
 import os
-import gif,random
+
+import time
+import functions
+import random
+from pathlib import Path
+from sys import platform
+class async_send(QtCore.QThread):
+    trigger = QtCore.pyqtSignal(tuple)
+    def __init__(self,target,args=tuple()):
+        super().__init__()
+        self.target = target
+        self.args = args
+    def run(self):
+        try:
+            succ,info = self.target(*self.args,update_con = False)
+        except Exception as e:
+            print(e)
+            succ,info = False,'Failed to send'
+        self.trigger.emit((succ,info,self.args))
 
 class Ui_Chat(object):
 
-    def setupUi(self, Form,w,h,view,user_info,ox=0,oy=0):
+    def setupUi(self, Form,w,h,view,user_info,Bot,ox=0,oy=0):
         #view:上一个view，value：该对话的信息，ox，oy是该界面显示的位置左上角的坐标，默认为0，0
 
         self.Form=Form
+        if user_info['yxsid'] in Bot.senders:
+            if Bot.get_user_type(Bot.senders[user_info['yxsid']])==2:
+                self.is_group = True#该对话是否是群对话
+            else:
+                self.is_group = False
+        else:
+            print('No user')
+            self.is_group = True
+        print('群对话',self.is_group)
+        self.config_path = str(Bot.path.parent.with_name('wechat_data'))
         self.size=(w,h)
+        self.bot = Bot
         self.isback=False
         self.view_last=view #用于返回上一个界面的变量
         self.max_text_height=2.5*CRITERION
         self.user_info=user_info #识别信息
+        self.me_info = Bot.get_me_info()
+        self.is_encrypt = False
         self.change_button=0 #用来判断是否要改变发送和功能按钮的逻辑变量
         #判断是要运行程序的计算器人  还是对话
-        if user_info['name'] in myrobot:
-            self.recognize='myrobot'
+        self.time_before = '{:.2f}'.format(9529456999.83)
+        self.time_latest = 0
+        self.time_pre = 0
+        self.at_bottom = True
 
-        else:
-            self.recognize='customer'
-        self.icon_other=self.get_icon(user_info['id_tag'])
-        print(user_info['id_tag'])
-        self.icon_me=self.get_icon(ME)
+        self.icon_other=QtGui.QIcon(self.user_info['img_path'])
+        self.icon_me=QtGui.QIcon(self.user_info['img_path'])
         self.icon_dict={ME:self.icon_me,OTHER:self.icon_other}
         #底边栏的高度
 
@@ -44,14 +74,14 @@ class Ui_Chat(object):
         ph_top=ph
 
         self.Button_back = QtWidgets.QPushButton(Form)
-        self.setButton(self.Button_back,"icon/back.jpg",tw1,ph,'Button_back',(ox, oy,tw1,ph),self.button_back_click)
+        self.setButton(self.Button_back,self.config_path+"/icon/back.jpg",tw1,ph,'Button_back',(ox, oy,tw1,ph),self.button_back_click)
 
         self.Button_title = YTextButton(Form)
         self.Button_title.setTextIcon(' {0}'.format(user_info['name']),(60,60,65),(255,255,255),(tw2-tw1,ph),'vcenter')
         self.setButton(self.Button_title,None,tw2-tw1,ph,'Button_title',(ox+tw1,oy,tw2-tw1,ph),self.button_title_click)
 
         self.Button_info = QtWidgets.QPushButton(Form)
-        self.setButton(self.Button_info,"icon/contact_info.jpg",w-tw2,ph,'Button_info',(ox+tw2,oy,w-tw2,ph),self.button_info_click)
+        self.setButton(self.Button_info,self.config_path+"/icon/contact_info.jpg",w-tw2,ph,'Button_info',(ox+tw2,oy,w-tw2,ph),self.button_info_click)
         
         self.line_width=1
         ph=100/1280*h
@@ -64,16 +94,16 @@ class Ui_Chat(object):
         self.labelBackground_top=oy+h-ph
 
         self.Button_speak = YButton(Form)
-        self.setButton(self.Button_speak,"icon/speak.jpg",pw1,ph,'Button_speak',(ox,oy+h-ph,pw1,ph),self.button_info_click)
+        self.setButton(self.Button_speak,self.config_path+"/icon/speak.jpg",pw1,ph,'Button_speak',(ox,oy+h-ph,pw1,ph),self.button_info_click)
 
         self.Button_emotion = YButton(Form)
-        self.setButton(self.Button_emotion,"icon/emotion.jpg",pw3-pw2,ph,'Button_emotion',(ox+pw2,oy+h-ph,pw3-pw2,ph),self.button_info_click)
+        self.setButton(self.Button_emotion,self.config_path+"/icon/emotion.jpg",pw3-pw2,ph,'Button_emotion',(ox+pw2,oy+h-ph,pw3-pw2,ph),self.button_info_click)
 
         self.Button_send = YButton(Form)
-        self.setButton(self.Button_send,"icon/send.jpg",w-pw3,ph,'Button_function',(ox+pw3,oy+h-ph,w-pw3,ph),self.button_send_click)
+        self.setButton(self.Button_send,self.config_path+"/icon/send.jpg",w-pw3,ph,'Button_function',(ox+pw3,oy+h-ph,w-pw3,ph),self.button_send_click)
        
         self.Button_function = YButton(Form)
-        self.setButton(self.Button_function,"icon/function_plus.jpg",w-pw3,ph,'Button_function',(ox+pw3,oy+h-ph,w-pw3,ph),self.button_info_click)
+        self.setButton(self.Button_function,self.config_path+"/icon/function_plus.jpg",w-pw3,ph,'Button_function',(ox+pw3,oy+h-ph,w-pw3,ph),self.button_info_click)
         
 
         self.input_text=YInputText(Form)
@@ -117,36 +147,105 @@ class Ui_Chat(object):
         self.Buttons=[self.Button_send,self.Button_back,self.labelLine,self.labelBackground,self.Button_title,self.Button_info,self.scrollArea,self.Button_speak,
         self.Button_emotion,self.Button_function,self.labelButton,self.input_text]
 
-        if self.recognize == 'myrobot':self.robot_run()
-    def robot_run(self):
-        if self.user_info['id_tag']=='GIFMAKER':
-            gif.run(self)
-    def get_icon(self,value):
-        icon = QtGui.QIcon()
-        if value is ME:
-            icon.addPixmap(QtGui.QPixmap('icon_users/me.png'))
+
+    # def addMessage(self,value,identity=OTHER,Format=TEXT): 
+
+    #     button=YTalkWidget(self.scrollWidget_message)
+    #     button.setContent(value,Format,self.icon_dict[identity],self.scrollWidget_message_bottom,identity=identity)
+    #     height=button.height()
+    #     w,h=self.scrollWidget_message_size
+    #     if self.scrollWidget_message_bottom+height>h:
+    #         self.scrollWidget_message.resize(w,self.scrollWidget_message_bottom+height)
+    #         self.scrollWidget_message.setMinimumSize(QtCore.QSize(w, self.scrollWidget_message_bottom+height))
+    #         self.scrollWidget_message_size=w,self.scrollWidget_message_bottom+height
+    #     self.scrollWidget_message_bottom+=height
+    #     button.show()
+    #     self.autoSlideBar()
+    def encrypt_state(self, state):#加密状态改变
+        if state == Qt.Checked:
+            self.is_encrypt = True
+            self.addMessage('Enable RSA',None,SYSTEM_YXS)
         else:
-            icon.addPixmap(QtGui.QPixmap('icon_users/{0}.png'.format(value)))
-        return icon
-    def addMessage(self,value,identity=OTHER,Format=TEXT): 
+            self.is_encrypt = False
+            self.addMessage('Disable RSA',None,SYSTEM_YXS)
+    def generate_time_element(self,Time):
+        if Time - self.time_latest > 300 and Time - self.time_pre > 60:
+            time_button = YTalkWidget(self.scrollWidget_message,self.bot)
+            Time_str = functions.get_latest_time(Time, True)
+            time_button.setContent(Time_str, SYSTEM_YXS, None, None)
+            time_button.show()
+            self.time_latest = Time
+        else:
+            time_button = None
+        self.time_pre = Time
+        return time_button
+    def addMessage(self,value:str,identity=OTHER,Format=TEXT,yxsid_send_user = None,is_slided=True): #value的值始终都为str类型
+        Time = time.time()
+        time_button = self.generate_time_element(Time)
+        if time_button is not None: 
+            self.scrollArea.append_element(time_button)
+        button=YTalkWidget(self.scrollWidget_message,self.bot)
+        if identity is not None:
+            if self.is_group and identity == OTHER:
+                icon = self.get_icon_group(yxsid_send_user)
+            else:
+                icon = self.icon_dict[identity]
+        else:
+            icon = None
 
-        button=YTalkWidget(self.scrollWidget_message)
-        button.setContent(value,Format,self.icon_dict[identity],self.scrollWidget_message_bottom,identity=identity)
-        height=button.height()
-        w,h=self.scrollWidget_message_size
-        if self.scrollWidget_message_bottom+height>h:
-            self.scrollWidget_message.resize(w,self.scrollWidget_message_bottom+height)
-            self.scrollWidget_message.setMinimumSize(QtCore.QSize(w, self.scrollWidget_message_bottom+height))
-            self.scrollWidget_message_size=w,self.scrollWidget_message_bottom+height
-        self.scrollWidget_message_bottom+=height
+        button.setContent(value,Format,icon,identity=identity,user_name_yxsid = yxsid_send_user)
+
+        bar_value = self.bar.value()#计算bar的大小和位置，
+        bar_height = self.scrollWidget_message.height()
+        scroll_height = self.scrollArea.height()
+
+        self.scrollArea.append_element(button)
         button.show()
+
+        if is_slided or bar_height - bar_value - scroll_height < 0.2 * scroll_height:
+            self.autoSlideBar()
+    def get_icon_group(self,yxsid_send):
+        if yxsid_send == '0':
+            return self.icon_dict[ME]
+        icon = self.members_info.get(yxsid_send)
+        if icon is None:
+            icon_path = self.bot.get_img_path(yxsid_send,self.user_info['yxsid'])
+            icon = QtGui.QIcon(icon_path)
+            self.members_info[yxsid_send]={'icon':icon}
+        else:
+            icon = icon['icon']
+        return icon
+    def insertMessage(self,msgs:list):#在对话前面插入历史对话信息
+        
+        def generate_element(msg):
+            yxsid_send,value, identity, Format,_ = msg
+            button = YTalkWidget(self.scrollWidget_message,self.bot)
+            if self.is_group:
+                icon = self.get_icon_group(yxsid_send)
+            else:
+                icon = self.icon_dict[identity]
+            button.setContent(value, Format, icon, identity=identity,user_name_yxsid = yxsid_send)
+            button.show()
+            return button
+        buttons = []
+        time_latest, time_pre = self.time_latest,self.time_pre
+        Time = 0
+        for i in msgs:
+            *_,Time = i
+            Time = float(Time)
+            time_button = self.generate_time_element(Time)
+            if time_button is not None:
+                buttons.append(time_button)
+                
+            buttons.append(generate_element(i))
+        self.time_latest, self.time_pre = time_latest, time_pre
+
+        self.scrollArea.insert_elements(buttons)
         self.autoSlideBar()
-
-
+        self.time_latest =max(self.time_latest, Time)
     def autoSlideBar(self,pos='bottom'):
         if pos=='bottom':
-            bottom=self.scrollWidget_message_bottom-self.scrollArea.height()+10
-            self.bar.setValue(bottom)
+            self.bar.setValue(self.scrollArea.bottom)
 
     def setButton(self,B,I,pw,ph,objectname,position=None,connect=None):
         if I is not None:
@@ -157,14 +256,69 @@ class Ui_Chat(object):
         B.setObjectName(objectname)
         if position is not None:B.setGeometry(QtCore.QRect(*position))
         if connect is not None:B.clicked.connect(connect)
+    def accept_callback(self,content,msg_type,yxsid_send,yxsid_send_user):#yxsid_send本质是yxsid
 
+        if yxsid_send == self.me_info['yxsid']:#判断消息是自己从手机发出的还是别人发过来的
+            person = ME
+        else:
+            person = OTHER
+        print('yxsid_send_user', yxsid_send_user)
+        self.addMessage(content, person, msg_type,
+                        yxsid_send_user=yxsid_send_user,is_slided=False)  # 显示消息
+    
     def hide(self):
         for i in self.Buttons:
             i.hide()
     def show(self):
         for i in self.Buttons:
             i.show()
-
+    def button_send_click(self,e):#发送消息
+        def is_file(text):
+            text = text.strip()
+            if path_.exists(text):
+                return text
+                
+            if platform.startswith('win'):
+                if text.startswith('file:///'):
+                    return text[8:]
+                else:
+                    return False 
+            elif platform.startswith('linux'):
+                if text.startswith('file://'):
+                    return text[7:]
+                else:
+                    return False
+        s=self.input_text.toPlainText()
+        if not s.strip():
+            return
+        self.input_text.setPlainText('')
+        fs = is_file(s)
+        if fs and path_.exists(fs):
+            data_path = fs
+            suffix = data_path.split('.')[-1].lower()
+            if suffix in ('jpg','png','jpeg','gif'):
+                msg_type = PICTURE 
+            elif suffix in ('mp4','mkv','flv','avi'):
+                msg_type = VIDEO
+            else:
+                msg_type = ATTACHMENT
+            s = data_path
+        else:
+            msg_type = TEXT
+        self.asyncSend = async_send(self.bot.send_data,(s,msg_type,self.user_info,self.is_encrypt))
+        self.asyncSend.trigger.connect(self.send_callback)
+        self.asyncSend.start()
+    def send_callback(self,args):
+        print('send',args)
+        succ,info,args_ = args
+        s,msg_type,*_ = args_
+        if not succ:
+            self.addMessage(info,None,SYSTEM_YXS)
+            self.input_text.setPlainText(s)
+            return
+        self.bot.async_update_conversation(info)
+        self.addMessage(s,ME,msg_type)
+        self.input_text.setFocus()        
     def button_back_click(self):
         print('back')
         self.isback=True
@@ -224,12 +378,12 @@ class Ui_Chat(object):
         gt.moveTo(QtCore.QPoint(gt.x(),p-3))
         self.labelLine.setGeometry(gt)
 
-    def button_send_click(self,e):
-        isEmpty=True
-        s=self.input_text.toPlainText()
-        self.input_text.setPlainText('')
-        self.textStatus((self.input_text_height,self.input_text_height+1,isEmpty)) #使输入框恢复初始状态
-        self.addMessage(s,ME,TEXT)
+    # def button_send_click(self,e):
+    #     isEmpty=True
+    #     s=self.input_text.toPlainText()
+    #     self.input_text.setPlainText('')
+    #     self.textStatus((self.input_text_height,self.input_text_height+1,isEmpty)) #使输入框恢复初始状态
+    #     self.addMessage(s,ME,TEXT)
 if __name__ == '__main__':
     '''
     主函数

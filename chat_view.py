@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QApplication , QMainWindow,QWidget,QVBoxLayout,QHBox
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from PyQt5.QtCore import QThread, QTimer, pyqtSignal
 from CoreWidget import *
-import wxpy
+
 import functions
 import time
 import sys 
@@ -33,8 +33,7 @@ class async_send(QThread):
             succ,info = False,'Failed to send'
         self.trigger.emit((succ,info,self.args))
 class Ui_Chat(QWidget):
-
-    def setupUi(self,Bot ,user_info:dict ,me_info:dict,father=None):
+    def setupUi(self,Bot ,user_info:dict,father):
         Form = self
         self.father = father
         self.Form=self
@@ -56,9 +55,9 @@ class Ui_Chat(QWidget):
         self.change_button=0 #用来判断是否要改变发送和功能按钮的逻辑变量
 
         self.user_info = user_info
-        self.me_info = me_info
+        self.me_info = Bot.get_me_info()
         self.icon_other=QtGui.QIcon(user_info['img_path'])
-        self.icon_me = QtGui.QIcon(me_info['img_path'])
+        self.icon_me = QtGui.QIcon(self.me_info['img_path'])
         self.icon_dict={ME:self.icon_me,OTHER:self.icon_other}
         layout = QVBoxLayout()
 
@@ -282,33 +281,6 @@ class Ui_Chat(QWidget):
         self.addMessage(content, person, msg_type,
                         yxsid_send_user=yxsid_send_user,is_slided=False)  # 显示消息
     
-    def adjustInputTextSize(self,h_d):
-        return 
-        if h_d<=self.input_text_height:
-            init_value=True 
-        else:
-            init_value=False
-        g=self.input_text.geometry()
-        p=g.bottom()-h_d
-        if init_value:p=self.input_text_top
-        g.setTop(p)
-        self.input_text.setGeometry(g)
-        
-        gs=self.scrollArea.geometry()
-        if init_value:p=self.scrollArea_bottom+4
-        gs.setBottom(p-4)
-        self.scrollArea.setGeometry(gs)
-        self.autoSlideBar()
-
-        gg=self.labelBackground.geometry()
-        if init_value:p=self.labelBackground_top+2 
-        gg.setTop(p-2)
-        self.labelBackground.setGeometry(gg)
-
-        gt=self.labelLine.geometry()
-        if init_value:p=self.labelLine_top+3
-        gt.moveTo(QtCore.QPoint(gt.x(),p-3))
-        self.labelLine.setGeometry(gt)
 
     def button_send_click(self,e):#发送消息
         def is_file(text):
