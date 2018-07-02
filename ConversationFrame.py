@@ -98,6 +98,7 @@ class ConversationFrame(object):
     def drawConversations(self):
         conversation_list = self.getConversations()
         for info in conversation_list:
+            if int(info['user_type'])==3:continue
             p1 = ConversationButton(self.scrollWidget_conversation)
             p1.setName(info,self)
             p1.setContent(info['img_path'],info['name'],info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)

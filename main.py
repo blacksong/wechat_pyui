@@ -146,11 +146,11 @@ class Ui_Form:
                 frame.showNormal()
                 frame.activateWindow()
                 return #保证一个窗口只被打开一次
-            self.view_active=chat_view.Ui_Chat()
-            self.view_active.setupUi(Bot = self.bot,user_info = value, me_info=self.bot.get_me_info())
-            self.bot.message_dispatcher[value['yxsid']] = self.view_active.accept_callback
-            self.view_active.show()
-            self.chat_view_dict[value['yxsid']] = self.view_active
+            view_active=chat_view.Ui_Chat()
+            view_active.setupUi(Bot = self.bot,user_info = value, me_info=self.bot.get_me_info(),father = self)
+            self.bot.message_dispatcher[value['yxsid']] = view_active.accept_callback
+            view_active.show()
+            self.chat_view_dict[value['yxsid']] = view_active
         elif kind == 'LogOut':
             self.log_out()
         else:
@@ -264,18 +264,24 @@ class myMainWindow(QWidget):
         self.del_funs = []
     def setBot(self,bot):
         self.bot=bot
+    def setUi(self,ui):
+        self.ui = ui
     def closeEvent(self,e):
+        self.ui.timer.stop()
         try:
             for fun in self.del_funs:
                 fun()
             self.bot.write_back()
         except:
             pass
+        
+        sys.exit()
 
 def main():
     app = QApplication(sys.argv)
     mainWindow = myMainWindow()
     ui = Ui_Form(mainWindow)
+    mainWindow.setUi(ui)
     mainWindow.show()
     sys.exit(app.exec_())
 if __name__ == '__main__':

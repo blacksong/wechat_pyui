@@ -199,9 +199,9 @@ class YSentenceBubble(QtWidgets.QWidget):
         self.d = self.textEdit.document() 
         self.d.setTextWidth(self.max_width) 
         def sub_func(t): 
-            ft = '< img src="{src}" height="{height}" />' 
+            ft = ' < img src="{src}" height="{height}" /> ' 
             b = t.group() 
-            return ft.format(src= emoji[b], height = self.font_size) 
+            return ft.format(src= emoji[b], height = int(self.font_size*1.3)) 
         tt = self.emoji_re.sub(sub_func, text) 
         text = '<p style="font-size:{height}px;font-family:\'Times New Roman\', Times, serif">{text}</p >'.format(text = tt.replace('\n', '<br />'), height=self.font_size) 
         self.textEdit.setHtml(text)

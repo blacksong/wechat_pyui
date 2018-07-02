@@ -34,8 +34,9 @@ class async_send(QThread):
         self.trigger.emit((succ,info,self.args))
 class Ui_Chat(QWidget):
 
-    def setupUi(self,Bot ,user_info:dict ,me_info:dict):
+    def setupUi(self,Bot ,user_info:dict ,me_info:dict,father=None):
         Form = self
+        self.father = father
         self.Form=self
         self.members_info = dict() #群消息时存储群成员信息的字典
         if user_info['yxsid'] in Bot.senders:
@@ -359,3 +360,5 @@ class Ui_Chat(QWidget):
         self.input_text.setFocus()
     def closeEvent(self,e):
         self.bot.message_dispatcher.pop(self.user_info['yxsid'])
+        self.father.chat_view_dict.pop(self.user_info['yxsid'])
+        self.destroy()

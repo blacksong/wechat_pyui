@@ -137,6 +137,7 @@ class myBot(wxpy.Bot):
         # self.puid_to_yxsid = dict()#{puid:yxsid}
         self.public_key_dict = dict()
         self.hash_write_auto = 1#记录自动写入硬盘的hash值
+        self.img_saved_dict = dict()
     def enable_rsa(self):# 启用加密
 
         path_rsa_key = self.rsa_path
@@ -252,7 +253,7 @@ class myBot(wxpy.Bot):
         else:
             self.conversation_list_now.append(d)
     def conversation_list(self):#返回已经发生过的对话列表
-        tags = ('yxsid', 'name', 'latest_time','unread_num', 'latest_user_name','text')
+        tags = ('yxsid', 'name', 'latest_time','unread_num', 'latest_user_name','text','user_type')
         if self.conversation_list_now:
             self.conversation_list_now.sort(key = lambda x: x['latest_time'])
             self.conversation_list_now.reverse()
@@ -418,7 +419,7 @@ class myBot(wxpy.Bot):
         time_index = str(time.time())
         data_record = {'yxsid':'0','Value':content,'Time':time_index,'Msg_type':msg_type}
         
-        cons = {'yxsid':target['yxsid'],'text':text_conversation,'name':target['name'],'latest_user_name':'','unread_num':0,'latest_time':time_index}
+        cons = {'yxsid':target['yxsid'],'text':text_conversation,'name':target['name'],'latest_user_name':'','unread_num':0,'latest_time':time_index,'user_type':self.get_user_type(friend)}
         info = (target['yxsid'],data_record,cons)
         if update_con:
             self.async_update_conversation(info)
@@ -456,7 +457,7 @@ class myBot(wxpy.Bot):
         print(msg.text)
         if type_ == 3:
             print('公众号消息')
-            return
+            msg_chat = 'Official'
         elif type_ == 1:
             msg_chat = 'Friend'
         elif type_ == 2:
@@ -543,13 +544,19 @@ class myBot(wxpy.Bot):
         print('\a','You receive a new message!',msg.chat,msg_type)
         print(data_record)
         self.write_content(yxsid,data_record)
-        self.add_conversation({'yxsid': yxsid,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time())})        
+        self.add_conversation({'yxsid': yxsid,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time()),'user_type':type_})        
         self.update_conversation()
     def get_img_path(self,yxsid,group_yxsid=None):
+        if yxsid in self.img_saved_dict:
+            return self.img_saved_dict[yxsid]
         if yxsid == 'filehelper':
-            return str(self.path.parent.with_name('wechat_data') /'icon'/'filehelper.jpg')
+            self.img_saved_dict[yxsid] = str(self.path.parent.with_name('wechat_data') /'icon'/'filehelper.jpg')
+            return self.img_saved_dict[yxsid]
         p = self.avatar_path/(yxsid+'.jpg')
         default_img= self.path.parent.with_name('wechat_data') / 'icon' / 'system_icon.jpg'
+        if (not group_yxsid) and (not self.senders.get(yxsid)):
+            self.img_saved_dict[yxsid] = default_img
+            return default_img
         if not p.is_file():
             try:
                 if group_yxsid is not None:
@@ -571,6 +578,7 @@ class myBot(wxpy.Bot):
             except Exception as e:
                 print('Error: get_img_path\n',e)
                 p = default_img
+        self.img_saved_dict[yxsid] = str(p)
         return str(p)
     def get_user_type(self,user):# 1-friend 2-group 3-mp(公众号)
         if user.user_name == 'filehelper':
@@ -607,6 +615,8 @@ class myBot(wxpy.Bot):
         if not img_name.is_file():
             img_data = (self.avatar_path / (yxsid+'.jpg')).read_bytes()
             img_name.write_bytes(img_data)
+        print('Save login status')
+
 
 
 if __name__=='__main__':
