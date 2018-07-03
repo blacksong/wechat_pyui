@@ -1,5 +1,5 @@
 import sys,os
-from PyQt5.QtWidgets import QApplication ,QWidget
+from PyQt5.QtWidgets import QApplication ,QWidget,QSystemTrayIcon
 from pathlib import Path
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from CoreWidget import *
@@ -8,6 +8,8 @@ import chat_view
 import ConversationFrame,MeFrame,ContactFrame,DiscoverFrame
 import WelcomeFrame
 data_path = './wechat_data/'
+import ctypes
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
 class Ui_Form:
     def __init__(self, Form, h=1280/90, w=720/90):
         super().__init__()
@@ -21,6 +23,13 @@ class Ui_Form:
         self.bot=None #设置机器人变量 初始为None，登录后会有值，在welcomeFrame中进行赋值
         self.start_login(True)
         self.chat_view_dict=dict()
+
+        # self.pannelIcon = QSystemTrayIcon(Form)
+        # self.system_icon = QtGui.QIcon(data_path+'icon/WeChat.ico')
+        # print(self.system_icon)
+        # self.pannelIcon.setIcon(self.system_icon)
+        # self.pannelIcon.show()
+        # self.pannelIcon.setToolTip("微信")
         Form.del_funs.append(self.close_chat)#关闭对话框 当关闭主程序的时候
 
     def start_login(self,state=None):#进入登录界面 
@@ -104,8 +113,7 @@ class Ui_Form:
         self.timer.timeout.connect(self.auto_run)
         self.timer.start(120000)
 
-        icon = QtGui.QIcon(self.bot.get_me_info()['img_path'])
-        self.Form.setWindowIcon(icon)
+        
     def auto_run(self):#间隔一段时间自动运行
         self.bot.write_auto()
     def redirect(self):
@@ -274,10 +282,24 @@ class myMainWindow(QWidget):
         super().__init__()
         self.setWindowTitle('WeChat')
         self.del_funs = []
+        self.system_icon = QtGui.QIcon(data_path+'icon/WeChat.ico')
+        self.warning_icon = QtGui.QIcon(data_path+'icon/WeChat_warning.ico')
+        self.setWindowIcon(self.system_icon)
+        self.is_warning = False
+    def start_warning(self):
+        if not self.is_warning:
+            self.setWindowIcon(self.warning_icon)    
+            self.is_warning=True
+    def stop_warning(self):
+        if self.is_warning:
+            self.setWindowIcon(self.system_icon)
+            self.is_warning=False
     def setBot(self,bot):
         self.bot=bot
     def setUi(self,ui):
         self.ui = ui
+    def enterEvent(self,e):
+        self.stop_warning()
     def closeEvent(self,e):
         try:
             self.ui.timer.stop()
@@ -302,4 +324,5 @@ if __name__ == '__main__':
     主函数
     '''
     main()
+    pass
     

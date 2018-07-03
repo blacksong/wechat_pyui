@@ -544,7 +544,7 @@ class myBot(wxpy.Bot):
             yxsid_send = yxsid_member
         time_index = '{:.2f}'.format(time.time())
         data_record = {'yxsid':yxsid_send,'Value':content,'Time':time_index,'Msg_type':msg_type}
-        print('\a','You receive a new message!')
+        print('You receive a new message!')
         print('sender',data_record)
         print('receiver',yxsid,msg.chat,msg_type)
         self.write_content(yxsid,data_record)

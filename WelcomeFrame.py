@@ -136,6 +136,7 @@ class WelcomeFrame:
             self.father_view.setupUi()
             self.father_view.show()
         elif TYPE == 'MSG':
+            self.Form.start_warning()
             self.bot.get_message(data,file_path)
             return
         elif TYPE == 'FIRST':
