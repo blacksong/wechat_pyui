@@ -472,10 +472,10 @@ class myBot(wxpy.Bot):
 
         yxsid_send = self.get_user_yxsid(msg.sender)
         yxsid = self.get_user_yxsid(msg.chat)
+
         if yxsid not in self.senders:
             print('增加群聊天',msg.chat,msg.chat.name)
             self.senders[yxsid] = msg.chat
-            print(msg)
         receiver = self.message_dispatcher.get(yxsid)
         
         if msg_type == TEXT:
@@ -544,8 +544,9 @@ class myBot(wxpy.Bot):
             yxsid_send = yxsid_member
         time_index = '{:.2f}'.format(time.time())
         data_record = {'yxsid':yxsid_send,'Value':content,'Time':time_index,'Msg_type':msg_type}
-        print('\a','You receive a new message!',msg.chat,msg_type)
-        print(data_record)
+        print('\a','You receive a new message!')
+        print('sender',data_record)
+        print('receiver',yxsid,msg.chat,msg_type)
         self.write_content(yxsid,data_record)
         self.add_conversation({'yxsid': yxsid,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time()),'user_type':type_})        
         self.update_conversation()
