@@ -421,7 +421,7 @@ class myBot(wxpy.Bot):
         time_index = str(time.time())
         data_record = {'yxsid':'0','Value':content,'Time':time_index,'Msg_type':msg_type}
         
-        cons = {'yxsid':target['yxsid'],'text':text_conversation,'name':target['name'],'latest_user_name':'','unread_num':0,'latest_time':time_index,'user_type':self.get_user_type(friend)}
+        cons = {'yxsid':target['yxsid'],'text':text_conversation,'latest_user_name':'','unread_num':0,'latest_time':time_index,'user_type':self.get_user_type(friend)}
         info = (target['yxsid'],data_record,cons)
         if update_con:
             self.async_update_conversation(info)
@@ -472,7 +472,6 @@ class myBot(wxpy.Bot):
 
         yxsid_send = self.get_user_yxsid(msg.sender)
         yxsid = self.get_user_yxsid(msg.chat)
-        print('增加群聊天',msg.chat,msg.chat.name)
         if yxsid not in self.senders:
             print('增加群聊天',msg.chat,msg.chat.name)
             self.senders[yxsid] = msg.chat
