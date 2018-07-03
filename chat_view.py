@@ -446,13 +446,14 @@ class Ui_Mobile(Ui_Chat):
         if self.input_text is not None:
             return
     def button_info_click(self):
-        print('info')
-        pass
+        if self.is_encrypt:
+            self.encrypt_state(False)
+        else:
+            self.encrypt_state(Qt.Checked)
     def textStatus(self,f):
         if self.isback:return
         if f=='FOCUS':
             self.labelButton.setStyleSheet('QWidget{background-color:rgb(100,200,90)}') 
-            print(self.input_text.d.isEmpty(),'FOCUS')
         elif f=='NOFOCUS':
             self.labelButton.setStyleSheet('QWidget{background-color:rgb(200,200,200)}')
         else:
