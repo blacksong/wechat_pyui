@@ -558,12 +558,9 @@ class myBot(wxpy.Bot):
             return self.img_saved_dict[yxsid]
         p = self.avatar_path/(yxsid+'.jpg')
         default_img= str(self.path.parent.with_name('wechat_data') / 'icon' / 'system_icon.jpg')
-        if (not group_yxsid) and (not self.senders.get(yxsid)):
-            self.img_saved_dict[yxsid] = default_img
-            return default_img
         if not p.is_file():
             try:
-                if group_yxsid is not None:
+                if group_yxsid:
                     friend = self.senders[group_yxsid]
                     for member in friend:
                         if self.get_user_yxsid(member) == yxsid:
@@ -573,9 +570,9 @@ class myBot(wxpy.Bot):
                         member = None
                     friend = member
                 else:
-                    friend = self.senders[yxsid]
+                    friend = self.senders.get(yxsid)
 
-                if friend is not None:
+                if friend:
                     friend.get_avatar(str(p))
                 else:
                     p = default_img

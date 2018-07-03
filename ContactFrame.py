@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QApplication , QMainWindow,QWidget
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from CoreWidget import *
-
+import functions
 import os
 
 class ContactFrame(object):
@@ -39,24 +39,26 @@ class ContactFrame(object):
         w = self.scrollWidget_contact.width()
         keys = lambda user:user['RemarkPYInitial'] if user['RemarkPYInitial'] else user['PYInitial']
         contacts.sort(key = keys)
-        for i in contacts:
-            name=i['name']
-            img=i['img_path']
-            clabel=FunctionButton(self.scrollWidget_contact)
-            clabel.setContent(img,name,pos=(0,0),sep=True)       
-            clabel.setName(i,self)
+        def generate_label(args):
+            name,img,widget,contact,father = args
+            clabel = FunctionButton(widget)
+            clabel.setContent(img,name,pos = (0,0),sep=True)
+            clabel.setName(contact,father)
+            clabel.show()
+            return clabel
+        def accept_label(args):
+            clabel = generate_label(args)
             self.scrollArea.append_element(clabel)
+
+        args_list = [(i['name'],i['img_path'],self.scrollWidget_contact,i,self) for i in contacts]
+        self.contact_thread = functions.async_generate()
+        self.contact_thread.setThread(args_list)
+        self.contact_thread.trigger.connect(accept_label)
+        self.contact_thread.start()
 
     def goto_view(self,name):
         #跳转到conversation的内容界面
         self.father_view.goto_view('chat',(name,False))
-    # def getDiscover(self):
-    #     dirname='discover/'
-    #     self.conversation_list=[dirname+i for i in os.listdir(dirname)]
-    #     if len(self.conversation_list)>30:
-    #         self.conversation_list=self.conversation_list[:30]
-    #     self.conversation_height=int(CRITERION*(128/90))
-    #     self.conversation_width=self.size[0]
 
     def setButton(self,B,I,pw,ph,objectname,position=None):
         if I is not None:

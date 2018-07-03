@@ -97,14 +97,31 @@ class ConversationFrame(object):
         self.drawConversations()
         
     def drawConversations(self):
-        conversation_list = self.getConversations()
-        for info in conversation_list:
-            if int(info['user_type'])==3:continue
+
+        def accept_callback(args):
+            info = args[0]
+            if int(info['user_type'])==3:
+                return
             p1 = ConversationButton(self.scrollWidget_conversation)
             p1.setName(info,self)
             p1.setContent(info['img_path'],info['name'],info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)
             self.scrollArea.append_element(p1)
             p1.show()
+
+        conversation_list = self.getConversations()
+        args_list = [(i,) for i in conversation_list]
+
+        self.conversation_thread = functions.async_generate()
+        self.conversation_thread.setThread(args_list)
+        self.conversation_thread.trigger.connect(accept_callback)
+        self.conversation_thread.start()
+        # for info in conversation_list:
+        #     if int(info['user_type'])==3:continue
+        #     p1 = ConversationButton(self.scrollWidget_conversation)
+        #     p1.setName(info,self)
+        #     p1.setContent(info['img_path'],info['name'],info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)
+        #     self.scrollArea.append_element(p1)
+        #     p1.show()
 
     def update_conversation(self):
         self.scrollArea.reset()

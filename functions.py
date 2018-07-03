@@ -1,4 +1,5 @@
 import time
+from PyQt5 import QtCore
 def get_latest_time(latest_time: float,need_hours=False):
     latest_time = time.localtime(latest_time)
     now_time = time.localtime()
@@ -24,3 +25,12 @@ def get_latest_time(latest_time: float,need_hours=False):
     if need_hours and not is_hours:
         r_time += ' {0}:{1}'.format(latest_time.tm_hour, latest_time.tm_min)
     return r_time
+class async_generate(QtCore.QThread):
+    trigger = QtCore.pyqtSignal(tuple)
+    def setThread(self,args_list):
+        self.args_list = args_list
+    def run(self):
+        for n,args in enumerate(self.args_list):
+            if n>10:
+                time.sleep(0.00001)
+            self.trigger.emit(args)
