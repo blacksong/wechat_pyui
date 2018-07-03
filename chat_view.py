@@ -38,19 +38,17 @@ class Ui_Chat(QWidget):
         self.scrollWidget_message_size= 200,70
         self.scrollWidget_message_bottom = 0
 
+        
+    def set_chat_info(self,Bot,user_info):
+        self.user_info = user_info
+        self.me_info = Bot.get_me_info()
+        self.bot = Bot
         self.is_encrypt = False
         self.isback=False
         self.time_before = '{:.2f}'.format(9529456999.83)
         self.time_latest = 0
         self.time_pre = 0
-        self.at_bottom = True
         self.members_info = dict() #群消息时存储群成员信息的字典
-
-    def setupUi(self,Bot ,user_info:dict,father):
-        Form = self
-        self.father = father
-        self.Form=self
-        
         if user_info['yxsid'] in Bot.senders:
             if Bot.get_user_type(Bot.senders[user_info['yxsid']])==2:
                 self.is_group = True#该对话是否是群对话
@@ -60,17 +58,20 @@ class Ui_Chat(QWidget):
             print('No user')
             self.is_group = True
         print('群对话',self.is_group)
-        self.resize(520,520)
-        self.blabel = QLabel(self)
-        self.blabel.setStyleSheet('QWidget{background-color:rgb(255,255,255)}')
-        self.max_text_height=2.5*CRITERION
-        self.change_button=0 #用来判断是否要改变发送和功能按钮的逻辑变量
-
-        self.user_info = user_info
-        self.me_info = Bot.get_me_info()
         self.icon_other=QtGui.QIcon(user_info['img_path'])
         self.icon_me = QtGui.QIcon(self.me_info['img_path'])
         self.icon_dict={ME:self.icon_me,OTHER:self.icon_other}
+        self.setWindowTitle(user_info['name'])
+        self.setWindowIcon(self.icon_other)
+    def setupUi(self,Bot ,user_info:dict,father):
+ 
+        self.father = father
+        self.Form=self
+        self.set_chat_info(Bot,user_info)
+        self.resize(520,520)
+        self.blabel = QLabel(self)
+        self.blabel.setStyleSheet('QWidget{background-color:rgb(255,255,255)}')
+
         layout = QVBoxLayout()
 
         self.title_widget = self.set_title()
@@ -87,9 +88,6 @@ class Ui_Chat(QWidget):
 
         self.setLayout(layout)
         self.show()
-
-
-        self.bot = Bot
 
         self.insert_some_message(100)
     def insert_some_message(self,nums):    
@@ -342,32 +340,14 @@ class Ui_Mobile(Ui_Chat):
         #view:上一个view，value：该对话的信息，ox，oy是该界面显示的位置左上角的坐标，默认为0，0
 
         self.Form=Form
-        if user_info['yxsid'] in Bot.senders:
-            if Bot.get_user_type(Bot.senders[user_info['yxsid']])==2:
-                self.is_group = True#该对话是否是群对话
-            else:
-                self.is_group = False
-        else:
-            print('No user')
-            self.is_group = True
-        print('群对话',self.is_group)
+        self.set_chat_info(Bot,user_info)
         self.config_path = str(Bot.path.parent.with_name('wechat_data'))
         self.size=(w,h)
-        self.bot = Bot
         self.isback=False
         self.view_last=view #用于返回上一个界面的变量
         self.max_text_height=2.5*CRITERION
-        self.user_info=user_info #识别信息
-        self.me_info = Bot.get_me_info()
-        self.is_encrypt = False
-        self.change_button=0 #用来判断是否要改变发送和功能按钮的逻辑变量
-        #判断是要运行程序的计算器人  还是对话
 
-        self.at_bottom = True
 
-        self.icon_other=QtGui.QIcon(self.user_info['img_path'])
-        self.icon_me=QtGui.QIcon(self.me_info['img_path'])
-        self.icon_dict={ME:self.icon_me,OTHER:self.icon_other}
         #底边栏的高度
 
         tw1,tw2=int(100/720*w+0.2),int((100+520)/720*w+0.2)
@@ -413,6 +393,7 @@ class Ui_Mobile(Ui_Chat):
         self.input_text.setStatusConnect(self.textStatus)
         self.input_text_top=oy+h-ph+pp
         self.input_text_height=self.input_text.document().size().height()
+        self.input_text.press_enter_connect(lambda :self.button_send_click(None))
 
         self.labelButton=QtWidgets.QLabel(Form)
         self.textStatus('NOFOCUS')
@@ -423,7 +404,6 @@ class Ui_Mobile(Ui_Chat):
         self.labelLine.setGeometry(ox,oy+h-ph,w,self.line_width)
 
         self.labelLine_top=oy+h-ph  #输入部分的顶部不能比该值小
-        print(self.labelLine.geometry())
 
 
         self.scrollArea = YScrollArea(Form)

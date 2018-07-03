@@ -582,7 +582,7 @@ class YDesignButton(QtWidgets.QPushButton):
         qp.setFont(global_font)
         qp.drawText(pos[0],pos[1],1000,1000,QtCore.Qt.AlignLeft,text)
     def YdrawImage(self,filename,pic_rect,qp):
-        image=QtGui.QImage(filename)
+        image=QtGui.QImage(str(filename))
         qp.drawImage(QtCore.QRectF(*pic_rect),image)
     def mousePressEvent(self,e):
         self.setDesigning(*self.d,color_background=self.color_film,pos=self.p ,size=self.s,sep = self.sep)

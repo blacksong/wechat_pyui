@@ -103,6 +103,9 @@ class Ui_Form:
         self.timer = QtCore.QTimer(self.Form)
         self.timer.timeout.connect(self.auto_run)
         self.timer.start(120000)
+
+        icon = QtGui.QIcon(self.bot.get_me_info()['img_path'])
+        self.Form.setWindowIcon(icon)
     def auto_run(self):#间隔一段时间自动运行
         self.bot.write_auto()
     def redirect(self):
@@ -269,7 +272,7 @@ class Ui_Form:
 class myMainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('wechat')
+        self.setWindowTitle('WeChat')
         self.del_funs = []
     def setBot(self,bot):
         self.bot=bot

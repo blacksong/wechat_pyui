@@ -229,23 +229,25 @@ class myBot(wxpy.Bot):
         info_dict = {i['yxsid']:i for i in t}
         self.contact_info_dict = info_dict
         return self.contact_info_dict
+
     def add_conversation(self,d):
 
         self.contact_dict()
         yxsid = d['yxsid']
         d['img_path'] =  self.get_img_path(yxsid)
-        if not d.get('name'):
+        user = self.senders.get(yxsid)
+        if user:
+            name = user.name
+        else:
+            name = None 
+        if not name:
+            if d['user_type']==2:
+                membercount = user.raw['MemberCount']
+                name = '群聊{}'.format(membercount)
+            
+        d['name'] = str(name)
 
-            if yxsid in self.contact_info_dict:
-                d['name'] = self.contact_info_dict[yxsid]['name']
-            elif yxsid == 'filehelper':
-                d['name']='文件传输助手'
-            else:
-                user = self.senders.get(yxsid)
-                if user is None:
-                    d['name']='None'
-                else:
-                    d['name'] = user.raw['NickName']
+
         for i in self.conversation_list_now:
             if i['yxsid'] == yxsid:
                 i.update(d)
@@ -470,9 +472,11 @@ class myBot(wxpy.Bot):
 
         yxsid_send = self.get_user_yxsid(msg.sender)
         yxsid = self.get_user_yxsid(msg.chat)
+        print('增加群聊天',msg.chat,msg.chat.name)
         if yxsid not in self.senders:
-            print('增加群聊天',msg.chat)
+            print('增加群聊天',msg.chat,msg.chat.name)
             self.senders[yxsid] = msg.chat
+            print(msg)
         receiver = self.message_dispatcher.get(yxsid)
         
         if msg_type == TEXT:
@@ -553,7 +557,7 @@ class myBot(wxpy.Bot):
             self.img_saved_dict[yxsid] = str(self.path.parent.with_name('wechat_data') /'icon'/'filehelper.jpg')
             return self.img_saved_dict[yxsid]
         p = self.avatar_path/(yxsid+'.jpg')
-        default_img= self.path.parent.with_name('wechat_data') / 'icon' / 'system_icon.jpg'
+        default_img= str(self.path.parent.with_name('wechat_data') / 'icon' / 'system_icon.jpg')
         if (not group_yxsid) and (not self.senders.get(yxsid)):
             self.img_saved_dict[yxsid] = default_img
             return default_img
