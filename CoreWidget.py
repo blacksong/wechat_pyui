@@ -323,7 +323,7 @@ class YTalkWidget(QtWidgets.QWidget):
         self.min_height=104/90*CRITERION
         self.lable_geometry = None #显示消息widget的geometry
         self.message_label = None
-    def setContent(self,value,Format,icon_name,identity,user_name_yxsid=None):
+    def setContent(self,value,Format,icon_name,identity,user_name=None):
         self.Format = Format 
         self.value = value
         if Format == NOTE:
@@ -363,19 +363,23 @@ class YTalkWidget(QtWidgets.QWidget):
             h = self.setMessage_Attachment(value,is_sharing = True)
         else:
             h = self.setMessage('不支持的消息类型，请在手机中查看：{}\n{}'.format(Format,value))
-        if False and identity is OTHER:
-            dh = 15
+        if user_name and identity is OTHER:
+            dh = 13
             h += dh
             pos = self.message_label.pos()
             x,y = pos.x(), pos.y()
             if Format == TEXT:
                 pic_width = self.pic_qsize.width()
                 name_x = self.pos_other[0]+5+pic_width
+                name_y = y+5
             else:
                 name_x = x
+                name_y = y
             self.name_label = QLabel(user_name,self)
+            # self.name_label.setScaledContents(True)
+            # self.name_label.resize(CRITERION*4,dh)
             self.message_label.move(x,y+dh)
-            self.name_label.move(name_x,y)
+            self.name_label.move(name_x,name_y)
         self.resize(self.Yw,h)
     def mouseDoubleClickEvent(self,e): 
         if e.buttons() == Qt.LeftButton and self.lable_geometry:

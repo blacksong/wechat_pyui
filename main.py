@@ -25,12 +25,11 @@ class Ui_Form:
         self.start_login(True)
         self.chat_view_dict=dict()
 
-        # self.pannelIcon = QSystemTrayIcon(Form)
-        # self.system_icon = QtGui.QIcon(data_path+'icon/WeChat.ico')
-        # print(self.system_icon)
-        # self.pannelIcon.setIcon(self.system_icon)
-        # self.pannelIcon.show()
-        # self.pannelIcon.setToolTip("微信")
+        self.pannelIcon = QSystemTrayIcon(Form)
+        self.system_icon = QtGui.QIcon(data_path+'icon/WeChat.ico')
+        self.pannelIcon.setIcon(self.system_icon)
+        self.pannelIcon.show()
+        self.pannelIcon.setToolTip("微信")
         Form.del_funs.append(self.close_chat)#关闭对话框 当关闭主程序的时候
 
     def start_login(self,state=None):#进入登录界面 
