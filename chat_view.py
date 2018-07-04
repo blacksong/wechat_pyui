@@ -41,8 +41,16 @@ class Ui_Chat(QWidget):
         
     def set_chat_info(self,Bot,user_info):
         self.user_info = user_info
+        print(user_info)
         self.me_info = Bot.get_me_info()
         self.bot = Bot
+        self.need_update_conversation = False
+        user_yxsid_t = user_info['yxsid']
+        for i in Bot.conversation_list_now:
+            if i['yxsid'] == user_yxsid_t and i['unread_num'] != 0:
+                i['unread_num'] = 0
+                self.need_update_conversation = True
+                # Bot.update_conversation()
         self.is_encrypt = False
         self.isback=False
         self.time_before = '{:.2f}'.format(9529456999.83)
@@ -442,6 +450,8 @@ class Ui_Mobile(Ui_Chat):
             i.show()
     def button_back_click(self):
         print('back')
+        if self.need_update_conversation:
+            self.bot.update_conversation()
         self.isback=True
         self.hide()
         self.view_last.show()

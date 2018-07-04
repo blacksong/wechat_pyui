@@ -104,7 +104,12 @@ class ConversationFrame(object):
                 return
             p1 = ConversationButton(self.scrollWidget_conversation)
             p1.setName(info,self)
-            p1.setContent(info['img_path'],info['name'],info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)
+            unread = info['unread_num']
+            if unread:
+                unread_str = '未读{} '.format(unread)
+            else:
+                unread_str = ''
+            p1.setContent(info['img_path'],info['name'],unread_str+info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)
             self.scrollArea.append_element(p1)
             p1.show()
 

@@ -127,7 +127,7 @@ class myBot(wxpy.Bot):
         self.TransPassword = None
         self.SavePassword = None
         #发生消息传送时更新对话页面的显示内容
-        self.update_conversation = lambda x=None:x
+        self.update_conversation = None
         self.senders = None
         self.me_info = None
         self.conversation_list_now=None
@@ -250,6 +250,11 @@ class myBot(wxpy.Bot):
 
         for i in self.conversation_list_now:
             if i['yxsid'] == yxsid:
+                unread = d['unread_num']
+                if unread:
+                    d['unread_num'] = i['unread_num']+1
+                else:
+                    d['unread_num'] = 0
                 i.update(d)
                 break
         else:
@@ -264,6 +269,7 @@ class myBot(wxpy.Bot):
             t = self.db.select('conversation_list', tags, return_dict=True)
             for i in t:
                 i['img_path'] = self.get_img_path(i['yxsid'])
+                i['unread_num'] = int(i['unread_num'])
             self.conversation_list_now = t
             self.conversation_list_now.sort(key=lambda x: x['latest_time'])
             self.conversation_list_now.reverse()
@@ -535,7 +541,6 @@ class myBot(wxpy.Bot):
 
         if receiver is not None:
             receiver(content, msg_type,message_sender)#
-        unread = 0
 
         time_index = '{:.2f}'.format(time.time())
         data_record = {'yxsid':yxsid_send_user,'Value':content,'Time':time_index,'Msg_type':msg_type,'name':message_sender.name}
@@ -543,7 +548,7 @@ class myBot(wxpy.Bot):
         print('sender',data_record)
         print('receiver',yxsid_chat,msg.chat,msg_type)
         self.write_content(yxsid_chat,data_record)
-        self.add_conversation({'yxsid': yxsid_chat,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time()),'user_type':type_})        
+        self.add_conversation({'yxsid': yxsid_chat,'text':text_conversation, 'latest_user_name': '','unread_num': 1, 'latest_time': str(time.time()),'user_type':type_})        
         self.update_conversation()
     def get_img_path(self,yxsid,group_yxsid=None):
         if yxsid in self.img_saved_dict:

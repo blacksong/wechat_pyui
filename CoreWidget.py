@@ -364,7 +364,7 @@ class YTalkWidget(QtWidgets.QWidget):
         else:
             h = self.setMessage('不支持的消息类型，请在手机中查看：{}\n{}'.format(Format,value))
         if user_name and identity is OTHER:
-            dh = 15
+            dh = 13
             h += dh
             pos = self.message_label.pos()
             x,y = pos.x(), pos.y()
@@ -376,6 +376,8 @@ class YTalkWidget(QtWidgets.QWidget):
                 name_x = x
                 name_y = y
             self.name_label = QLabel(user_name,self)
+            # self.name_label.setScaledContents(True)
+            # self.name_label.resize(CRITERION*4,dh)
             self.message_label.move(x,y+dh)
             self.name_label.move(name_x,name_y)
         self.resize(self.Yw,h)
