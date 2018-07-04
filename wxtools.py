@@ -195,7 +195,7 @@ class myBot(wxpy.Bot):
         for i in ('Signature','RemarkName','Province','Sex','NickName','City'):
             m.update(str(raw_data.get(i,i)).encode('utf8'))
         return m.hexdigest()[:15]
-
+    
     def get_user_yxsid(self,user):#user_data is a dict, like {yxsid:(md5,puid,avamd5)}
         if user.user_name == 'filehelper':
             return 'filehelper'
@@ -278,7 +278,7 @@ class myBot(wxpy.Bot):
     def read_content(self,yxsid,time_before,nums):
         if not self.db.table_exists('Record_'+yxsid):
             return []
-        return self.db.cur.execute('SELECT yxsid,Value,Msg_type,Time FROM {0} WHERE Time<{1} ORDER BY Time DESC LIMIT {2};'.format('Record_'+yxsid,time_before,nums))
+        return self.db.cur.execute('SELECT yxsid,Value,Msg_type,Time,name FROM {0} WHERE Time<{1} ORDER BY Time DESC LIMIT {2};'.format('Record_'+yxsid,time_before,nums))
 
     def setPath(self,path): #设置微信账号的信息存储路径
 
@@ -419,7 +419,7 @@ class myBot(wxpy.Bot):
             content = data  
             friend.send_video(data)
         time_index = str(time.time())
-        data_record = {'yxsid':'0','Value':content,'Time':time_index,'Msg_type':msg_type}
+        data_record = {'yxsid':'0','Value':content,'Time':time_index,'Msg_type':msg_type,'name':''}
         
         cons = {'yxsid':target['yxsid'],'text':text_conversation,'latest_user_name':'','unread_num':0,'latest_time':time_index,'user_type':self.get_user_type(friend)}
         info = (target['yxsid'],data_record,cons)
@@ -462,9 +462,11 @@ class myBot(wxpy.Bot):
             msg_chat = 'Official'
         elif type_ == 1:
             msg_chat = 'Friend'
+            message_sender = msg.sender
         elif type_ == 2:
             msg_chat = 'Group'
             yxsid_member = self.get_user_yxsid(msg.member)
+            message_sender = msg.member
         else:
             print('Error:\n',self.get_message)
             return
@@ -538,12 +540,12 @@ class myBot(wxpy.Bot):
         else:
             yxsid_send_user = yxsid_send
         if receiver is not None:
-            receiver(content, msg_type, yxsid_send,yxsid_send_user)
+            receiver(content, msg_type, yxsid_send,yxsid_send_user,message_sender)
         unread = 0
         if msg_chat == 'Group':
             yxsid_send = yxsid_member
         time_index = '{:.2f}'.format(time.time())
-        data_record = {'yxsid':yxsid_send,'Value':content,'Time':time_index,'Msg_type':msg_type}
+        data_record = {'yxsid':yxsid_send,'Value':content,'Time':time_index,'Msg_type':msg_type,'name':message_sender.name}
         print('You receive a new message!')
         print('sender',data_record)
         print('receiver',yxsid,msg.chat,msg_type)

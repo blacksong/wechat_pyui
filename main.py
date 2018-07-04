@@ -9,7 +9,8 @@ import ConversationFrame,MeFrame,ContactFrame,DiscoverFrame
 import WelcomeFrame
 data_path = './wechat_data/'
 import ctypes
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
+if sys.platform.startswith('win'):
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
 class Ui_Form:
     def __init__(self, Form, h=1280/90, w=720/90):
         super().__init__()
@@ -24,12 +25,12 @@ class Ui_Form:
         self.start_login(True)
         self.chat_view_dict=dict()
 
-        # self.pannelIcon = QSystemTrayIcon(Form)
-        # self.system_icon = QtGui.QIcon(data_path+'icon/WeChat.ico')
-        # print(self.system_icon)
-        # self.pannelIcon.setIcon(self.system_icon)
-        # self.pannelIcon.show()
-        # self.pannelIcon.setToolTip("微信")
+        self.pannelIcon = QSystemTrayIcon(Form)
+        self.system_icon = QtGui.QIcon(data_path+'icon/WeChat.ico')
+        print(self.system_icon)
+        self.pannelIcon.setIcon(self.system_icon)
+        self.pannelIcon.show()
+        self.pannelIcon.setToolTip("微信")
         Form.del_funs.append(self.close_chat)#关闭对话框 当关闭主程序的时候
 
     def start_login(self,state=None):#进入登录界面 

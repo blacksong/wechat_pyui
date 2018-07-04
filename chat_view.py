@@ -95,12 +95,12 @@ class Ui_Chat(QWidget):
         an.reverse()
         ans = []
         me_yxsid = self.me_info['yxsid']
-        for yxsid, value, msg_type, time_ in an:
+        for yxsid, value, msg_type, time_,name_ in an:
             if yxsid == '0' or yxsid == me_yxsid:
                 idendity = ME
             else:
                 idendity = OTHER
-            ans.append((yxsid,value, idendity, msg_type, time_))
+            ans.append((yxsid,value, idendity, msg_type, time_,name_))
         self.insertMessage(ans)
     def resizeEvent(self,d):#根据窗口大小调整白色背景的大小以及发送键的位置
         size = self.size()
@@ -194,7 +194,7 @@ class Ui_Chat(QWidget):
             time_button = None
         self.time_pre = Time
         return time_button
-    def addMessage(self,value:str,identity=OTHER,Format=TEXT,yxsid_send_user = None,is_slided=True): #value的值始终都为str类型
+    def addMessage(self,value:str,identity=OTHER,Format=TEXT,yxsid_send_user = None,is_slided=True,message_sender=None): #value的值始终都为str类型
         Time = time.time()
         time_button = self.generate_time_element(Time)
         if time_button is not None: 
@@ -207,8 +207,14 @@ class Ui_Chat(QWidget):
                 icon = self.icon_dict[identity]
         else:
             icon = None
-
-        button.setContent(value,Format,icon,identity=identity,user_name_yxsid = yxsid_send_user)
+        if message_sender:
+            user_name = message_sender.name
+            print(dir(message_sender))
+        else:
+            user_name = None
+        if not self.is_group:
+            user_name=None
+        button.setContent(value,Format,icon,identity=identity,user_name = user_name)
 
         bar_value = self.bar.value()#计算bar的大小和位置，
         bar_height = self.scrollWidget_message.height()
@@ -219,7 +225,7 @@ class Ui_Chat(QWidget):
 
         if is_slided or bar_height - bar_value - scroll_height < 0.2 * scroll_height:
             self.autoSlideBar()
-    def get_icon_group(self,yxsid_send):
+    def get_icon_group(self,yxsid_send):#获取群成员的头像，以及群成员的其它信息
         if yxsid_send == '0':
             return self.icon_dict[ME]
         icon = self.members_info.get(yxsid_send)
@@ -233,20 +239,22 @@ class Ui_Chat(QWidget):
     def insertMessage(self,msgs:list):#在对话前面插入历史对话信息
         
         def generate_element(msg):
-            yxsid_send,value, identity, Format,_ = msg
+            yxsid_send,value, identity, Format,_ ,name= msg
             button = YTalkWidget(self.scrollWidget_message,self.bot)
             if self.is_group:
                 icon = self.get_icon_group(yxsid_send)
             else:
                 icon = self.icon_dict[identity]
-            button.setContent(value, Format, icon, identity=identity,user_name_yxsid = yxsid_send)
+            if not self.is_group:
+                name=None
+            button.setContent(value, Format, icon, identity=identity,user_name = name)
             button.show()
             return button
         buttons = []
         time_latest, time_pre = self.time_latest,self.time_pre
         Time = 0
         for i in msgs:
-            *_,Time = i
+            *_,Time,_ = i
             Time = float(Time)
             time_button = self.generate_time_element(Time)
             if time_button is not None:
@@ -271,7 +279,7 @@ class Ui_Chat(QWidget):
         B.setObjectName(objectname)
         if position is not None:B.setGeometry(QtCore.QRect(*position))
         if connect is not None:B.clicked.connect(connect)
-    def accept_callback(self,content,msg_type,yxsid_send,yxsid_send_user):#yxsid_send本质是yxsid
+    def accept_callback(self,content,msg_type,yxsid_send,yxsid_send_user,message_sender):#yxsid_send本质是yxsid
 
         if yxsid_send == self.me_info['yxsid']:#判断消息是自己从手机发出的还是别人发过来的
             person = ME
@@ -279,7 +287,7 @@ class Ui_Chat(QWidget):
             person = OTHER
         print('yxsid_send_user', yxsid_send_user)
         self.addMessage(content, person, msg_type,
-                        yxsid_send_user=yxsid_send_user,is_slided=False)  # 显示消息
+                        yxsid_send_user=yxsid_send_user,is_slided=False,message_sender=message_sender)  # 显示消息
     
 
     def button_send_click(self,e):#发送消息
