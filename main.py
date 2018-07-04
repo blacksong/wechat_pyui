@@ -9,7 +9,8 @@ import ConversationFrame,MeFrame,ContactFrame,DiscoverFrame
 import WelcomeFrame
 data_path = './wechat_data/'
 import ctypes
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
+if sys.platform.startswith('win'):
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
 class Ui_Form:
     def __init__(self, Form, h=1280/90, w=720/90):
         super().__init__()
