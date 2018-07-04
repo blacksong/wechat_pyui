@@ -465,14 +465,14 @@ class YTalkWidget(QtWidgets.QWidget):
             icon_path = self.bot.path.parent.with_name('wechat_data') / 'icon' / 'icon_sharing.jpg'
         else:
             icon_path = self.bot.path.parent.with_name('wechat_data') / 'icon' / 'icon_file_red.jpg'
-        self.file_icon = QLabel(self)
+        self.file_icon = QLabel(self.attachment_bubble)
         self.file_icon.setScaledContents(True)
         pixmap = Image.open(icon_path).toqpixmap()
         self.file_icon.setPixmap(pixmap)
-        w0,h0 = pos
+
         width = self.attachment_bubble.width()
         size = 50
-        self.file_icon.setGeometry(w0+width-size*1.3,h0+0.2*CRITERION,size,size)
+        self.file_icon.setGeometry(width-size*1.3,0.2*CRITERION,size,size)
 
         bias = int(0.2*CRITERION)
 
@@ -491,8 +491,9 @@ class YTalkWidget(QtWidgets.QWidget):
         else:
             n = value.find(' ')
             text = value[n+1:]
-        self.text_label = QLabel(text ,self)
-        self.text_label.setGeometry(w0+bias,h0+bias,width - size * 2.3 - bias, CRITERION)
+        self.text_label = QLabel(text ,self.attachment_bubble)
+        self.text_label.setStyleSheet("border:none;")
+        self.text_label.setGeometry(bias,bias,width - size * 2.3 - bias, CRITERION)
         self.lable_geometry = self.attachment_bubble.geometry()
         return self.attachment_bubble.height()+10
     def setMessage_Picture(self,value,is_video=False):
@@ -529,16 +530,15 @@ class YTalkWidget(QtWidgets.QWidget):
         self.picture_bubble.move(*pos)
         w,h = self.picture_bubble.width(),self.picture_bubble.height()
         if is_video:
-            self.display_label = QLabel(self)
+            self.display_label = QLabel(self.picture_bubble)
             self.display_label.setStyleSheet('QWidget{background-color:rgba(0,0,0,0)}')
             self.display_label.setScaledContents(True)
             display_path = self.bot.path.parent.with_name('wechat_data') / 'icon' /'video.png'
             pixmap = Image.open(display_path).toqpixmap()
             # pixmap.fill(Qt.transparent)
             self.display_label.setPixmap(pixmap)
-            w0,h0 = pos
             size = 50
-            self.display_label.setGeometry(w0+(w-size)//2,h0+(h-size)//2,size,size)
+            self.display_label.setGeometry((w-size)//2,(h-size)//2,size,size)
         self.lable_geometry = self.picture_bubble.geometry()
         return h
 
@@ -656,8 +656,3 @@ class YInputText(QtWidgets.QTextEdit):
     def paintEvent(self,d):
         super().paintEvent(d)
         self.statusConnect((self.d.size().height(),self.height(),self.d.isEmpty()))
-
-
-if __name__=='__main__':
-    '''__debug__'''
-    pass

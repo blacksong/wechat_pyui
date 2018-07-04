@@ -130,7 +130,7 @@ class myBot(wxpy.Bot):
         self.update_conversation = None
         self.senders = None
         self.me_info = None
-        self.conversation_list_now=None
+        self.conversation_list_now=None #保存对话信息的的list
         self.message_dispatcher=dict()
         self.is_first=False
         self.contact_info_dict = None
@@ -548,7 +548,11 @@ class myBot(wxpy.Bot):
         print('sender',data_record)
         print('receiver',yxsid_chat,msg.chat,msg_type)
         self.write_content(yxsid_chat,data_record)
-        self.add_conversation({'yxsid': yxsid_chat,'text':text_conversation, 'latest_user_name': '','unread_num': 1, 'latest_time': str(time.time()),'user_type':type_})        
+        if yxsid_send_user == self.yxsid:
+            unread = 0
+        else:
+            unread = 1
+        self.add_conversation({'yxsid': yxsid_chat,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time()),'user_type':type_})        
         self.update_conversation()
     def get_img_path(self,yxsid,group_yxsid=None):
         if yxsid in self.img_saved_dict:
@@ -618,12 +622,3 @@ class myBot(wxpy.Bot):
             img_name.write_bytes(img_data)
         print('Save login status')
 
-
-
-if __name__=='__main__':
-    # bot = myBot(cache_path=True)
-    # print(t)
-    # x = myBot(True)
-    # x.path = Path('./')
-    # x.enable_rsa()
-    pass
