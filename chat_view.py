@@ -57,7 +57,6 @@ class Ui_Chat(QWidget):
         else:
             print('No user')
             self.is_group = True
-        print('群对话',self.is_group)
         self.icon_other=QtGui.QIcon(user_info['img_path'])
         self.icon_me = QtGui.QIcon(self.me_info['img_path'])
         self.icon_dict={ME:self.icon_me,OTHER:self.icon_other}
@@ -209,7 +208,6 @@ class Ui_Chat(QWidget):
             icon = None
         if message_sender:
             user_name = message_sender.name
-            print(dir(message_sender))
         else:
             user_name = None
         if not self.is_group:
@@ -279,13 +277,14 @@ class Ui_Chat(QWidget):
         B.setObjectName(objectname)
         if position is not None:B.setGeometry(QtCore.QRect(*position))
         if connect is not None:B.clicked.connect(connect)
-    def accept_callback(self,content,msg_type,yxsid_send,yxsid_send_user,message_sender):#yxsid_send本质是yxsid
 
-        if yxsid_send == self.me_info['yxsid']:#判断消息是自己从手机发出的还是别人发过来的
+    def accept_callback(self,content,msg_type,message_sender):#message_sender是wxpy的一个User对象
+        yxsid_send_user = self.bot.get_user_yxsid(message_sender)
+        if yxsid_send_user == self.me_info['yxsid']:#判断消息是自己从手机发出的还是别人发过来的
             person = ME
         else:
             person = OTHER
-        print('yxsid_send_user', yxsid_send_user)
+
         self.addMessage(content, person, msg_type,
                         yxsid_send_user=yxsid_send_user,is_slided=False,message_sender=message_sender)  # 显示消息
     
@@ -328,7 +327,6 @@ class Ui_Chat(QWidget):
         self.asyncSend.start()
         
     def send_callback(self,args):
-        print('send',args)
         succ,info,args_ = args
         s,msg_type,*_ = args_
         if not succ:

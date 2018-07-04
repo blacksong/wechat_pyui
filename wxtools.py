@@ -422,6 +422,7 @@ class myBot(wxpy.Bot):
         data_record = {'yxsid':'0','Value':content,'Time':time_index,'Msg_type':msg_type,'name':''}
         
         cons = {'yxsid':target['yxsid'],'text':text_conversation,'latest_user_name':'','unread_num':0,'latest_time':time_index,'user_type':self.get_user_type(friend)}
+        print('post',cons)
         info = (target['yxsid'],data_record,cons)
         if update_con:
             self.async_update_conversation(info)
@@ -456,40 +457,39 @@ class myBot(wxpy.Bot):
     def get_message(self,msg,file_path=None):#处理收到的消息
         #yxsid_send 发送msg的人
         type_ = self.get_user_type(msg.chat)
-        print(msg.text)
-        if type_ == 3:
-            print('公众号消息')
-            msg_chat = 'Official'
-        elif type_ == 1:
-            msg_chat = 'Friend'
-            message_sender = msg.sender
-        elif type_ == 2:
-            msg_chat = 'Group'
-            yxsid_member = self.get_user_yxsid(msg.member)
-            message_sender = msg.member
-        else:
-            print('Error:\n',self.get_message)
-            return
+        yxsid_send = self.get_user_yxsid(msg.sender)#
+        yxsid_chat = self.get_user_yxsid(msg.chat)#对话框的yxsid，个人对话框和对方用户的yxsid相同
         msg_type = msg.type#获取消息类型
 
-        yxsid_send = self.get_user_yxsid(msg.sender)
-        yxsid = self.get_user_yxsid(msg.chat)
+        if type_ == 1:#好友消息，文件助手
+            message_sender = msg.sender
+            yxsid_send_user = yxsid_send #发送消息的人的yxsid
+        elif type_ == 2:#群聊
+            yxsid_member = self.get_user_yxsid(msg.member)
+            print('yxsid_member',yxsid_member)
+            message_sender = msg.member
+            yxsid_send_user = yxsid_member
+        else:#除去群聊，好友，文件助手的一切消息
+            print('公众号消息')
+            message_sender = msg.sender
+            yxsid_send_user = yxsid_send
 
-        if yxsid not in self.senders:
-            print('增加群聊天',msg.chat,msg.chat.name)
-            self.senders[yxsid] = msg.chat
-        receiver = self.message_dispatcher.get(yxsid)
+        if yxsid_chat not in self.senders:
+            print('增加聊天',msg.chat,msg.chat.name)
+            self.senders[yxsid_chat] = msg.chat
+        receiver = self.message_dispatcher.get(yxsid_chat)
         
+        #解析获取的消息
         if msg_type == TEXT:
             content = msg.text
             if content.startswith(HEAD_SYSTEM):#自定义消息 无需显示在界面中
-                self.system_message(content,yxsid_send)
+                self.system_message(content,yxsid_send_user)
                 return
             elif content.startswith(HEAD_ENCRYPT):#加密信息  需要解析后显示
                 content = self.decrypt_data(content,TEXT)
             text_conversation = content
         elif msg_type == PICTURE:
-            content = str(self.image_path /(yxsid+msg.file_name))
+            content = str(self.image_path /(yxsid_chat+msg.file_name))
             if not file_path:
                 msg.get_file(content)
             else:
@@ -520,7 +520,6 @@ class myBot(wxpy.Bot):
                 msg.get_file(filename)
             else:
                 os.rename(file_path,filename)
-            print(filename)
             content = filename
                 
         elif msg_type == NOTE:
@@ -533,24 +532,18 @@ class myBot(wxpy.Bot):
             content = 'None'
             text_conversation = '[消息]'
             print(msg.text)
-            print(dir(msg))
 
-        if msg_chat == 'Group':
-            yxsid_send_user = yxsid_member
-        else:
-            yxsid_send_user = yxsid_send
         if receiver is not None:
-            receiver(content, msg_type, yxsid_send,yxsid_send_user,message_sender)
+            receiver(content, msg_type,message_sender)#
         unread = 0
-        if msg_chat == 'Group':
-            yxsid_send = yxsid_member
+
         time_index = '{:.2f}'.format(time.time())
-        data_record = {'yxsid':yxsid_send,'Value':content,'Time':time_index,'Msg_type':msg_type,'name':message_sender.name}
+        data_record = {'yxsid':yxsid_send_user,'Value':content,'Time':time_index,'Msg_type':msg_type,'name':message_sender.name}
         print('You receive a new message!')
         print('sender',data_record)
-        print('receiver',yxsid,msg.chat,msg_type)
-        self.write_content(yxsid,data_record)
-        self.add_conversation({'yxsid': yxsid,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time()),'user_type':type_})        
+        print('receiver',yxsid_chat,msg.chat,msg_type)
+        self.write_content(yxsid_chat,data_record)
+        self.add_conversation({'yxsid': yxsid_chat,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time()),'user_type':type_})        
         self.update_conversation()
     def get_img_path(self,yxsid,group_yxsid=None):
         if yxsid in self.img_saved_dict:

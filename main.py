@@ -27,7 +27,6 @@ class Ui_Form:
 
         self.pannelIcon = QSystemTrayIcon(Form)
         self.system_icon = QtGui.QIcon(data_path+'icon/WeChat.ico')
-        print(self.system_icon)
         self.pannelIcon.setIcon(self.system_icon)
         self.pannelIcon.show()
         self.pannelIcon.setToolTip("微信")
