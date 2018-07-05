@@ -466,6 +466,7 @@ class myBot(wxpy.Bot):
         yxsid_send = self.get_user_yxsid(msg.sender)#
         yxsid_chat = self.get_user_yxsid(msg.chat)#对话框的yxsid，个人对话框和对方用户的yxsid相同
         msg_type = msg.type#获取消息类型
+        sender_name = '' #发消息人的名字，主要是用来在对话框预览界面显示群聊天中群成员的名字，其它对话中不 显示
 
         if type_ == 1:#好友消息，文件助手
             message_sender = msg.sender
@@ -474,6 +475,7 @@ class myBot(wxpy.Bot):
             yxsid_member = self.get_user_yxsid(msg.member)
             print('yxsid_member',yxsid_member)
             message_sender = msg.member
+            sender_name = message_sender.name+':'
             yxsid_send_user = yxsid_member
         else:#除去群聊，好友，文件助手的一切消息
             print('公众号消息')
@@ -552,7 +554,7 @@ class myBot(wxpy.Bot):
             unread = 0
         else:
             unread = 1
-        self.add_conversation({'yxsid': yxsid_chat,'text':text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time()),'user_type':type_})        
+        self.add_conversation({'yxsid': yxsid_chat,'text':sender_name+text_conversation, 'latest_user_name': '','unread_num': unread, 'latest_time': str(time.time()),'user_type':type_})        
         self.update_conversation()
     def get_img_path(self,yxsid,group_yxsid=None):
         if yxsid in self.img_saved_dict:

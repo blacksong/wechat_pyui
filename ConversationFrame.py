@@ -15,6 +15,9 @@ import os
 class ConversationButton(YDesignButton):
     picture_rect=(28/90*CRITERION,16/90*CRITERION,97/90*CRITERION,97/90*CRITERION)
     def setContent(self,picture,name,content,time,w,h,color_background=None):
+        if len(content)>22:
+            content = content[:2]
+        content = content.replace('\n',' ')
         picture = str(picture)
         if color_background is None:
             color_background=self.color_background
@@ -111,8 +114,11 @@ class ConversationFrame(object):
         self.drawConversations()
         
     def drawConversations(self):
-        set_warning = False
+        self.set_warning = False
+        self.unread = 0
         def accept_callback(args):
+            if args[0] is None:
+                return
             info = args[0]
             if int(info['user_type'])==3:
                 return
@@ -121,7 +127,8 @@ class ConversationFrame(object):
             unread = info['unread_num']
             if unread:
                 p1.setWarning(unread)
-                set_warning=True
+                self.unread += unread
+                self.set_warning=True
             p1.setContent(info['img_path'],info['name'],info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)
             self.scrollArea.append_element(p1)
             p1.show()
@@ -142,7 +149,7 @@ class ConversationFrame(object):
             self.conversation_thread.setThread(args_list)
             self.conversation_thread.trigger.connect(accept_callback)
             self.conversation_thread.start()
-        if set_warning:
+        if self.set_warning:
             self.Form.start_warning()
     def update_conversation(self):
         self.scrollArea.reset()
