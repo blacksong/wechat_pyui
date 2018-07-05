@@ -8,7 +8,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QWidget, QSlider, QApplication,QMainWindow,
                              QHBoxLayout, QVBoxLayout,QLabel,QFrame)
 from PyQt5.QtCore import Qt,QPoint,QRect
-from PyQt5.QtGui import QTextDocument,QPalette,QBrush,QColor,QFontMetrics,QPainter,QPen,QImage,QPixmap,QMovie
+from PyQt5.QtGui import QTextDocument,QPalette,QBrush,QColor,QFontMetrics,QPainter,QPen,QImage,QPixmap,QMovie,QLinearGradient
 import sys
 from pathlib import Path
 import re
@@ -656,3 +656,30 @@ class YInputText(QtWidgets.QTextEdit):
     def paintEvent(self,d):
         super().paintEvent(d)
         self.statusConnect((self.d.size().height(),self.height(),self.d.isEmpty()))
+class RedCircle(QWidget):
+    color = QColor(255,0,0)
+    text_color = QColor(255,255,255)
+    font=QtGui.QFont()
+    font.setFamily('SimHei')
+    font.setBold(True)
+    def __init__(self,father,text = None):
+        super().__init__(father)
+        self.text = text
+    def paintEvent(self,e):
+        qp = QPainter()
+        qp.begin(self)
+        self.drawWidget(qp)
+        qp.end()
+ 
+    def drawWidget(self, qp):
+        Width,Height=self.width(),self.height()
+        qp.setBrush(QBrush(self.color))
+        qp.setPen(QPen(self.color))
+        d = int(Width*0.9)
+        rect = QRect(0,0,d,d)
+        qp.drawEllipse(rect)
+        if self.text:
+            qp.setPen(QPen(self.text_color))
+            self.font.setPixelSize(d*0.75)
+            qp.setFont(self.font)
+            qp.drawText(rect,QtCore.Qt.AlignCenter,self.text)
