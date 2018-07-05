@@ -13,7 +13,11 @@ from CoreWidget import *
 import functions
 import os
 class ConversationButton(YDesignButton):
+    picture_rect=(28/90*CRITERION,16/90*CRITERION,97/90*CRITERION,97/90*CRITERION)
     def setContent(self,picture,name,content,time,w,h,color_background=None):
+        if len(content)>22:
+            content = content[:2]
+        content = content.replace('\n',' ')
         picture = str(picture)
         if color_background is None:
             color_background=self.color_background
@@ -30,7 +34,8 @@ class ConversationButton(YDesignButton):
         color_text_content=(161,161,161)
         color_text_time=(190,190,190)
 
-        picture_rect=(28/90*CRITERION,16/90*CRITERION,97/90*CRITERION,97/90*CRITERION)
+        picture_rect=self.picture_rect
+        self.picture_rect = picture_rect
 
         name_size=32/90*CRITERION
         content_size=24/90*CRITERION
@@ -76,6 +81,18 @@ class ConversationButton(YDesignButton):
         self.father_surface=father
     def adjust_position(self,*d):
         pass
+    def setWarning(self,n=0):
+        w,h,l,_ = self.picture_rect
+        if n >0:
+            text = str(n)
+            if n>99:
+                text = '+'
+        else:
+            text = None
+        self.warningButton = RedCircle(self,text)
+        d = (0.45*l)#直径
+        self.warningButton.setGeometry(w+l-0.6*d,h-0.3*d,d,d)
+        self.warningButton.show()
 
 
 class ConversationFrame(object):
@@ -97,8 +114,11 @@ class ConversationFrame(object):
         self.drawConversations()
         
     def drawConversations(self):
-
+        self.set_warning = False
+        self.unread = 0
         def accept_callback(args):
+            if args[0] is None:
+                return
             info = args[0]
             if int(info['user_type'])==3:
                 return
@@ -106,28 +126,31 @@ class ConversationFrame(object):
             p1.setName(info,self)
             unread = info['unread_num']
             if unread:
-                unread_str = '未读{} '.format(unread)
-            else:
-                unread_str = ''
-            p1.setContent(info['img_path'],info['name'],unread_str+info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)
+                p1.setWarning(unread)
+                self.unread += unread
+                self.set_warning=True
+            p1.setContent(info['img_path'],info['name'],info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)
             self.scrollArea.append_element(p1)
             p1.show()
 
         conversation_list = self.getConversations()
-        args_list = [(i,) for i in conversation_list]
+        if len(conversation_list)>9:
+            con_list_1 = conversation_list[:9]
+            con_list_2 = conversation_list[9:]
+        else:
+            con_list_1 = conversation_list
+            con_list_2 = list()
+        for info in con_list_1:
+            accept_callback((info,))
 
-        self.conversation_thread = functions.async_generate()
-        self.conversation_thread.setThread(args_list)
-        self.conversation_thread.trigger.connect(accept_callback)
-        self.conversation_thread.start()
-        # for info in conversation_list:
-        #     if int(info['user_type'])==3:continue
-        #     p1 = ConversationButton(self.scrollWidget_conversation)
-        #     p1.setName(info,self)
-        #     p1.setContent(info['img_path'],info['name'],info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)
-        #     self.scrollArea.append_element(p1)
-        #     p1.show()
-
+        if con_list_2:
+            args_list = [(i,) for i in con_list_2]
+            self.conversation_thread = functions.async_generate()
+            self.conversation_thread.setThread(args_list)
+            self.conversation_thread.trigger.connect(accept_callback)
+            self.conversation_thread.start()
+        if self.set_warning:
+            self.Form.start_warning()
     def update_conversation(self):
         self.scrollArea.reset()
         self.drawConversations()
@@ -141,15 +164,3 @@ class ConversationFrame(object):
     def show(self):
         self.scrollArea.show()
 
-
-if __name__ == '__main__':
-    '''
-    主函数
-    '''
-    app = QApplication(sys.argv)
-    mainWindow = QMainWindow()
-    ui = Ui_Form()
-    ui.setupUi(mainWindow)
-    mainWindow.show()
-    sys.exit(app.exec_())
-    

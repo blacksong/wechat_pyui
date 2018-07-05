@@ -426,21 +426,18 @@ class Ui_Mobile(Ui_Chat):
         self.scrollArea_bottom=ph_top+h-ph_top-ph-1
 
         self.scrollArea.setStyleSheet("border:none;")
-        self.scrollArea.setObjectName("scrollArea")
         self.scrollWidget_message = YWidget()#显示对话的Widget
         self.scrollWidget_message.setGeometry(QtCore.QRect(0, 0, w, h-ph_top-ph))
         # self.scrollWidget_message.setMinimumSize(QtCore.QSize(w, h-ph_top-ph-5))
         self.scrollWidget_message_size=w, h-ph_top-ph
         self.scrollWidget_message_bottom=0  #显示信息最底部的位置
 
-        self.scrollWidget_message.setObjectName("scrollWidget_message")
-        # self.pushButton1 = QtWidgets.QPushButton(self.scrollWidget_message)
-        # self.pushButton1.setGeometry(QtCore.QRect(40, 30, 92, 36))
-        
+
         self.scrollArea.setWidget(self.scrollWidget_message)
 
         self.Buttons=[self.Button_send,self.Button_back,self.labelLine,self.labelBackground,self.Button_title,self.Button_info,self.scrollArea,self.Button_speak,
         self.Button_emotion,self.Button_function,self.labelButton,self.input_text]
+        self.show()
         self.insert_some_message(100)
     def hide(self):
         for i in self.Buttons:
@@ -497,7 +494,6 @@ class Ui_Mobile(Ui_Chat):
         if init_value:p=self.scrollArea_bottom+4
         gs.setBottom(p-4)
         self.scrollArea.setGeometry(gs)
-        self.autoSlideBar()
 
         gg=self.labelBackground.geometry()
         if init_value:p=self.labelBackground_top+2 
