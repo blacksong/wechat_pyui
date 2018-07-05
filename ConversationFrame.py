@@ -121,6 +121,7 @@ class ConversationFrame(object):
             unread = info['unread_num']
             if unread:
                 p1.setWarning(unread)
+                set_warning=True
             p1.setContent(info['img_path'],info['name'],info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)
             self.scrollArea.append_element(p1)
             p1.show()

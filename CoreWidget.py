@@ -55,8 +55,9 @@ class YScrollArea(QtWidgets.QScrollArea):
         self.bottom = 0
         self.widgets = list()
         self.bar=self.verticalScrollBar()
-    def wheelEvent(self,e):
-        super().wheelEvent(e)
+    # def wheelEvent(self,e):
+    #     super().wheelEvent(e)
+        # self.setFocus()
         # print(self.bar.value())
         
     def mousePressEvent(self,e):
@@ -102,6 +103,7 @@ class YScrollArea(QtWidgets.QScrollArea):
     def reset(self):
         self.bottom = 0
         self.main_widget.resize(self.main_widget.width(), 1)
+        self.main_widget.setMinimumSize(self.main_widget.width(), 2)
         [i.hide() for i in self.widgets]
         self.widgets = list()
 #滚动区域的Widget
