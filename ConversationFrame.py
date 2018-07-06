@@ -16,7 +16,7 @@ class ConversationButton(YDesignButton):
     picture_rect=(28/90*CRITERION,16/90*CRITERION,97/90*CRITERION,97/90*CRITERION)
     def setContent(self,picture,name,content,time,w,h,color_background=None):
         if len(content)>22:
-            content = content[:2]
+            content = content[:22]
         content = content.replace('\n',' ')
         picture = str(picture)
         if color_background is None:
