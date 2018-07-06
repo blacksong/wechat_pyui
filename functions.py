@@ -31,6 +31,6 @@ class async_generate(QtCore.QThread):
         self.args_list = args_list
     def run(self):
         for n,args in enumerate(self.args_list):
-            if n>10:
-                time.sleep(0.00001)
+            time.sleep(0.00001)
             self.trigger.emit(args)
+        self.trigger.emit((None,))

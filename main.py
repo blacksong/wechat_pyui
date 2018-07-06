@@ -24,6 +24,7 @@ class Ui_Form:
         self.bot=None #设置机器人变量 初始为None，登录后会有值，在welcomeFrame中进行赋值
         self.start_login(True)
         self.chat_view_dict=dict()
+        Form.chat_view_dict = self.chat_view_dict
 
         self.pannelIcon = QSystemTrayIcon(Form)
         self.system_icon = QtGui.QIcon(data_path+'icon/WeChat.ico')
@@ -281,6 +282,8 @@ class myMainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('WeChat')
+        self.chat_yxsid_present = None#记录当前对话框yxsid的一个变量，相当于一个全局变量，因为Form会出现在很多widget中
+        self.chat_view_dict = None#记录单独剥离出来的对话框
         self.del_funs = []
         self.system_icon = QtGui.QIcon(data_path+'icon/WeChat.ico')
         self.warning_icon = QtGui.QIcon(data_path+'icon/WeChat_warning.ico')
