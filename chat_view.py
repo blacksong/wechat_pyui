@@ -441,6 +441,7 @@ class Ui_Mobile(Ui_Chat):
         self.Button_emotion,self.Button_function,self.labelButton,self.input_text]
         self.show()
         self.insert_some_message(100)
+        Bot.update_conversation()#更新对话frame的信息，主要是为了消除该对话的未读消息记录
     def hide(self):
         for i in self.Buttons:
             i.hide()
