@@ -107,6 +107,7 @@ class ConversationFrame(object):
         self.conversation_width = self.size[0]
 
         self.scrollArea = YScrollArea(Form)
+        self.bar_value = 0
         self.scrollArea.setGeometry(QtCore.QRect(ox, oy, w, h))
         self.scrollArea.setObjectName("conversation_surface")
         self.scrollWidget_conversation = YWidget()
@@ -117,13 +118,25 @@ class ConversationFrame(object):
         self.set_warning = False
         self.unread = 0
         def accept_callback(args):
-            if args[0] is None:
+            if args[0] is None: #异步绘制完毕后会返回一个(None,)参数，可以进行最后的处理
+                if self.set_warning:
+                    self.Form.start_warning()
+                if self.unread:
+                    self.Form.setWindowTitle('WeChat({}条新消息)'.format(self.unread))
+                else:
+                    self.Form.setWindowTitle('WeChat')
+                self.scrollArea.bar.setValue(self.bar_value)
                 return
             info = args[0]
-            if int(info['user_type'])==3:
-                return
+            #如果该对话框被剥离出来，则在对话消息界面不显示该用户,3表示不显示公众号信息
+            if int(info['user_type'])==3 or info['yxsid'] in self.Form.chat_view_dict:
+                return None
             p1 = ConversationButton(self.scrollWidget_conversation)
             p1.setName(info,self)
+
+            if info['yxsid']==self.Form.chat_yxsid_present:#如果当前正在和该用户聊天 则不增加该用户的新消息提示
+                info['unread_num'] = 0
+
             unread = info['unread_num']
             if unread:
                 p1.setWarning(unread)
@@ -132,8 +145,10 @@ class ConversationFrame(object):
             p1.setContent(info['img_path'],info['name'],info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)
             self.scrollArea.append_element(p1)
             p1.show()
+            return p1 
 
         conversation_list = self.getConversations()
+
         if len(conversation_list)>9:
             con_list_1 = conversation_list[:9]
             con_list_2 = conversation_list[9:]
@@ -149,9 +164,9 @@ class ConversationFrame(object):
             self.conversation_thread.setThread(args_list)
             self.conversation_thread.trigger.connect(accept_callback)
             self.conversation_thread.start()
-        if self.set_warning:
-            self.Form.start_warning()
+        
     def update_conversation(self):
+        self.bar_value = self.scrollArea.bar.value()
         self.scrollArea.reset()
         self.drawConversations()
     def goto_view(self,user_info):
@@ -162,5 +177,6 @@ class ConversationFrame(object):
     def hide(self):
         self.scrollArea.hide()
     def show(self):
+        print('show')
         self.scrollArea.show()
 

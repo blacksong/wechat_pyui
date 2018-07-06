@@ -81,7 +81,7 @@ class YScrollArea(QtWidgets.QScrollArea):
         element.move(0,self.bottom)
         self.bottom += h
         self.widgets.append(element)
-    def insert_elements(self,elements):
+    def insert_elements(self,elements):#在elements顶部插入 多个element
         mw, mh = self.main_widget.width(), self.main_widget.height()
         heights = [e.height() for e in elements]
         delta_h = sum(heights)

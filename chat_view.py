@@ -353,8 +353,10 @@ class Ui_Mobile(Ui_Chat):
     def setupUi(self, Form,w,h,view,user_info,Bot,ox=0,oy=0):
         #view:上一个view，value：该对话的信息，ox，oy是该界面显示的位置左上角的坐标，默认为0，0
 
+        Form.chat_yxsid_present = user_info['yxsid']
         self.Form=Form
         self.set_chat_info(Bot,user_info)
+        
         self.config_path = str(Bot.path.parent.with_name('wechat_data'))
         self.size=(w,h)
         self.isback=False
@@ -447,6 +449,7 @@ class Ui_Mobile(Ui_Chat):
             i.show()
     def button_back_click(self):
         print('back')
+        self.Form.chat_yxsid_present = None
         if self.need_update_conversation:
             self.bot.update_conversation()
         self.isback=True

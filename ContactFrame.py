@@ -47,6 +47,8 @@ class ContactFrame(object):
             clabel.show()
             return clabel
         def accept_label(args):
+            if args[0] is None:
+                return
             clabel = generate_label(args)
             self.scrollArea.append_element(clabel)
 
