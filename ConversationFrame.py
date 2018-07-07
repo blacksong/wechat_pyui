@@ -177,6 +177,7 @@ class ConversationFrame(object):
                     warningButton = con_widget.warningButton
                     if warningButton:
                         self.unread -= con_widget.unread
+                        con_widget.unread = 0
                         warningButton.hide()
                         self.setUnreadTitle()
                         break
