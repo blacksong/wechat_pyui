@@ -177,8 +177,11 @@ class ConversationFrame(object):
                     warningButton = con_widget.warningButton
                     if warningButton:
                         self.unread -= con_widget.unread
-                        con_widget.unread = 0
                         warningButton.hide()
+                        con_widget.unread = 0
+                        for i in self.bot.conversation_list_now:
+                            if i['yxsid'] == warning_yxsid:
+                                i['unread_num'] = 0
                         self.setUnreadTitle()
                         break
         else:
