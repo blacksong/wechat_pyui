@@ -511,14 +511,20 @@ class YTalkWidget(QtWidgets.QWidget):
                     return str(self.bot.path.parent.with_name('wechat_data') / 'icon' / 'error.jpg')
                 if getsize(value)<1024*100 or value.split('.')[-1].lower() == 'gif':
                     return value
-                img = Image.open(p)
-                w,h = img.size
-                if w>h:
-                    rate = w/150
-                else:
-                    rate = h/150
-                img.thumbnail((w//rate,h//rate))
-                img.save(path_thum)
+                try:
+                    img = Image.open(p)
+                
+                    w,h = img.size
+                    if w>h:
+                        rate = w/150
+                    else:
+                        rate = h/150
+                    img.thumbnail((w//rate,h//rate))
+                    img.save(path_thum)
+
+                except Exception as e:
+                    print('Error:\n{}\nread image{}'.format(e,p))
+                    path_thum = self.bot.path.parent.with_name('wechat_data') / 'icon' / 'error.jpg'
                 return str(path_thum)
         value = get_thumbnail(value)
         self.picture_bubble = YPictureBubble(self)#定义显示图片的组件

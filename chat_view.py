@@ -44,13 +44,6 @@ class Ui_Chat(QWidget):
         print(user_info)
         self.me_info = Bot.get_me_info()
         self.bot = Bot
-        self.need_update_conversation = False
-        user_yxsid_t = user_info['yxsid']
-        for i in Bot.conversation_list_now:
-            if i['yxsid'] == user_yxsid_t and i['unread_num'] != 0:
-                i['unread_num'] = 0
-                self.need_update_conversation = True
-                # Bot.update_conversation()
         self.is_encrypt = False
         self.isback=False
         self.time_before = '{:.2f}'.format(9529456999.83)
@@ -70,6 +63,7 @@ class Ui_Chat(QWidget):
         self.icon_dict={ME:self.icon_me,OTHER:self.icon_other}
         self.setWindowTitle(user_info['name'])
         self.setWindowIcon(self.icon_other)
+        Bot.update_conversation(user_info['yxsid'])#更新对话frame的信息，主要是为了消除该对话的未读消息记录
     def setupUi(self,Bot ,user_info:dict,father):
  
         self.father = father
@@ -441,6 +435,7 @@ class Ui_Mobile(Ui_Chat):
         self.Button_emotion,self.Button_function,self.labelButton,self.input_text]
         self.show()
         self.insert_some_message(100)
+        
     def hide(self):
         for i in self.Buttons:
             i.hide()
@@ -450,8 +445,6 @@ class Ui_Mobile(Ui_Chat):
     def button_back_click(self):
         print('back')
         self.Form.chat_yxsid_present = None
-        if self.need_update_conversation:
-            self.bot.update_conversation()
         self.isback=True
         self.hide()
         self.view_last.show()

@@ -14,9 +14,12 @@ import functions
 import os
 class ConversationButton(YDesignButton):
     picture_rect=(28/90*CRITERION,16/90*CRITERION,97/90*CRITERION,97/90*CRITERION)
+    def __init__(self,*d):
+        super().__init__(*d)
+        self.warningButton = None
     def setContent(self,picture,name,content,time,w,h,color_background=None):
         if len(content)>22:
-            content = content[:2]
+            content = content[:22]
         content = content.replace('\n',' ')
         picture = str(picture)
         if color_background is None:
@@ -26,7 +29,7 @@ class ConversationButton(YDesignButton):
         self.Ycontent=content 
         self.Ytime=time
         self.Yw=w 
-        self.Yh=h 
+        self.Yh=h
 
         font=global_font
         image=QtGui.QImage(picture)
@@ -78,11 +81,13 @@ class ConversationButton(YDesignButton):
                 (self.user_info, False))  # True代表打开一个新窗口
     def setName(self,user_info,father):
         self.user_info=user_info
+        self.yxsid = user_info['yxsid']
         self.father_surface=father
     def adjust_position(self,*d):
         pass
     def setWarning(self,n=0):
         w,h,l,_ = self.picture_rect
+        self.unread = n
         if n >0:
             text = str(n)
             if n>99:
@@ -113,7 +118,11 @@ class ConversationFrame(object):
         self.scrollWidget_conversation = YWidget()
         self.scrollArea.setWidget(self.scrollWidget_conversation)
         self.drawConversations()
-        
+    def setUnreadTitle(self):
+        if self.unread:
+            self.Form.setWindowTitle('WeChat({}条新消息)'.format(self.unread))
+        else:
+            self.Form.setWindowTitle('WeChat')
     def drawConversations(self):
         self.set_warning = False
         self.unread = 0
@@ -121,10 +130,7 @@ class ConversationFrame(object):
             if args[0] is None: #异步绘制完毕后会返回一个(None,)参数，可以进行最后的处理
                 if self.set_warning:
                     self.Form.start_warning()
-                if self.unread:
-                    self.Form.setWindowTitle('WeChat({}条新消息)'.format(self.unread))
-                else:
-                    self.Form.setWindowTitle('WeChat')
+                self.setUnreadTitle()
                 self.scrollArea.bar.setValue(self.bar_value)
                 return
             info = args[0]
@@ -133,7 +139,6 @@ class ConversationFrame(object):
                 return None
             p1 = ConversationButton(self.scrollWidget_conversation)
             p1.setName(info,self)
-
             if info['yxsid']==self.Form.chat_yxsid_present:#如果当前正在和该用户聊天 则不增加该用户的新消息提示
                 info['unread_num'] = 0
 
@@ -165,10 +170,20 @@ class ConversationFrame(object):
             self.conversation_thread.trigger.connect(accept_callback)
             self.conversation_thread.start()
         
-    def update_conversation(self):
-        self.bar_value = self.scrollArea.bar.value()
-        self.scrollArea.reset()
-        self.drawConversations()
+    def update_conversation(self,warning_yxsid=None):
+        if warning_yxsid:
+            for con_widget in self.scrollArea.widgets:
+                if con_widget.yxsid == warning_yxsid:
+                    warningButton = con_widget.warningButton
+                    if warningButton:
+                        self.unread -= con_widget.unread
+                        warningButton.hide()
+                        self.setUnreadTitle()
+                        break
+        else:
+            self.bar_value = self.scrollArea.bar.value()
+            self.scrollArea.reset()
+            self.drawConversations()
     def goto_view(self,user_info):
         #跳转到conversation的内容界面
         self.father_view.goto_view('chat',user_info)
