@@ -6,7 +6,7 @@ def get_latest_time(latest_time: float,need_hours=False):
     is_hours = False
     if latest_time.tm_year == now_time.tm_year:
         if now_time.tm_yday - latest_time.tm_yday == 0:
-            r_time = '{0}:{1}'.format(
+            r_time = '{0:02d}:{1:02d}'.format(
                 latest_time.tm_hour, latest_time.tm_min)
             is_hours = True
         elif now_time.tm_yday - latest_time.tm_yday == 1:
@@ -23,14 +23,14 @@ def get_latest_time(latest_time: float,need_hours=False):
         r_time = '{0}年{1}月{2}日'.format(
             latest_time.tm_year, latest_time.tm_mon, latest_time.tm_mday)
     if need_hours and not is_hours:
-        r_time += ' {0}:{1}'.format(latest_time.tm_hour, latest_time.tm_min)
+        r_time += ' {0:02d}:{1:02d}'.format(latest_time.tm_hour, latest_time.tm_min)
     return r_time
 class async_generate(QtCore.QThread):
     trigger = QtCore.pyqtSignal(tuple)
     def setThread(self,args_list):
         self.args_list = args_list
     def run(self):
-        for n,args in enumerate(self.args_list):
+        for _,args in enumerate(self.args_list):
             time.sleep(0.00001)
             self.trigger.emit(args)
         self.trigger.emit((None,))
