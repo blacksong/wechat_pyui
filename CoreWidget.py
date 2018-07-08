@@ -145,11 +145,9 @@ class YTextButton(QtWidgets.QPushButton):
 class YSentenceBubble(QtWidgets.QWidget):
     me_color=100,200,90
     other_color=255,255,255
-    other_rect_pos=(120/90*CRITERION,24/90*CRITERION)
+    other_rect_pos=(120/90*CRITERION,12/90*CRITERION)
     radius=10/90*CRITERION
-
     border_text=8/90*CRITERION #bubble和文字边框之间的距离
-
     font_size=int(30/90*CRITERION) #字体大小css  单文px
 
     max_width=450/90*CRITERION
@@ -170,22 +168,24 @@ class YSentenceBubble(QtWidgets.QWidget):
  
     def drawWidget(self, qp):
 
-        Width,Height=self.Ysize
-        self.rect=QRect(self.rect_pos[0]-self.border_text,self.rect_pos[1]-self.border_text,Width+self.border_text*2,Height+self.border_text*2)
-        self.textEdit.setGeometry(self.rect_pos[0],self.rect_pos[1],Width,Height)
+        # self.rect=QRect(self.rect_pos[0]-self.border_text,self.rect_pos[1]-self.border_text,Width+self.border_text*2,Height+self.border_text*2)
+        # rect=QRect(0,0,Width+self.border_text*2,Height+self.border_text*2)
+        # self.textEdit.setGeometry(
+        #     self.border_text, self.border_text, Width, Height)
         qp.setBrush(QBrush(self.color))
         qp.setPen(QPen(self.color))
-        qp.drawRoundedRect(self.rect,self.radius,self.radius)
+        qp.drawRoundedRect(self.bubble_rect,self.radius,self.radius)
     
     def setBubble(self,identity=ME):
         if identity is ME:
             self.color=QColor(*self.me_color)
             Width=self.Ysize[0]+self.border_text 
-            self.rect_pos=self.Yw-(self.other_rect_pos[0]+Width),self.other_rect_pos[1]
+            rect_pos=self.Yw-(self.other_rect_pos[0]+Width),self.other_rect_pos[1]
         else:
             self.color=QColor(*self.other_color)
-            self.rect_pos=self.other_rect_pos
-        self.window_height = max(self.Ysize[1]+self.border_text+self.rect_pos[1],self.min_height)
+            rect_pos=self.other_rect_pos
+        self.window_height = max(self.Ysize[1]+self.border_text+rect_pos[1],self.min_height)
+        self.move(*rect_pos)
     def setMessage(self,text,identity=ME):
         self.textEdit = QtWidgets.QTextEdit(self)
         self.textEdit.setObjectName("textEdit")
@@ -215,6 +215,12 @@ class YSentenceBubble(QtWidgets.QWidget):
         self.Ysize=width,self.d.size().height()
 
         self.setBubble(identity)
+        Width, Height = self.Ysize
+        Height0 = max(80/90*CRITERION-2*self.border_text,Height)
+        self.bubble_rect = QRect(
+            0, 0, Width+self.border_text*2, Height0+self.border_text*2)
+        self.textEdit.setGeometry(
+            self.border_text, (Height0-Height)/2+self.border_text, Width, Height)
 
 
 class YSystemBubble(QtWidgets.QWidget):#显示系统提示消息
@@ -372,20 +378,12 @@ class YTalkWidget(QtWidgets.QWidget):
             h += dh
             pos = self.message_label.pos()
             x,y = pos.x(), pos.y()
-            if Format == TEXT:
-                pic_width = self.pic_qsize.width()
-                name_x = self.pos_other[0]+5+pic_width
-                name_y = y+5
-            else:
-                name_x = x
-                name_y = y
+            print(x,y,Format)
             self.name_label = QLabel(user_name,self)
             self.name_label.setFont(self.font)
-            # self.name_label.setScaledContents(True)
-            # self.name_label.resize(CRITERION*4,dh)
             self.message_label.move(x,y+dh)
             
-            self.name_label.move(name_x,name_y)
+            self.name_label.move(x,y)
         self.resize(self.Yw,h)
     def mouseDoubleClickEvent(self,e): 
         if e.buttons() == Qt.LeftButton and self.lable_geometry:
