@@ -148,7 +148,7 @@ class ConversationFrame(object):
                 self.unread += unread
                 self.set_warning=True
             p1.setContent(info['img_path'],info['name'],info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)
-            self.scrollArea.append_element(p1)
+            self.scrollArea.append_element(p1,info['yxsid'])
             p1.show()
             return p1 
 
@@ -172,18 +172,15 @@ class ConversationFrame(object):
         
     def update_conversation(self,warning_yxsid=None):
         if warning_yxsid:
-            for con_widget in self.scrollArea.widgets:
-                if con_widget.yxsid == warning_yxsid:
-                    warningButton = con_widget.warningButton
-                    if warningButton:
-                        self.unread -= con_widget.unread
-                        warningButton.hide()
-                        con_widget.unread = 0
-                        for i in self.bot.conversation_list_now:
-                            if i['yxsid'] == warning_yxsid:
-                                i['unread_num'] = 0
-                        self.setUnreadTitle()
-                        break
+            con_widget = self.scrollArea.widgets_dict[warning_yxsid]
+            warningButton = con_widget.warningButton
+            if warningButton:
+                self.unread -= con_widget.unread
+                warningButton.hide()
+                con_widget.unread = 0
+                con = self.bot.conversation_dict_now[warning_yxsid]
+                con['unread_num'] = 0
+                self.setUnreadTitle()
         else:
             self.bar_value = self.scrollArea.bar.value()
             self.scrollArea.reset()
@@ -192,7 +189,9 @@ class ConversationFrame(object):
         #跳转到conversation的内容界面
         self.father_view.goto_view('chat',user_info)
     def getConversations(self): #获取对话列表
-        return self.bot.conversation_list()
+        con_list = self.bot.conversation_list()
+        con_list.sort(key = lambda x:-float(x['latest_time']))
+        return con_list
     def hide(self):
         self.scrollArea.hide()
     def show(self):

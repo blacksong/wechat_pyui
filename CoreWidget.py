@@ -54,6 +54,7 @@ class YScrollArea(QtWidgets.QScrollArea):
         self.setWidgetResizable(True)
         self.bottom = 0
         self.widgets = list()
+        self.widgets_dict = dict()
         self.bar=self.verticalScrollBar()
     # def wheelEvent(self,e):
     #     super().wheelEvent(e)
@@ -71,7 +72,7 @@ class YScrollArea(QtWidgets.QScrollArea):
         for i in self.widgets:
             i.adjust_position(width_w)
 
-    def append_element(self,element):
+    def append_element(self,element,key = 0):#默认widgets_dict的key值为0
         
         h=element.height()
         mw,mh = self.main_widget.width(),self.main_widget.height()
@@ -81,7 +82,10 @@ class YScrollArea(QtWidgets.QScrollArea):
         element.move(0,self.bottom)
         self.bottom += h
         self.widgets.append(element)
-    def insert_elements(self,elements):#在elements顶部插入 多个element
+        self.widgets_dict[key] = element
+    def insert_elements(self,elements,keys = None):#在elements顶部插入 多个element
+        if keys is None:
+            keys = [0]*len(elements)
         mw, mh = self.main_widget.width(), self.main_widget.height()
         heights = [e.height() for e in elements]
         delta_h = sum(heights)
@@ -91,11 +95,12 @@ class YScrollArea(QtWidgets.QScrollArea):
         self.bottom += delta_h
         [i.move(0, i.pos().y()+delta_h) for i in reversed(self.widgets)]
             
-        for i in reversed(elements):
+        for i,key in zip(reversed(elements),reversed(keys)):
             height = i.height()
             i.move(0,delta_h-height)
             delta_h -= height
             self.widgets.insert(0,i)
+            self.widgets_dict[key] = i
 
     def setWidget(self,w): #设置并记录该滚动区域的widget
         super().setWidget(w)

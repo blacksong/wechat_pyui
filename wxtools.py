@@ -246,24 +246,17 @@ class myBot(wxpy.Bot):
                 name = '群聊{}'.format(membercount)
             
         d['name'] = str(name)
-
-
-        for i in self.conversation_list_now:
-            if i['yxsid'] == yxsid:
-                unread = d['unread_num']
-                if unread:
-                    d['unread_num'] = i['unread_num']+1
-                else:
-                    d['unread_num'] = 0
-                i.update(d)
-                break
+        con = self.conversation_dict_now.get(yxsid)
+        if con:
+            con = self.conversation_dict_now[yxsid]
+            con['unread_num']+=d['unread_num']
+            con.update(d)
         else:
             self.conversation_list_now.append(d)
+            self.conversation_dict_now[yxsid] = d
     def conversation_list(self):#返回已经发生过的对话列表
         tags = ('yxsid', 'name', 'latest_time','unread_num', 'latest_user_name','text','user_type')
         if self.conversation_list_now:
-            self.conversation_list_now.sort(key = lambda x: x['latest_time'])
-            self.conversation_list_now.reverse()
             return self.conversation_list_now
         elif self.db.table_exists('conversation_list'):
             t = self.db.select('conversation_list', tags, return_dict=True)
@@ -271,12 +264,13 @@ class myBot(wxpy.Bot):
                 i['img_path'] = self.get_img_path(i['yxsid'])
                 i['unread_num'] = int(i['unread_num'])
             self.conversation_list_now = t
-            self.conversation_list_now.sort(key=lambda x: x['latest_time'])
-            self.conversation_list_now.reverse()
+            self.conversation_dict_now = {i['yxsid']:i for i in t}
+
         else:
             d=dict.fromkeys(tags)
             self.db.dict_to_table(d,'conversation_list')
             self.conversation_list_now = list()
+            self.conversation_dict_now = dict()
         return self.conversation_list_now
     def write_content(self,yxsid,data,passwd=None):
         #data保存的数据格式 字典形式，包括Value:str,Msg_type,Time,yxsid(两人对话时0代表自己，1代表对方，群聊时代表发送者的yxsid)
