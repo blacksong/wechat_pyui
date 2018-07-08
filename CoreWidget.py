@@ -184,7 +184,7 @@ class YSentenceBubble(QtWidgets.QWidget):
         else:
             self.color=QColor(*self.other_color)
             rect_pos=self.other_rect_pos
-        self.window_height = max(self.Ysize[1]+self.border_text+rect_pos[1],self.min_height)
+        
         self.move(*rect_pos)
     def setMessage(self,text,identity=ME):
         self.textEdit = QtWidgets.QTextEdit(self)
@@ -221,6 +221,8 @@ class YSentenceBubble(QtWidgets.QWidget):
             0, 0, Width+self.border_text*2, Height0+self.border_text*2)
         self.textEdit.setGeometry(
             self.border_text, (Height0-Height)/2+self.border_text, Width, Height)
+
+        self.window_height = Height0+self.border_text*4
 
 
 class YSystemBubble(QtWidgets.QWidget):#显示系统提示消息
@@ -378,7 +380,6 @@ class YTalkWidget(QtWidgets.QWidget):
             h += dh
             pos = self.message_label.pos()
             x,y = pos.x(), pos.y()
-            print(x,y,Format)
             self.name_label = QLabel(user_name,self)
             self.name_label.setFont(self.font)
             self.message_label.move(x,y+dh)
