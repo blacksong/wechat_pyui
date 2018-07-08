@@ -22,6 +22,9 @@ import imageio
 import webbrowser
 import subprocess
 from multiprocessing import Process
+
+platform = sys.platform
+
 SYSTEM_YXS = 'SYSTEM_YXS'
 global_font=QtGui.QFont()
 global_font.setFamily('SimHei')
@@ -55,10 +58,6 @@ class YScrollArea(QtWidgets.QScrollArea):
         self.bottom = 0
         self.widgets = list()
         self.bar=self.verticalScrollBar()
-    # def wheelEvent(self,e):
-    #     super().wheelEvent(e)
-        # self.setFocus()
-        # print(self.bar.value())
         
     def mousePressEvent(self,e):
         print(e.x(),e.y(),'Ps')
@@ -211,7 +210,7 @@ class YSentenceBubble(QtWidgets.QWidget):
 
 
         width = self.d.idealWidth()   #获取对话框的宽度
-        if sys.platform.startswith('linux'):
+        if platform.startswith('linux'):
             width += int(self.font_size/4)
         self.Ysize=width,self.d.size().height()
 
@@ -272,7 +271,7 @@ class YSystemBubble(QtWidgets.QWidget):#显示系统提示消息
         self.textEdit.setHtml(text)
 
         width = self.d.idealWidth()  # 获取对话框的宽度
-        if sys.platform.startswith('linux'):
+        if platform.startswith('linux'):
             width += int(self.font_size/4)
         self.Ysize = width, self.d.size().height()
         self.resize(*self.Ysize)
@@ -315,6 +314,9 @@ class YTalkWidget(QtWidgets.QWidget):
     other_rect_topleft=(120/90*CRITERION,12/90*CRITERION)
     max_size=250/90*CRITERION
     min_size=104/90*CRITERION
+    font = QtGui.QFont()
+    font.setFamily('SimHei')
+    font.setPixelSize(0.25*CRITERION)
     def __init__(self,d=None,Bot = None):
         super().__init__(d)
         self.Yw=d.width()
@@ -378,9 +380,11 @@ class YTalkWidget(QtWidgets.QWidget):
                 name_x = x
                 name_y = y
             self.name_label = QLabel(user_name,self)
+            self.name_label.setFont(self.font)
             # self.name_label.setScaledContents(True)
             # self.name_label.resize(CRITERION*4,dh)
             self.message_label.move(x,y+dh)
+            
             self.name_label.move(name_x,name_y)
         self.resize(self.Yw,h)
     def mouseDoubleClickEvent(self,e): 
@@ -399,7 +403,7 @@ class YTalkWidget(QtWidgets.QWidget):
             if self.Format == PICTURE:
                 self._display = ysv.GifPreview(name=value)
             elif self.Format == VIDEO:
-                if sys.platform.startswith('linux'):
+                if platform.startswith('linux'):
                     p = Process(target = subprocess.call,args=(['vlc',value],))
                     p.start()
                 else:
