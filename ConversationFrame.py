@@ -172,7 +172,9 @@ class ConversationFrame(object):
         
     def update_conversation(self,warning_yxsid=None):
         if warning_yxsid:
-            con_widget = self.scrollArea.widgets_dict[warning_yxsid]
+            con_widget = self.scrollArea.widgets_dict.get(warning_yxsid)
+            if not con_widget:
+                return
             warningButton = con_widget.warningButton
             if warningButton:
                 self.unread -= con_widget.unread
