@@ -99,7 +99,6 @@ class ConversationButton(YDesignButton):
         self.warningButton.setGeometry(w+l-0.6*d,h-0.3*d,d,d)
         self.warningButton.show()
 
-
 class ConversationFrame(object):
 
     def setupUi(self, Form,ox,oy,w,h,father=None):
@@ -172,10 +171,14 @@ class ConversationFrame(object):
         
     def update_conversation(self,warning_yxsid=None):
         if warning_yxsid:
-            con_widget = self.scrollArea.widgets_dict[warning_yxsid]
+            con_widget = self.scrollArea.widgets_dict.get(warning_yxsid)
+            if not con_widget:
+                return
             warningButton = con_widget.warningButton
             if warningButton:
                 self.unread -= con_widget.unread
+                if not self.unread:
+                    self.Form.stop_warning()
                 warningButton.hide()
                 con_widget.unread = 0
                 con = self.bot.conversation_dict_now[warning_yxsid]

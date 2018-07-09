@@ -302,7 +302,8 @@ class myMainWindow(QWidget):
     def setUi(self,ui):
         self.ui = ui
     def enterEvent(self,e):
-        self.stop_warning()
+        # self.stop_warning()
+        pass
     def closeEvent(self,e):
         try:
             self.ui.timer.stop()
