@@ -123,10 +123,11 @@ class Ui_Form:
 
     def setButton(self,B,I,pw,ph,objectname,connect=None):
         if I is not None:
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(I) )
+            icon = QtGui.QIcon(I)
             B.setIcon(icon)
+
             B.setIconSize(QtCore.QSize(pw , ph))
+            print(pw,ph,B.iconSize(),I)
         B.setObjectName(objectname)
         if connect is not None:B.clicked.connect(connect)
 

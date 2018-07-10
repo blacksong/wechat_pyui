@@ -32,8 +32,7 @@ global_font.setFamily('SimHei')
 
 #宏定义值
 AUTO_PUSH=1
-CRITERION = 90/1280*640
-
+CRITERION = int(100/1280*640)
 ME=5 
 OTHER=6
 emoji = dict()
@@ -45,6 +44,7 @@ read_emoji()
 class YButton(QtWidgets.QPushButton):
     def __init__(self,d=None):
         super().__init__(d)
+        self.setStyleSheet('border:none')
     def tt(self):
         pass
 
@@ -637,6 +637,7 @@ class FunctionButton(YDesignButton):
         self.setDesigning(arg1,arg2,pos=pos,size=(w,h),sep=sep)
 #微信信息输入框
 class YInputText(QtWidgets.QTextEdit):
+    
     def __init__(self,d):
         super().__init__(d)
         self.max_length=2*CRITERION
@@ -648,6 +649,10 @@ class YInputText(QtWidgets.QTextEdit):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.statusConnect = lambda x:None
         self.d=self.document()
+        # self.font=QtGui.QFont()
+        # self.font.setFamily('SimHei')
+        # self.font.setPixelSize(0.4*CRITERION)
+        # self.setFont(self.font)
 
     def press_enter_connect(self,func):
         self.press_enter = func
