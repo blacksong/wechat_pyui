@@ -127,7 +127,6 @@ class Ui_Form:
             B.setIcon(icon)
 
             B.setIconSize(QtCore.QSize(pw , ph))
-            print(pw,ph,B.iconSize(),I)
         B.setObjectName(objectname)
         if connect is not None:B.clicked.connect(connect)
 

@@ -248,8 +248,7 @@ class myBot(wxpy.Bot):
         d['name'] = str(name)
         con = self.conversation_dict_now.get(yxsid)
         if con:
-            con = self.conversation_dict_now[yxsid]
-            con['unread_num']+=d['unread_num']
+            d['unread_num']+=con['unread_num']
             con.update(d)
         else:
             self.conversation_list_now.append(d)

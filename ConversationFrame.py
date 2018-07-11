@@ -88,6 +88,7 @@ class ConversationButton(YDesignButton):
     def setWarning(self,n=0):
         w,h,l,_ = self.picture_rect
         self.unread = n
+        print(self.user_info,n,'warning')
         if n >0:
             text = str(n)
             if n>99:
@@ -123,11 +124,10 @@ class ConversationFrame(object):
         else:
             self.Form.setWindowTitle('WeChat')
     def drawConversations(self):
-        self.set_warning = False
         self.unread = 0
         def accept_callback(args):
             if args[0] is None: #异步绘制完毕后会返回一个(None,)参数，可以进行最后的处理
-                if self.set_warning:
+                if self.unread:
                     self.Form.start_warning()
                 else:
                     self.Form.stop_warning()
@@ -147,7 +147,7 @@ class ConversationFrame(object):
             if unread:
                 p1.setWarning(unread)
                 self.unread += unread
-                self.set_warning=True
+                
             p1.setContent(info['img_path'],info['name'],info['text'],functions.get_latest_time(float(info['latest_time'])) ,self.conversation_width,self.conversation_height)
             self.scrollArea.append_element(p1,info['yxsid'])
             p1.show()
