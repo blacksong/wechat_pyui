@@ -129,6 +129,8 @@ class ConversationFrame(object):
             if args[0] is None: #异步绘制完毕后会返回一个(None,)参数，可以进行最后的处理
                 if self.set_warning:
                     self.Form.start_warning()
+                else:
+                    self.Form.stop_warning()
                 self.setUnreadTitle()
                 self.scrollArea.bar.setValue(self.bar_value)
                 return
