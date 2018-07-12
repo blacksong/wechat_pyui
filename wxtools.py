@@ -494,8 +494,9 @@ class myBot(wxpy.Bot):
             if not file_path:
                 msg.get_file(content)
             else:
-                if not Path(content).is_file() and Path(file_path).exists():
-                    os.rename(file_path,content)
+                if Path(content).exists():
+                    os.remove(content)
+                os.rename(file_path,content)
             is_existed = Path(content).is_file()
             if not is_existed or getsize(content) == 0:
                 if is_existed:
@@ -520,6 +521,8 @@ class myBot(wxpy.Bot):
             if not file_path:
                 msg.get_file(filename)
             else:
+                if Path(filename).exists():
+                    os.remove(filename)
                 os.rename(file_path,filename)
             content = filename
                 
