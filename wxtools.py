@@ -521,9 +521,12 @@ class myBot(wxpy.Bot):
             if not file_path:
                 msg.get_file(filename)
             else:
-                if Path(filename).exists():
-                    os.remove(filename)
-                os.rename(file_path,filename)
+                try:
+                    if Path(filename).exists():
+                        os.remove(filename)
+                    os.rename(file_path,filename)
+                except Exception as e:
+                    print('Error:文件已存在 无法删除',e)
             content = filename
                 
         elif msg_type == NOTE:
