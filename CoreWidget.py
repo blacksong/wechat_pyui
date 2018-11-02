@@ -16,7 +16,7 @@ import os
 from PIL import Image
 from os.path import getsize
 import yxspkg_songzviewer as ysv
-from wxpy import TEXT, PICTURE, MAP, VIDEO, CARD, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
+from wxpy import TEXT, PICTURE, MAP, CARD, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
 import video_player
 import imageio
 import webbrowser
@@ -378,6 +378,8 @@ class YTalkWidget(QtWidgets.QWidget):
             h = self.setMessage_Attachment(value)
         elif Format == SHARING:
             h = self.setMessage_Attachment(value,is_sharing = True)
+        elif Format == RECORDING:
+            h = self.setMessage_Attachment(value)
         else:
             h = self.setMessage('不支持的消息类型，请在手机中查看：{}\n{}'.format(Format,value))
         if user_name and identity is OTHER:
@@ -418,6 +420,9 @@ class YTalkWidget(QtWidgets.QWidget):
             elif self.Format == SHARING:
                 url = self.value.split()[0]
                 webbrowser.open(url)
+            elif self.Format == RECORDING:
+                self.play_audio = video_player.play_audio(self.value)
+                self.play_audio.start()
         else:
             pass
     def setMessage_System(self,value):

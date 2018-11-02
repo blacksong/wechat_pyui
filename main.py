@@ -9,8 +9,9 @@ import ConversationFrame,MeFrame,ContactFrame,DiscoverFrame
 import WelcomeFrame
 data_path = './wechat_data/'
 import ctypes
-if sys.platform.startswith('win'):
+if sys.platform.startswith('win'):#为了使任务栏图标和标题栏图标一样，需要ctypes的设置
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
+    del ctypes
 class Ui_Form:
     def __init__(self, Form, h=1280/90, w=720/90):
         super().__init__()
@@ -26,6 +27,7 @@ class Ui_Form:
         self.chat_view_dict=dict()
         Form.chat_view_dict = self.chat_view_dict
 
+        #在系统托盘显示图标
         self.pannelIcon = QSystemTrayIcon(Form)
         self.system_icon = QtGui.QIcon(data_path+'icon/WeChat.ico')
         self.pannelIcon.setIcon(self.system_icon)
@@ -287,7 +289,7 @@ class myMainWindow(QWidget):
         self.del_funs = []
         self.system_icon = QtGui.QIcon(data_path+'icon/WeChat.ico')
         self.warning_icon = QtGui.QIcon(data_path+'icon/WeChat_warning.ico')
-        self.setWindowIcon(self.system_icon)
+        self.setWindowIcon(self.system_icon)#设置标题栏和系统任务栏图标
         self.is_warning = False
     def start_warning(self):
         if not self.is_warning:

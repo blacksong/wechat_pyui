@@ -90,7 +90,7 @@ class Ui_Chat(QWidget):
         self.setLayout(layout)
         self.show()
 
-        self.insert_some_message(100)
+        self.insert_some_message(10)
     def insert_some_message(self,nums):    
         an = list(self.bot.read_content(self.user_info['yxsid'],time_before= self.time_before,nums = nums))
         an.reverse()
@@ -434,7 +434,7 @@ class Ui_Mobile(Ui_Chat):
         self.Buttons=[self.Button_send,self.Button_back,self.labelLine,self.labelBackground,self.Button_title,self.Button_info,self.scrollArea,self.Button_speak,
         self.Button_emotion,self.Button_function,self.labelButton,self.input_text]
         self.show()
-        self.insert_some_message(100)
+        self.insert_some_message(10)
         
     def hide(self):
         for i in self.Buttons:

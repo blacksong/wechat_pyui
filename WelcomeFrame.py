@@ -28,7 +28,7 @@ class LogInThread(QtCore.QThread):
         @bot.register(except_self=False)
         def get_message(msg,index_file = [1]):
             filename = None
-            if msg.type in (PICTURE,VIDEO,ATTACHMENT):
+            if msg.type in (PICTURE,VIDEO,ATTACHMENT,RECORDING):
                 filename = bot.path /(str(index_file[0]) + msg.file_name)
                 index_file[0]+=1
                 msg.get_file(str(filename))

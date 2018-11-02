@@ -216,10 +216,12 @@ class PlayerControls(QWidget):
         return self.playerState
 
     def setState(self,state):
+        print('sdfsdf')
         if state != self.playerState:
             self.playerState = state
 
             if state == QMediaPlayer.StoppedState:
+
                 
                 self.stopButton.setEnabled(False)
                 self.playButton.setIcon(
@@ -565,6 +567,7 @@ class Player(QWidget):
         self.player.setPosition(seconds * 1000)
 
     def statusChanged(self, status):
+        print('sdddd')
         self.handleCursor(status)
 
         if status == QMediaPlayer.LoadingMedia:
@@ -687,14 +690,35 @@ class Player(QWidget):
 
         self.colorDialog.show()
 
-
+class play_audio:
+    def __init__(self,audio_file):
+        url = QUrl.fromLocalFile(audio_file) 
+        content = QMediaContent(url) 
+        
+        self.player = QMediaPlayer() 
+        self.player.setMedia(content) 
+        self.player.mediaStatusChanged.connect(self.statusChanged)
+    def statusChanged(self,status):
+        print(status,'dddddd',self.player.playerState)
+        if status == QMediaPlayer.StoppedState:
+            self.stop()
+    def start(self):
+        self.player.play() 
+    def stop(self):
+        print('sdfsdf')
+        self.player.stop()
+        del self
 if __name__ == '__main__':
 
     import sys
 
     app = QApplication(sys.argv)
 
-    player = Player(['1.mp4'])
-    player.show()
+    # player = Player(['1.mp3'])
+    # player.show()
 
-    sys.exit(app.exec_())
+    # sys.exit(app.exec_())
+    t = play_audio('3.mp3')
+    t.start()
+    print(dir(t.player))
+    sys.exit(app.exec())

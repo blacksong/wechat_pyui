@@ -383,6 +383,7 @@ class myBot(wxpy.Bot):
             head_length = len(HEAD_ENCRYPT)
             public_key_id = data[head_length:head_length+4]
             if public_key_id != self.public_key_id:
+                self.public_key_dict = {}
                 return False #加密所使用的密钥错误
             data = data[head_length+4:] #4代表public_key_id 的长度
             data = base64.b64decode(data.encode('utf8'))
@@ -417,11 +418,14 @@ class myBot(wxpy.Bot):
             text_conversation = '[视频]'
             content = data  
             friend.send_video(data)
+        elif msg_type == RECORDING:
+            text_conversation = '[语音]'
+            content = data
+            friend.send_video(data)
         time_index = str(time.time())
         data_record = {'yxsid':'0','Value':content,'Time':time_index,'Msg_type':msg_type,'name':''}
         
         cons = {'yxsid':target['yxsid'],'text':text_conversation,'latest_user_name':'','unread_num':0,'latest_time':time_index,'user_type':self.get_user_type(friend)}
-        print('post',cons)
         info = (target['yxsid'],data_record,cons)
         if update_con:
             self.async_update_conversation(info)
@@ -452,7 +456,10 @@ class myBot(wxpy.Bot):
             sender = self.senders[yxsid]
             print('send file', str(self.publicfile))
             sender.send_file(str(self.publicfile))
-
+    def RSAError(self,msg):
+        '''RSA解密时出现错误调用此函数，发送一条明文消息给对方，告诉对方消息发送错误，请对方重发，并且发送我方公钥给对方'''
+        msg.sender.send_file(str(self.publicfile))
+        msg.sender.send('信息错误，请尝试重发上一条信息')
     def get_message(self,msg,file_path=None):#处理收到的消息
         #yxsid_send 发送msg的人
         type_ = self.get_user_type(msg.chat)
@@ -488,6 +495,9 @@ class myBot(wxpy.Bot):
                 return
             elif content.startswith(HEAD_ENCRYPT):#加密信息  需要解析后显示
                 content = self.decrypt_data(content,TEXT)
+                if content is False:
+                    self.RSAError(msg)
+                    return
             text_conversation = content
         elif msg_type == PICTURE:
             content = str(self.image_path /(yxsid_chat+msg.file_name))
@@ -506,7 +516,7 @@ class myBot(wxpy.Bot):
                 text_conversation = content
             else:
                 text_conversation = '[图片]'
-        elif msg_type == ATTACHMENT or msg_type == VIDEO:
+        elif msg_type in [ATTACHMENT, VIDEO, RECORDING]:
             if msg.file_name.endswith(SUFFIX_PUBLICKEY):#如果文件后缀为SUFFIX_PUBLICKEY则不显示该文件 该文件是公钥文件，，进行保存
                 self.save_publickey(msg,file_path)
                 return
@@ -514,6 +524,9 @@ class myBot(wxpy.Bot):
             if msg_type == VIDEO:
                 epath = self.video_path
                 text_conversation = '[视频]'
+            elif msg_type == RECORDING:
+                text_conversation = '[语音]'
+                epath = self.attachment_path
             else:
                 text_conversation = '[文件]'
                 epath = self.attachment_path
