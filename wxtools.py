@@ -92,13 +92,15 @@ class mydb:
                 self.cur.execute('delete from {table} where 1=1'.format(table=table))
                 
         res = self.cur.execute('select * from {}'.format(table))
-        columns = set([i[0] for i in res.description])
-        
+        columns = set([i[0].lower() for i in res.description])
+        def filter_key(key,keys):
+            if key.lower() in keys:
+                return True
+            else:
+                return False
         for d in data:
-            c2 = set(d.keys())
-            g = c2-columns
+            g = set([i for i in d.keys() if not filter_key(i,columns)])
             if g:
-                columns.update(g)
                 for i in g:
                     self.cur.execute('alter table {table} add {column} varchar(3)'.format(table = table, column = i))
             t=','.join(['`'+i+'`' for i in d.keys()])
@@ -127,7 +129,7 @@ class myBot(wxpy.Bot):
         self.TransPassword = None
         self.SavePassword = None
         #发生消息传送时更新对话页面的显示内容
-        self.update_conversation = None
+        self.update_conversation = lambda :None
         self.senders = None
         self.me_info = None
         self.conversation_list_now=None #保存对话信息的的list
@@ -299,6 +301,8 @@ class myBot(wxpy.Bot):
         self.db = mydb(sql.connect(
             str(self.path / 'wechat_data.db'), check_same_thread=False))
         self.enable_rsa()
+        thread = Thread(target=self.async_check_and_update)
+        thread.start()
     def first_run(self):
         #创建储存联系人信息的表
         self.get_avatar_all()
@@ -312,6 +316,9 @@ class myBot(wxpy.Bot):
         fu = loop.run_in_executor(None,user.get_avatar)
         im = await fu
         self.update_user_info_one(user,is_append=True,img = im)#更新用户数据信息
+        self.save_avatar(user,im)
+        
+    def save_avatar(self,user,im):#保存用户头像
         name = self.avatar_path / (self.get_user_yxsid(user)+'.jpg')
         open(name,'wb').write(im)
 
@@ -321,22 +328,51 @@ class myBot(wxpy.Bot):
         tasks = [self.get_avatar_one(user) for user in self.get_senders().values()]
         loop.run_until_complete(asyncio.wait(tasks))
         loop.close()
+    def get_img_md5(self,img):
+        return hashlib.md5(img).hexdigest()
 
+    def check_and_update_user_info_one(self,user):
+        if user.user_name == 'filehelper':
+            return
+        im = user.get_avatar()
+        yxsid = self.get_user_yxsid(user)
+        if yxsid in self.contact_info_dict:
+            is_append = False
+        else:
+            is_append = True
+        self.update_user_info_one(user,is_append,im)
+
+    def check_and_update_user_info_all(self):
+        for user in self.get_senders().values():
+            self.check_and_update_user_info_one(user)
+    def async_check_and_update(self):
+        print('check and update user info')
+        time.sleep(20)
+        self.contact_dict()
+        self.check_and_update_user_info_all()
     def update_user_info_one(self,user,is_append,img = None):
         d=user.raw
         d['md5']=self.get_user_md5(user)
         d['yxsid'] = self.get_user_yxsid(user)
         d['puid'] = user.puid 
-        d['imgmd5'] = self.get_user_md5(user)
+        d['imgmd5'] = self.get_img_md5(img)
         ftype = self.get_user_type(user)
         d['user_type'] = ftype
 
-        if ftype == 2:
-            self.db.to_sql('group_info',[d])
-        elif ftype == 3:
-            self.db.to_sql('mp_info',[d])
+        if is_append:
+
+            if ftype == 2:
+                self.db.to_sql('group_info',[d])
+            elif ftype == 3:
+                self.db.to_sql('mp_info',[d])
+            else:
+                self.db.to_sql('friend_info', [d])
         else:
-            self.db.to_sql('friend_info', [d])
+            user_info_history = self.contact_info_dict[d['yxsid']]
+            if user_info_history['imgmd5'] != d['imgmd5']:
+                self.save_avatar(user,img)
+            
+
 
     def get_senders(self):#微信机器人启动后自动后台运行的程序
         if self.senders:
