@@ -38,7 +38,7 @@ OTHER=6
 emoji = dict()
 def read_emoji(path_emoji='./wechat_data/emoji'):
     p=Path(path_emoji)
-    emo = {i.name[:-4]:str(i) for i in p.glob('*.png')}
+    emo = {j:str(i) for i in p.glob('*.png') for j in i.name[:-4].split('_')}
     emoji.update(emo)
 read_emoji()
 class YButton(QtWidgets.QPushButton):
