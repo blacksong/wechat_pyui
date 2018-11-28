@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'test.ui'
-#
-# Created by: PyQt5 UI code generator 5.9
-#
-# WARNING! All changes made in this file will be lost!
 
 from PyQt5.QtWidgets import QApplication , QMainWindow,QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLineEdit,QDialog,QCheckBox
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
@@ -90,10 +83,13 @@ class Ui_Chat(QWidget):
         self.setLayout(layout)
         self.show()
 
-        self.insert_some_message(10)
-    def insert_some_message(self,nums):    
+        self.insert_some_message(20)
+    def insert_some_message(self,nums):
         an = list(self.bot.read_content(self.user_info['yxsid'],time_before= self.time_before,nums = nums))
+        if not an:
+            return
         an.reverse()
+        self.time_before = an[0][3]
         ans = []
         me_yxsid = self.me_info['yxsid']
         for yxsid, value, msg_type, time_,name_ in an:
@@ -113,7 +109,7 @@ class Ui_Chat(QWidget):
         self.encrypt_box.move(size.width()-self.Button_send.width()-80,0)
 
     def click_name(self,d):#点击用户名响应函数
-        print('press name button')
+        self.insert_some_message(20)
     def set_title(self):#设置对话框的标题
         size_title = 250,40
         title = QWidget()
@@ -251,21 +247,23 @@ class Ui_Chat(QWidget):
             button.show()
             return button
         buttons = []
+        
         time_latest, time_pre = self.time_latest,self.time_pre
-        Time = 0
+        self.time_latest, self.time_pre = 0, 0
         for i in msgs:
             *_,Time,_ = i
             Time = float(Time)
             time_button = self.generate_time_element(Time)
             if time_button is not None:
                 buttons.append(time_button)
-                
             buttons.append(generate_element(i))
-        self.time_latest, self.time_pre = time_latest, time_pre
 
         self.scrollArea.insert_elements(buttons)
-        self.autoSlideBar()
-        self.time_latest =max(self.time_latest, Time)
+        if time_latest is 0:
+            self.autoSlideBar()
+        else:
+            self.time_latest, self.time_pre = time_latest, time_pre
+            self.autoSlideBar('top')
     def autoSlideBar(self,pos='bottom'):
         if pos=='bottom':
             self.bar.setValue(self.scrollArea.bottom)
@@ -455,6 +453,8 @@ class Ui_Mobile(Ui_Chat):
         if self.input_text is not None:
             return
     def button_info_click(self):
+        self.insert_some_message(20)
+        return
         if self.is_encrypt:
             self.encrypt_state(False)
         else:
