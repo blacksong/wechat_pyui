@@ -99,6 +99,7 @@ class Ui_Chat(QWidget):
                 idendity = OTHER
             ans.append((yxsid,value, idendity, msg_type, time_,name_))
         self.insertMessage(ans)
+
     def resizeEvent(self,d):#根据窗口大小调整白色背景的大小以及发送键的位置
         size = self.size()
         self.blabel.resize(size)
@@ -110,6 +111,7 @@ class Ui_Chat(QWidget):
 
     def click_name(self,d):#点击用户名响应函数
         self.insert_some_message(20)
+
     def set_title(self):#设置对话框的标题
         size_title = 250,40
         title = QWidget()
@@ -354,6 +356,7 @@ class Ui_Mobile(Ui_Chat):
         self.isback=False
         self.view_last=view #用于返回上一个界面的变量
         self.max_text_height=2.5*CRITERION
+        self.min_text_height = None
 
 
         #底边栏的高度
@@ -398,6 +401,7 @@ class Ui_Mobile(Ui_Chat):
         self.input_text=YInputText(Form)
         pp=ph*0.2
         self.input_text.setGeometry( ox+pw1+pp , oy+h-ph+pp , pw2-pw1-pp*2 , ph-pp*2 )
+        print('ddd',ox+pw1+pp , oy+h-ph+pp , pw2-pw1-pp*2 , ph-pp*2)
         self.input_text.setStatusConnect(self.textStatus)
         self.input_text_top=oy+h-ph+pp
         self.input_text_height=self.input_text.document().size().height()
@@ -467,8 +471,13 @@ class Ui_Mobile(Ui_Chat):
             self.labelButton.setStyleSheet('QWidget{background-color:rgb(200,200,200)}')
         else:
             h_d,h_t,isEmpty=f 
-            if h_d!=h_t and h_d<self.max_text_height:
+            if self.min_text_height is None:
+                self.min_text_height = h_t
+            if h_d!=h_t and h_d<self.max_text_height and h_d>=self.min_text_height:
                 self.adjustInputTextSize(h_d)
+            elif h_d <= self.min_text_height:
+                #只有设置一个特别小的值才能回归正常的大小 所以取了最小值的一半
+                self.adjustInputTextSize(self.min_text_height/2)
             if isEmpty:
                 self.Button_function.show()
                 self.Button_send.hide()

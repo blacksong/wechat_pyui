@@ -654,10 +654,10 @@ class YInputText(QtWidgets.QTextEdit):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.statusConnect = lambda x:None
         self.d=self.document()
-        # self.font=QtGui.QFont()
-        # self.font.setFamily('SimHei')
-        # self.font.setPixelSize(0.4*CRITERION)
-        # self.setFont(self.font)
+        self.font=QtGui.QFont()
+        self.font.setFamily('SimHei')
+        self.font.setPixelSize(0.35*CRITERION)
+        self.setFont(self.font)
 
     def press_enter_connect(self,func):
         self.press_enter = func
