@@ -166,7 +166,7 @@ class YSentenceBubble(QtWidgets.QWidget):
     me_color=160,232,88
     other_color=255,255,254
     other_rect_pos=(120/90*CRITERION,12/90*CRITERION)
-    radius=10/90*CRITERION
+    radius=5/90*CRITERION
     border_text=8/90*CRITERION #bubble和文字边框之间的距离
     font_size=int(30/90*CRITERION) #字体大小css  单文px
 
@@ -407,6 +407,7 @@ class YTalkWidget(QtWidgets.QWidget):
             self.message_label.move(x,y+dh)
             
             self.name_label.move(x,y)
+        h = max(h,self.min_size)
         self.resize(self.Yw,h)
     def mouseDoubleClickEvent(self,e): 
         if e.buttons() == Qt.LeftButton and self.lable_geometry:
