@@ -699,7 +699,7 @@ class play_audio:
         self.player.setMedia(content) 
         self.player.mediaStatusChanged.connect(self.statusChanged)
     def statusChanged(self,status):
-        print(status,'dddddd',self.player.playerState)
+        # print(status,'dddddd',self.player.playerState)
         if status == QMediaPlayer.StoppedState:
             self.stop()
     def start(self):
