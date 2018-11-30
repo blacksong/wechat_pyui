@@ -8,7 +8,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QWidget, QSlider, QApplication,QMainWindow,
                              QHBoxLayout, QVBoxLayout,QLabel,QFrame)
 from PyQt5.QtCore import Qt,QPoint,QRect
-from PyQt5.QtGui import QTextDocument,QPalette,QBrush,QColor,QFontMetrics,QPainter,QPen,QImage,QPixmap,QMovie,QLinearGradient,QCursor
+from PyQt5.QtGui import (QTextDocument,QPalette,QBrush,QColor,QFontMetrics,QPainter,
+                        QPen,QImage,QPixmap,QMovie,QLinearGradient,QCursor,QPolygon)
 import sys
 from pathlib import Path
 import re
@@ -166,7 +167,6 @@ class YSentenceBubble(QtWidgets.QWidget):
     me_color=160,232,88
     other_color=255,255,254
     other_rect_pos=(120/90*CRITERION,12/90*CRITERION)
-    radius=5/90*CRITERION
     border_text=8/90*CRITERION #bubble和文字边框之间的距离
     font_size=int(30/90*CRITERION) #字体大小css  单文px
 
@@ -187,19 +187,21 @@ class YSentenceBubble(QtWidgets.QWidget):
         qp.end()
  
     def drawWidget(self, qp):
+
         qp.setBrush(QBrush(self.color))
         qp.setPen(QPen(self.color))
-        qp.drawRoundedRect(self.bubble_rect,self.radius,self.radius)
+        qp.drawPolygon(self.bubble_ploygon)
 
-        qp.setPen(QPen(QColor(210,210,210)))
-        qp.drawRoundedRect(self.bubble_rect,self.radius,self.radius)
+        qp.setPen(QPen(QColor(220,220,220)))
+        qp.drawPolygon(self.bubble_ploygon)
 
     
     def setBubble(self,identity=ME):
+        self.identity = identity
         if identity is ME:
             self.color=QColor(*self.me_color)
             Width=self.Ysize[0]+self.border_text 
-            rect_pos=self.Yw-(self.other_rect_pos[0]+Width),self.other_rect_pos[1]
+            rect_pos=self.Yw-(self.other_rect_pos[0]+Width)-CRITERION/6,self.other_rect_pos[1]
         else:
             self.color=QColor(*self.other_color)
             rect_pos=self.other_rect_pos
@@ -236,10 +238,30 @@ class YSentenceBubble(QtWidgets.QWidget):
         self.setBubble(identity)
         Width, Height = self.Ysize
         Height0 = max(80/90*CRITERION-2*self.border_text,Height)
-        self.bubble_rect = QRect(
-            0, 0, Width+self.border_text*2, Height0+self.border_text*2)
+        pw,ph = Width+self.border_text*2, Height0+self.border_text*2
+
+        if identity is ME:
+            t= 0
+            self.bubble_ploygon = QPolygon([
+                QPoint(0, 0),
+                QPoint(pw,0),
+                QPoint(pw,CRITERION/3),
+                QPoint(pw+CRITERION/6,CRITERION/2),
+                QPoint(pw,CRITERION/3*2),
+                QPoint(pw,ph),
+                QPoint(0,ph)])
+        else:
+            t = CRITERION/6
+            self.bubble_ploygon = QPolygon([
+                QPoint(t, 0),
+                QPoint(pw+t,0),
+                QPoint(pw+t,ph),
+                QPoint(t,ph),
+                QPoint(t,CRITERION/3*2),
+                QPoint(0,CRITERION/2),
+                QPoint(t,CRITERION/3)])
         self.textEdit.setGeometry(
-            self.border_text, (Height0-Height)/2+self.border_text, Width, Height)
+            self.border_text+t, (Height0-Height)/2+self.border_text, Width, Height)
 
         self.window_height = Height0+self.border_text*4
 
@@ -256,7 +278,7 @@ class YSystemBubble(QtWidgets.QWidget):#显示系统提示消息
         s = s.replace('[', r'\[')
         s = s.replace(']', r'\]')
         self.emoji_re = re.compile('({})'.format(s))
-        self.color = QColor(200,200,200)
+        self.color = QColor(205,205,205)
         self.max_width = 7*CRITERION
 
     def paintEvent(self, e):
@@ -293,7 +315,8 @@ class YSystemBubble(QtWidgets.QWidget):#显示系统提示消息
             b = t.group()
             return ft.format(src=emoji[b], height=self.font_size)
         tt = self.emoji_re.sub(sub_func, text)
-        text = '<p style="font-size:{height}px;font-family:\'Times New Roman\', Times, serif">{text}</p >'.format(
+        #font-family:\'Times New Roman\', Times, serif
+        text = '<p style="font-size:{height}px;color:white;font-family:SimHei">{text}</p >'.format(
             text=tt.replace('\n', '<br />'), height=self.font_size)
         self.textEdit.setHtml(text)
 
