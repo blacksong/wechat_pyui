@@ -187,14 +187,13 @@ class YSentenceBubble(QtWidgets.QWidget):
         qp.end()
  
     def drawWidget(self, qp):
-
-        # self.rect=QRect(self.rect_pos[0]-self.border_text,self.rect_pos[1]-self.border_text,Width+self.border_text*2,Height+self.border_text*2)
-        # rect=QRect(0,0,Width+self.border_text*2,Height+self.border_text*2)
-        # self.textEdit.setGeometry(
-        #     self.border_text, self.border_text, Width, Height)
         qp.setBrush(QBrush(self.color))
         qp.setPen(QPen(self.color))
         qp.drawRoundedRect(self.bubble_rect,self.radius,self.radius)
+
+        qp.setPen(QPen(QColor(210,210,210)))
+        qp.drawRoundedRect(self.bubble_rect,self.radius,self.radius)
+
     
     def setBubble(self,identity=ME):
         if identity is ME:
