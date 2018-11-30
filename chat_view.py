@@ -31,6 +31,7 @@ class Ui_Chat(QWidget):
         self.scrollWidget_message_size= 200,70
         self.scrollWidget_message_bottom = 0
 
+        self.emotionWidget = None   #用来显示表情的widget
         
     def set_chat_info(self,Bot,user_info):
         self.user_info = user_info
@@ -58,7 +59,8 @@ class Ui_Chat(QWidget):
         self.setWindowIcon(self.icon_other)
         Bot.update_conversation(user_info['yxsid'])#更新对话frame的信息，主要是为了消除该对话的未读消息记录
     def setupUi(self,Bot ,user_info:dict,father):
- 
+
+        self.config_path = str(Bot.path.parent.with_name('wechat_data'))
         self.father = father
         self.Form=self
         self.set_chat_info(Bot,user_info)
@@ -84,6 +86,9 @@ class Ui_Chat(QWidget):
         self.show()
 
         self.insert_some_message(20)
+
+    def set_emotion_widget(self, h = 0):
+        pass
     def insert_some_message(self,nums):
         an = list(self.bot.read_content(self.user_info['yxsid'],time_before= self.time_before,nums = nums))
         if not an:
@@ -108,6 +113,7 @@ class Ui_Chat(QWidget):
         self.send_widget.resize(size_send)
         self.Button_send.move(size.width()-self.Button_send.width()-20,0)
         self.encrypt_box.move(size.width()-self.Button_send.width()-80,0)
+        self.emotionButton.move(size.width()-self.Button_send.width()-140,0)
 
     def click_name(self,d):#点击用户名响应函数
         self.insert_some_message(20)
@@ -172,8 +178,19 @@ class Ui_Chat(QWidget):
         self.encrypt_box = QCheckBox('RSA',send_widget)
         self.encrypt_box.stateChanged.connect(self.encrypt_state)
         self.encrypt_box.resize(60, 30)
+
+        self.emotionButton = YButton(send_widget)
+        self.emotionButton.setButton(self.config_path+"/icon/emotion.jpg",30,30,'Button_emoji',None,self.show_emoji_button)
+        self.emotionButton.resize(60, 30)
         return send_widget
 
+    def show_emoji_button(self):
+        if self.emotionWidget is None:
+            self.emotionWidget = EmotionWidget(None,200,120,self.emojiClickCallback)
+        self.emotionWidget.show()
+    def emojiClickCallback(self,emoji):
+        name = Emoji(emoji.objectName()).name_list
+        self.input_text.cursor.insertText(name[0])
     def encrypt_state(self, state):#加密状态改变
         if state == Qt.Checked:
             self.is_encrypt = True
@@ -270,15 +287,15 @@ class Ui_Chat(QWidget):
         if pos=='bottom':
             self.bar.setValue(self.scrollArea.bottom)
         
-    def setButton(self,B,I,pw,ph,objectname,position=None,connect=None):
-        if I is not None:
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(I) )
-            B.setIcon(icon)
-            B.setIconSize(QtCore.QSize(pw , ph))
-        B.setObjectName(objectname)
-        if position is not None:B.setGeometry(QtCore.QRect(*position))
-        if connect is not None:B.clicked.connect(connect)
+    # def setButton(self,B,I,pw,ph,objectname,position=None,connect=None):
+    #     if I is not None:
+    #         icon = QtGui.QIcon()
+    #         icon.addPixmap(QtGui.QPixmap(I) )
+    #         B.setIcon(icon)
+    #         B.setIconSize(QtCore.QSize(pw , ph))
+    #     B.setObjectName(objectname)
+    #     if position is not None:B.setGeometry(QtCore.QRect(*position))
+    #     if connect is not None:B.clicked.connect(connect)
 
     def accept_callback(self,content,msg_type,message_sender):#message_sender是wxpy的一个User对象
         yxsid_send_user = self.bot.get_user_yxsid(message_sender)
@@ -365,15 +382,16 @@ class Ui_Mobile(Ui_Chat):
         ph=CRITERION
         ph_top=ph
 
-        self.Button_back = QtWidgets.QPushButton(Form)
-        self.setButton(self.Button_back,self.config_path+"/icon/back.jpg",tw1,ph,'Button_back',(ox, oy,tw1,ph),self.button_back_click)
+        self.Button_back = YButton(Form)
+        self.Button_back.setButton(self.config_path+"/icon/back.jpg",tw1,ph,'Button_back',(ox, oy,tw1,ph),self.button_back_click)
+
 
         self.Button_title = YTextButton(Form)
         self.Button_title.setTextIcon(' {0}'.format(user_info['name']),(60,60,65),(255,255,255),(tw2-tw1,ph),'vcenter')
-        self.setButton(self.Button_title,None,tw2-tw1,ph,'Button_title',(ox+tw1,oy,tw2-tw1,ph),self.button_title_click)
+        self.Button_title.setButton(None,tw2-tw1,ph,'Button_title',(ox+tw1,oy,tw2-tw1,ph),self.button_title_click)
 
-        self.Button_info = QtWidgets.QPushButton(Form)
-        self.setButton(self.Button_info,self.config_path+"/icon/contact_info.jpg",w-tw2,ph,'Button_info',(ox+tw2,oy,w-tw2,ph),self.button_info_click)
+        self.Button_info = YButton(Form)
+        self.Button_info.setButton(self.config_path+"/icon/contact_info.jpg",w-tw2,ph,'Button_info',(ox+tw2,oy,w-tw2,ph),self.button_info_click)
         
         self.line_width=1
         ph=100/1280*h
@@ -386,22 +404,21 @@ class Ui_Mobile(Ui_Chat):
         self.labelBackground_top=oy+h-ph
 
         self.Button_speak = YButton(Form)
-        self.setButton(self.Button_speak,self.config_path+"/icon/speak.jpg",pw1,ph,'Button_speak',(ox,oy+h-ph,pw1,ph),self.button_info_click)
+        self.Button_speak.setButton(self.config_path+"/icon/speak.jpg",pw1,ph,'Button_speak',(ox,oy+h-ph,pw1,ph),self.button_info_click)
 
         self.Button_emotion = YButton(Form)
-        self.setButton(self.Button_emotion,self.config_path+"/icon/emotion.jpg",pw3-pw2,ph,'Button_emotion',(ox+pw2,oy+h-ph,pw3-pw2,ph),self.button_info_click)
+        self.Button_emotion.setButton(self.config_path+"/icon/emotion.jpg",pw3-pw2,ph,'Button_emotion',(ox+pw2,oy+h-ph,pw3-pw2,ph),self.button_emotion_click)
 
         self.Button_send = YButton(Form)
-        self.setButton(self.Button_send,self.config_path+"/icon/send.jpg",w-pw3,ph,'Button_function',(ox+pw3,oy+h-ph,w-pw3,ph),self.button_send_click)
+        self.Button_send.setButton(self.config_path+"/icon/send.jpg",w-pw3,ph,'Button_function',(ox+pw3,oy+h-ph,w-pw3,ph),self.button_send_click)
        
         self.Button_function = YButton(Form)
-        self.setButton(self.Button_function,self.config_path+"/icon/function_plus.jpg",w-pw3,ph,'Button_function',(ox+pw3,oy+h-ph,w-pw3,ph),self.button_info_click)
+        self.Button_function.setButton(self.config_path+"/icon/function_plus.jpg",w-pw3,ph,'Button_function',(ox+pw3,oy+h-ph,w-pw3,ph),self.button_info_click)
         
 
         self.input_text=YInputText(Form)
         pp=ph*0.2
         self.input_text.setGeometry( ox+pw1+pp , oy+h-ph+pp , pw2-pw1-pp*2 , ph-pp*2 )
-        print('ddd',ox+pw1+pp , oy+h-ph+pp , pw2-pw1-pp*2 , ph-pp*2)
         self.input_text.setStatusConnect(self.textStatus)
         self.input_text_top=oy+h-ph+pp
         self.input_text_height=self.input_text.document().size().height()
@@ -426,10 +443,8 @@ class Ui_Mobile(Ui_Chat):
         self.scrollArea.setStyleSheet("border:none;")
         self.scrollWidget_message = YWidget()#显示对话的Widget
         self.scrollWidget_message.setGeometry(QtCore.QRect(0, 0, w, h-ph_top-ph))
-        # self.scrollWidget_message.setMinimumSize(QtCore.QSize(w, h-ph_top-ph-5))
         self.scrollWidget_message_size=w, h-ph_top-ph
         self.scrollWidget_message_bottom=0  #显示信息最底部的位置
-
 
         self.scrollArea.setWidget(self.scrollWidget_message)
 
@@ -437,7 +452,7 @@ class Ui_Mobile(Ui_Chat):
         self.Button_emotion,self.Button_function,self.labelButton,self.input_text]
         self.show()
         self.insert_some_message(10)
-        
+
     def hide(self):
         for i in self.Buttons:
             i.hide()
@@ -459,10 +474,8 @@ class Ui_Mobile(Ui_Chat):
     def button_info_click(self):
         self.insert_some_message(20)
         return
-        if self.is_encrypt:
-            self.encrypt_state(False)
-        else:
-            self.encrypt_state(Qt.Checked)
+    def button_emotion_click(self):
+        self.show_emoji_button()
     def textStatus(self,f):
         if self.isback:return
         if f=='FOCUS':

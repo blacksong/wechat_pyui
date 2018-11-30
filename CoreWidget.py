@@ -36,17 +36,34 @@ CRITERION = int(100/1280*640)
 ME=5 
 OTHER=6
 emoji = dict()
+class Emoji:
+    def __init__(self,emoji_path):
+        self.emoji_path = Path(emoji_path)
+        self.name_list = self.emoji_path.name[:-4].split('_')
+        
 def read_emoji(path_emoji='./wechat_data/emoji'):
     p=Path(path_emoji)
-    emo = {j:str(i) for i in p.glob('*.png') for j in i.name[:-4].split('_')}
+    ps = list(p.glob('*.png'))
+    ps.sort()
+    emo = {j:str(i) for i in ps for j in Emoji(i).name_list}
     emoji.update(emo)
 read_emoji()
 class YButton(QtWidgets.QPushButton):
     def __init__(self,d=None):
         super().__init__(d)
         self.setStyleSheet('border:none')
-    def tt(self):
-        pass
+    def setButton(self,I,pw,ph,objectname,position=None,connect=None,callback = None):
+        if I is not None:
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(I))
+            self.setIcon(icon)
+            self.setIconSize(QtCore.QSize(pw , ph))
+        self.setObjectName(objectname)
+        if position is not None:self.setGeometry(QtCore.QRect(*position))
+        if connect is not None:self.clicked.connect(connect)
+        if callback is not None:self.callback = callback
+    def selfCallback(self):
+        self.callback(self)
 
 class YScrollArea(QtWidgets.QScrollArea):
     def __init__(self,*d,**k):
@@ -124,7 +141,7 @@ class YWidget(QtWidgets.QWidget):
         # print(e.x(),e.y(),'R')
         pass
 
-class YTextButton(QtWidgets.QPushButton):
+class YTextButton(YButton):
     position_dict={'center':Qt.AlignCenter,'left':Qt.AlignLeft,'hcenter':Qt.AlignHCenter,'vcenter':Qt.AlignVCenter,'justify':Qt.AlignJustify}
     def setTextIcon(self,text,color_background,color_text,icon_size,position='center',font=None,font_percent_size=0.4):
         position_qt=self.position_dict[position.lower()]
@@ -658,6 +675,7 @@ class YInputText(QtWidgets.QTextEdit):
         self.font.setFamily('SimHei')
         self.font.setPixelSize(0.35*CRITERION)
         self.setFont(self.font)
+        self.cursor = self.textCursor()
 
     def press_enter_connect(self,func):
         self.press_enter = func
@@ -667,7 +685,7 @@ class YInputText(QtWidgets.QTextEdit):
         self.statusConnect('FOCUS')
         self.statusConnect((self.d.size().height(),self.height(),self.d.isEmpty()))
     def focusOutEvent(self,e):
-        super().focusInEvent(e)
+        super().focusOutEvent(e)
         self.statusConnect('NOFOCUS')
     def setStatusConnect(self,p):
         self.statusConnect=p
@@ -682,6 +700,7 @@ class YInputText(QtWidgets.QTextEdit):
     def paintEvent(self,d):
         super().paintEvent(d)
         self.statusConnect((self.d.size().height(),self.height(),self.d.isEmpty()))
+
 class RedCircle(QWidget):
     color = QColor(255,0,0)
     text_color = QColor(255,255,255)
@@ -709,3 +728,35 @@ class RedCircle(QWidget):
             self.font.setPixelSize(d*0.75)
             qp.setFont(self.font)
             qp.drawText(rect,QtCore.Qt.AlignCenter,self.text)
+
+
+class EmotionWidget(QWidget):
+    def __init__(self,Form,w,h,callback):
+        super().__init__(Form)
+        self.resize(w,h)
+        # self.setWindowFlags(Qt.FramelessWindowHint)
+        row_num = 8
+        list_emoji = list(set(emoji.values()))
+        layout = QVBoxLayout()
+        for i in range(len(list_emoji)//row_num):
+            hlayout = QHBoxLayout()
+            for j in range(row_num):
+                t = YButton()
+                em_path = list_emoji[i*row_num+j]
+                t.setButton(em_path,40,40,em_path,None,t.selfCallback,callback)
+                hlayout.addWidget(t)
+            hlayout.addStretch()
+            layout.addLayout(hlayout)
+        if len(list_emoji)%row_num != 0:
+            hlayout = QHBoxLayout()
+            for e in list_emoji[-(len(list_emoji)%row_num):]:
+                t = YButton()
+                t.setButton(e,40,40,str(e),None,t.selfCallback,callback)
+                hlayout.addWidget(t)
+            hlayout.addStretch()
+            layout.addLayout(hlayout)
+        layout.addStretch()
+        self.setLayout(layout)
+
+        
+    
