@@ -8,7 +8,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QWidget, QSlider, QApplication,QMainWindow,
                              QHBoxLayout, QVBoxLayout,QLabel,QFrame)
 from PyQt5.QtCore import Qt,QPoint,QRect
-from PyQt5.QtGui import QTextDocument,QPalette,QBrush,QColor,QFontMetrics,QPainter,QPen,QImage,QPixmap,QMovie,QLinearGradient
+from PyQt5.QtGui import QTextDocument,QPalette,QBrush,QColor,QFontMetrics,QPainter,QPen,QImage,QPixmap,QMovie,QLinearGradient,QCursor
 import sys
 from pathlib import Path
 import re
@@ -43,9 +43,7 @@ class Emoji:
         
 def read_emoji(path_emoji='./wechat_data/emoji'):
     p=Path(path_emoji)
-    ps = list(p.glob('*.png'))
-    ps.sort()
-    emo = {j:str(i) for i in ps for j in Emoji(i).name_list}
+    emo = {j:str(i) for i in p.glob('*.png') for j in Emoji(i).name_list}
     emoji.update(emo)
 read_emoji()
 class YButton(QtWidgets.QPushButton):
@@ -165,8 +163,8 @@ class YTextButton(YButton):
 
 #聊天时显示对话文字内容的bubble
 class YSentenceBubble(QtWidgets.QWidget):
-    me_color=100,200,90
-    other_color=255,255,255
+    me_color=160,232,88
+    other_color=255,255,254
     other_rect_pos=(120/90*CRITERION,12/90*CRITERION)
     radius=10/90*CRITERION
     border_text=8/90*CRITERION #bubble和文字边框之间的距离
@@ -734,9 +732,15 @@ class EmotionWidget(QWidget):
     def __init__(self,Form,w,h,callback):
         super().__init__(Form)
         self.resize(w,h)
-        # self.setWindowFlags(Qt.FramelessWindowHint)
+        self.ok_start = False
+
+        self.setStyleSheet('QWidget{border-width:1px;border-style:solid;border-color:rgb(150,180,140);background-color:rgb(160,232,88)}')
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        
+        self.current_use = False
         row_num = 8
         list_emoji = list(set(emoji.values()))
+        list_emoji.sort()
         layout = QVBoxLayout()
         for i in range(len(list_emoji)//row_num):
             hlayout = QHBoxLayout()
@@ -757,6 +761,20 @@ class EmotionWidget(QWidget):
             layout.addLayout(hlayout)
         layout.addStretch()
         self.setLayout(layout)
+        self.ok_start = True
 
-        
-    
+
+    def changeEvent(self,e):
+        if self.ok_start is False:
+            return
+        if self.current_use is True:
+            self.current_use = False
+            self.hide()
+        else:
+            pos = QCursor.pos()
+            x,y = pos.x(),pos.y()
+            w,h = self.width(), self.height()
+            x= max(0,x-w//2)
+            y = y-h-20
+            self.move(x,y)
+            self.current_use = True

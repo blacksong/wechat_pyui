@@ -154,7 +154,6 @@ class Ui_Form:
 
     def goto_view(self,kind,value):#功能跳转，调度
         if kind == 'chat':
-            print('chat',value)
             value,is_window = value
             if value['yxsid'] in self.chat_view_dict:
                 frame = self.chat_view_dict[value['yxsid']]

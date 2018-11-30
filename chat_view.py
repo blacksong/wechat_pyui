@@ -30,12 +30,11 @@ class Ui_Chat(QWidget):
         super().__init__()
         self.scrollWidget_message_size= 200,70
         self.scrollWidget_message_bottom = 0
-
         self.emotionWidget = None   #用来显示表情的widget
-        
+
     def set_chat_info(self,Bot,user_info):
-        self.user_info = user_info
         print(user_info)
+        self.user_info = user_info
         self.me_info = Bot.get_me_info()
         self.bot = Bot
         self.is_encrypt = False
@@ -86,9 +85,6 @@ class Ui_Chat(QWidget):
         self.show()
 
         self.insert_some_message(20)
-
-    def set_emotion_widget(self, h = 0):
-        pass
     def insert_some_message(self,nums):
         an = list(self.bot.read_content(self.user_info['yxsid'],time_before= self.time_before,nums = nums))
         if not an:
@@ -413,7 +409,7 @@ class Ui_Mobile(Ui_Chat):
         self.Button_send.setButton(self.config_path+"/icon/send.jpg",w-pw3,ph,'Button_function',(ox+pw3,oy+h-ph,w-pw3,ph),self.button_send_click)
        
         self.Button_function = YButton(Form)
-        self.Button_function.setButton(self.config_path+"/icon/function_plus.jpg",w-pw3,ph,'Button_function',(ox+pw3,oy+h-ph,w-pw3,ph),self.button_info_click)
+        self.Button_function.setButton(self.config_path+"/icon/function_plus.jpg",w-pw3,ph,'Button_function',(ox+pw3,oy+h-ph,w-pw3,ph),self.button_plus_click)
         
 
         self.input_text=YInputText(Form)
@@ -473,7 +469,13 @@ class Ui_Mobile(Ui_Chat):
             return
     def button_info_click(self):
         self.insert_some_message(20)
-        return
+    def button_plus_click(self):
+        if self.is_encrypt is False:
+            self.is_encrypt = True
+            self.addMessage('Enable RSA',None,SYSTEM_YXS)
+        else:
+            self.is_encrypt = False
+            self.addMessage('Disable RSA',None,SYSTEM_YXS)
     def button_emotion_click(self):
         self.show_emoji_button()
     def textStatus(self,f):
