@@ -389,6 +389,7 @@ class YTalkWidget(QtWidgets.QWidget):
             self.setPic(icon_name,self.obj_name[identity])
         if Format == TEXT:
             h=self.setMessage(value)
+            h = max(h,self.min_size)
         elif Format == PICTURE:#显示表情或者图片
             h=self.setMessage_Picture(value)
         elif Format == SYSTEM_YXS:
@@ -429,7 +430,7 @@ class YTalkWidget(QtWidgets.QWidget):
             self.message_label.move(x,y+dh)
             
             self.name_label.move(x,y)
-        h = max(h,self.min_size)
+        
         self.resize(self.Yw,h)
     def mouseDoubleClickEvent(self,e): 
         if e.buttons() == Qt.LeftButton and self.lable_geometry:
