@@ -225,7 +225,7 @@ class YSentenceBubble(QtWidgets.QWidget):
             b = t.group() 
             return ft.format(src= emoji[b], height = int(self.font_size*1.3)) 
         tt = self.emoji_re.sub(sub_func, text) 
-        text = '<p style="font-size:{height}px;font-family:\'Times New Roman\', Times, serif">{text}</p >'.format(text = tt.replace('\n', '<br />'), height=self.font_size) 
+        text = '<p style="font-size:{height}px;font-family:SimHei">{text}</p >'.format(text = tt.replace('\n', '<br />'), height=self.font_size) 
         self.textEdit.setHtml(text)
 
 
