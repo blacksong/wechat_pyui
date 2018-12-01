@@ -452,7 +452,7 @@ class YTalkWidget(QtWidgets.QWidget):
                 self._display = ysv.GifPreview(name=value)
             elif self.Format == VIDEO:
                 if platform.startswith('linux'):
-                    p = Process(target = subprocess.call,args=(['vlc',value],))
+                    p = Process(target = subprocess.call,args=(['ffplay',value],))
                     p.start()
                 else:
                     self._play = video_player.Player([value])
