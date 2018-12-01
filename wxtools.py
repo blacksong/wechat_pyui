@@ -384,7 +384,11 @@ class myBot(wxpy.Bot):
         if self.senders:
             return self.senders
         print('get_senders')
-        self.senders = {self.get_user_yxsid(s): s for s in self.friends()+self.groups()}
+        try:
+            groups = self.groups()
+        except:
+            groups = []
+        self.senders = {self.get_user_yxsid(s): s for s in self.friends()+groups}
         print('It is OK!')
         self.senders['filehelper']=self.file_helper
         return self.senders

@@ -714,11 +714,11 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
 
-    # player = Player(['1.mp3'])
-    # player.show()
+    player = Player(['/home/songzi/Videos/test.mp4'])
+    player.show()
 
-    # sys.exit(app.exec_())
-    t = play_audio('3.mp3')
-    t.start()
-    print(dir(t.player))
-    sys.exit(app.exec())
+    sys.exit(app.exec_())
+    # t = play_audio('3.mp3')
+    # t.start()
+    # print(dir(t.player))
+    # sys.exit(app.exec())
