@@ -369,9 +369,7 @@ class Ui_Mobile(Ui_Chat):
         self.isback=False
         self.view_last=view #用于返回上一个界面的变量
         self.max_text_height=2.5*CRITERION
-        self.min_text_height = None
-
-
+        # self.min_label_top = None
         #底边栏的高度
 
         tw1,tw2=int(100/720*w+0.2),int((100+520)/720*w+0.2)
@@ -486,13 +484,10 @@ class Ui_Mobile(Ui_Chat):
             self.labelButton.setStyleSheet('QWidget{background-color:rgb(200,200,200)}')
         else:
             h_d,h_t,isEmpty=f 
-            if self.min_text_height is None:
-                self.min_text_height = h_t
-            if h_d!=h_t and h_d<self.max_text_height and h_d>=self.min_text_height:
+
+            if h_d!=h_t and h_d<self.max_text_height:
                 self.adjustInputTextSize(h_d)
-            elif h_d <= self.min_text_height:
-                #只有设置一个特别小的值才能回归正常的大小 所以取了最小值的一半
-                self.adjustInputTextSize(self.min_text_height/2)
+
             if isEmpty:
                 self.Button_function.show()
                 self.Button_send.hide()
@@ -506,22 +501,25 @@ class Ui_Mobile(Ui_Chat):
             init_value=False
         g=self.input_text.geometry()
         p=g.bottom()-h_d
-        if init_value:p=self.input_text_top
-        g.setTop(p)
+
+        gt=self.labelLine.geometry()
+        if init_value:p=self.labelLine_top
+        label_top = min(self.labelLine_top,p)
+        gt.moveTo(QtCore.QPoint(gt.x(),label_top))
+        self.labelLine.setGeometry(gt)
+
+        dtop = label_top - self.labelLine_top
+
+
+        g.setTop(self.input_text_top + dtop)
         self.input_text.setGeometry(g)
         
         gs=self.scrollArea.geometry()
-        if init_value:p=self.scrollArea_bottom+4
-        gs.setBottom(p-4)
+        gs.setBottom(self.scrollArea_bottom + dtop)
         self.scrollArea.setGeometry(gs)
 
         gg=self.labelBackground.geometry()
-        if init_value:p=self.labelBackground_top+2 
-        gg.setTop(p-2)
+        gg.setTop(self.labelBackground_top + dtop )
         self.labelBackground.setGeometry(gg)
 
-        gt=self.labelLine.geometry()
-        if init_value:p=self.labelLine_top+3
-        gt.moveTo(QtCore.QPoint(gt.x(),p-3))
-        self.labelLine.setGeometry(gt)
 

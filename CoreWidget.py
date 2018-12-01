@@ -34,6 +34,8 @@ global_font.setFamily('SimHei')
 #宏定义值
 AUTO_PUSH=1
 CRITERION = int(100/1280*640)
+#用户头像大小
+HEAD_PHOTO_LENGTH = 80/90*CRITERION
 ME=5 
 OTHER=6
 emoji = dict()
@@ -200,11 +202,11 @@ class YSentenceBubble(QtWidgets.QWidget):
         self.identity = identity
         if identity is ME:
             self.color=QColor(*self.me_color)
-            Width=self.Ysize[0]+self.border_text 
-            rect_pos=self.Yw-(self.other_rect_pos[0]+Width)-CRITERION/6,self.other_rect_pos[1]
+            Width=self.Ysize[0]+self.border_text + HEAD_PHOTO_LENGTH/6
+            rect_pos=self.Yw-(self.other_rect_pos[0]+Width),self.other_rect_pos[1]
         else:
             self.color=QColor(*self.other_color)
-            rect_pos=self.other_rect_pos
+            rect_pos=self.other_rect_pos[0]-self.border_text,self.other_rect_pos[1]
         
         self.move(*rect_pos)
     def setMessage(self,text,identity=ME):
@@ -237,31 +239,32 @@ class YSentenceBubble(QtWidgets.QWidget):
 
         self.setBubble(identity)
         Width, Height = self.Ysize
-        Height0 = max(80/90*CRITERION-2*self.border_text,Height)
+        Height0 = max(HEAD_PHOTO_LENGTH-2*self.border_text,Height)
         pw,ph = Width+self.border_text*2, Height0+self.border_text*2
-
+        ruler = HEAD_PHOTO_LENGTH
         if identity is ME:
-            t= 0
             self.bubble_ploygon = QPolygon([
                 QPoint(0, 0),
                 QPoint(pw,0),
-                QPoint(pw,CRITERION/3),
-                QPoint(pw+CRITERION/6,CRITERION/2),
-                QPoint(pw,CRITERION/3*2),
+                QPoint(pw,ruler/3),
+                QPoint(pw+ruler/6,ruler/2),
+                QPoint(pw,ruler/3*2),
                 QPoint(pw,ph),
                 QPoint(0,ph)])
+            text_pos_x = self.border_text
         else:
-            t = CRITERION/6
+            t = ruler/6
             self.bubble_ploygon = QPolygon([
                 QPoint(t, 0),
                 QPoint(pw+t,0),
                 QPoint(pw+t,ph),
                 QPoint(t,ph),
-                QPoint(t,CRITERION/3*2),
-                QPoint(0,CRITERION/2),
-                QPoint(t,CRITERION/3)])
+                QPoint(t,ruler/3*2),
+                QPoint(0,ruler/2),
+                QPoint(t,ruler/3)])
+            text_pos_x = self.border_text+ruler/5
         self.textEdit.setGeometry(
-            self.border_text+t, (Height0-Height)/2+self.border_text, Width, Height)
+            text_pos_x, (Height0-Height)/2+self.border_text, Width, Height)
 
         self.window_height = Height0+self.border_text*4
 
@@ -373,7 +376,7 @@ class YTalkWidget(QtWidgets.QWidget):
         self.bot = Bot
         self.pos_me=(self.Yw-110/90*CRITERION,12/90*CRITERION)
         self.pos_other=(30/90*CRITERION,12/90*CRITERION)
-        self.pic_qsize=QtCore.QSize(80/90*CRITERION,80/90*CRITERION)
+        self.pic_qsize=QtCore.QSize(HEAD_PHOTO_LENGTH,HEAD_PHOTO_LENGTH)
         self.min_height=104/90*CRITERION
         self.lable_geometry = None #显示消息widget的geometry
         self.message_label = None
@@ -498,7 +501,7 @@ class YTalkWidget(QtWidgets.QWidget):
             pos=self.pos_me
         else:
             pos=self.pos_other
-        self.figure_button.setGeometry(*pos,80/90*CRITERION,80/90*CRITERION)
+        self.figure_button.setGeometry(*pos,HEAD_PHOTO_LENGTH,HEAD_PHOTO_LENGTH)
     def setMessage_Sharing(self,value):
         return self.setMessage_Attachment(value,True)
     def setMessage_Attachment(self,value,is_sharing = False):#定义显示附件的组件
