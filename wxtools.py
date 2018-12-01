@@ -102,7 +102,11 @@ class mydb:
             g = set([i for i in d.keys() if not filter_key(i,columns)])
             if g:
                 for i in g:
-                    self.cur.execute('alter table {table} add {column} varchar(3)'.format(table = table, column = i))
+                    try:
+                        self.cur.execute('alter table {table} add {column} varchar(3)'.format(table = table, column = i))
+                    except Exception as e:
+                        print(e)
+                        continue
             t=','.join(['`'+i+'`' for i in d.keys()])
             v=['"'+str(i).replace('"','""')+'"' for i in d.values()]
             v=','.join(v)
@@ -301,8 +305,10 @@ class myBot(wxpy.Bot):
         self.db = mydb(sql.connect(
             str(self.path / 'wechat_data.db'), check_same_thread=False))
         self.enable_rsa()
-        thread = Thread(target=self.async_check_and_update)
-        thread.start()
+        if not self.is_first:
+            #不是第一次登录 则开始检测用户数据更新
+            thread = Thread(target=self.async_check_and_update)
+            thread.start()
     def first_run(self):
         #创建储存联系人信息的表
         self.get_avatar_all()
