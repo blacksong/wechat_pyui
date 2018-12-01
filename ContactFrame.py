@@ -33,12 +33,16 @@ class ContactFrame(object):
         
     def get_contacts(self):
         return self.bot.contact_dict()
+    def keys_index(self,user):
+        pinyin = user['RemarkPYInitial'] if user['RemarkPYInitial'] else user['PYInitial']
+        if pinyin is None:
+            pinyin = user['name']
+        return pinyin
     def drawContacts(self,contacts=None,label=None):#创建联系人列表
         # self.con=[]
         contacts = list(contacts.values())
-        w = self.scrollWidget_contact.width()
-        keys = lambda user:user['RemarkPYInitial'] if user['RemarkPYInitial'] else user['PYInitial']
-        contacts.sort(key = keys)
+        # w = self.scrollWidget_contact.width()
+        contacts.sort(key = self.keys_index)
         def generate_label(args):
             name,img,widget,contact,father = args
             clabel = FunctionButton(widget)

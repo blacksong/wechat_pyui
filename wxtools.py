@@ -12,6 +12,7 @@ from threading import Thread
 from collections import defaultdict
 from os.path import getsize
 import pickle
+import shutil
 from wxpy import TEXT, PICTURE, MAP, VIDEO, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
 '''
 TEXT = 'Text'
@@ -279,8 +280,17 @@ class myBot(wxpy.Bot):
         return self.conversation_list_now
     def write_content(self,yxsid,data,passwd=None):
         #data保存的数据格式 字典形式，包括Value:str,Msg_type,Time,yxsid(两人对话时0代表自己，1代表对方，群聊时代表发送者的yxsid)
+        data = data.copy()
         if data['Msg_type'] in (PICTURE,VIDEO,ATTACHMENT,RECORDING):
-            data['Value'] = str(Path(data['Value']).relative_to(self.path))
+            file_path = Path(data['Value'])
+            abspath = str(file_path.absolute())
+            n = len(self.path_str)
+            if len(abspath)>n and abspath[:n] == self.path_str:
+                data['Value'] = abspath[n+1:]
+            else:
+                send_file = self.send_files_path / file_path.name
+                shutil.copy(file_path,send_file)
+                data['Value'] = str(send_file.relative_to(self.path))
         self.db.to_sql('Record_'+yxsid,[data])
     def read_content(self,yxsid,time_before,nums):
         #读取数据
@@ -296,17 +306,22 @@ class myBot(wxpy.Bot):
     def setPath(self,path): #设置微信账号的信息存储路径
 
         self.path = Path(path)
+        self.path_str = str(self.path)
         self.avatar_path = self.path / 'avatar'
+        
         if not self.avatar_path.exists():
             self.avatar_path.mkdir(parents=True)
             self.is_first = True
 
+        self.send_files_path = self.path / 'send_files'
         self.thumbnail_path = self.path / 'thumbnail'
         self.video_path = self.path / 'videos'
         self.image_path = self.path / 'images'
         self.rsa_path = self.path / 'rsa_key'
         self.attachment_path = self.path / 'attachments'
-        for epath in [self.video_path,self.image_path,self.thumbnail_path,self.rsa_path,self.attachment_path]:
+        dirs_list = [self.video_path,self.image_path,self.thumbnail_path,
+                    self.rsa_path,self.attachment_path,self.send_files_path]
+        for epath in dirs_list:
             if not epath.exists():
                 epath.mkdir()
 
@@ -357,7 +372,8 @@ class myBot(wxpy.Bot):
         self.update_user_info_one(user,is_append,im)
 
     def check_and_update_user_info_all(self):
-        for user in self.get_senders().values():
+        f = list(self.get_senders().values())
+        for user in f:
             self.check_and_update_user_info_one(user)
     def async_check_and_update(self):
         print('check and update user info')
@@ -558,9 +574,9 @@ class myBot(wxpy.Bot):
             if not file_path:
                 msg.get_file(content)
             else:
-                if Path(content).exists():
-                    os.remove(content)
-                os.rename(file_path,content)
+                if not Path(content).exists():
+                    os.rename(file_path,content)
+
             is_existed = Path(content).is_file()
             if not is_existed or getsize(content) == 0:
                 if is_existed:
@@ -590,8 +606,7 @@ class myBot(wxpy.Bot):
             else:
                 try:
                     if Path(filename).exists():
-                        os.remove(filename)
-                    os.rename(file_path,filename)
+                        os.rename(file_path,filename)
                 except Exception as e:
                     print('Error:文件已存在 无法删除',e)
             content = filename
@@ -606,6 +621,9 @@ class myBot(wxpy.Bot):
             content = 'None'
             text_conversation = '[消息]'
             print(msg.text)
+
+        if file_path is not None and Path(file_path).exists():
+            os.remove(file_path)
 
         if receiver is not None:
             receiver(content, msg_type,message_sender)#

@@ -216,7 +216,6 @@ class PlayerControls(QWidget):
         return self.playerState
 
     def setState(self,state):
-        print('sdfsdf')
         if state != self.playerState:
             self.playerState = state
 
@@ -567,7 +566,6 @@ class Player(QWidget):
         self.player.setPosition(seconds * 1000)
 
     def statusChanged(self, status):
-        print('sdddd')
         self.handleCursor(status)
 
         if status == QMediaPlayer.LoadingMedia:
@@ -705,7 +703,6 @@ class play_audio:
     def start(self):
         self.player.play() 
     def stop(self):
-        print('sdfsdf')
         self.player.stop()
         del self
 if __name__ == '__main__':
