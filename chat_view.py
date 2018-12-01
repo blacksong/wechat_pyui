@@ -86,7 +86,7 @@ class Ui_Chat(QWidget):
 
         self.insert_some_message(20)
     def insert_some_message(self,nums):
-        an = list(self.bot.read_content(self.user_info['yxsid'],time_before= self.time_before,nums = nums))
+        an = self.bot.read_content(self.user_info['yxsid'],time_before= self.time_before,nums = nums)
         if not an:
             return
         an.reverse()

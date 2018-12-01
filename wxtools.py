@@ -279,12 +279,20 @@ class myBot(wxpy.Bot):
         return self.conversation_list_now
     def write_content(self,yxsid,data,passwd=None):
         #data保存的数据格式 字典形式，包括Value:str,Msg_type,Time,yxsid(两人对话时0代表自己，1代表对方，群聊时代表发送者的yxsid)
+        if data['Msg_type'] in (PICTURE,VIDEO,ATTACHMENT,RECORDING):
+            data['Value'] = str(Path(data['Value']).relative_to(self.path))
         self.db.to_sql('Record_'+yxsid,[data])
     def read_content(self,yxsid,time_before,nums):
+        #读取数据
+        def filter_data(yxsid,Value,Msg_type,Time,name):
+            if Msg_type in (PICTURE,VIDEO,ATTACHMENT,RECORDING):
+                Value = str(self.path / Value)
+            return yxsid,Value,Msg_type,Time,name
+
         if not self.db.table_exists('Record_'+yxsid):
             return []
-        return self.db.cur.execute('SELECT yxsid,Value,Msg_type,Time,name FROM {0} WHERE Time<{1} ORDER BY Time DESC LIMIT {2};'.format('Record_'+yxsid,time_before,nums))
-
+        t = self.db.cur.execute('SELECT yxsid,Value,Msg_type,Time,name FROM {0} WHERE Time<{1} ORDER BY Time DESC LIMIT {2};'.format('Record_'+yxsid,time_before,nums))
+        return [filter_data(*i) for i in t]
     def setPath(self,path): #设置微信账号的信息存储路径
 
         self.path = Path(path)

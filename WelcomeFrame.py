@@ -46,6 +46,7 @@ class WelcomeFrame:
         self.cache = cache#存储登录信息路径的pkl文件 
         self.users_login=self.get_users_login()
         self.cache_select = None
+        self.bot = None
     def get_users_login(self):
         users = [str(i.name).replace('.jpg','').split('_') for i in self.cache.parent.glob('*.jpg')]
         fun_sort = lambda x:0 - Path(self.cache.with_name(x[0]+'_wx.pkl')).stat().st_mtime
@@ -135,7 +136,7 @@ class WelcomeFrame:
             self.hide()
             self.father_view.setupUi()
             self.father_view.show()
-        elif TYPE == 'MSG':
+        elif TYPE == 'MSG' and self.bot is not None:
             self.bot.get_message(data,file_path)
             return
         elif TYPE == 'FIRST':
