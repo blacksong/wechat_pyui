@@ -280,18 +280,7 @@ class Ui_Chat(QWidget):
             self.time_latest, self.time_pre = time_latest, time_pre
             self.autoSlideBar('top')
     def autoSlideBar(self,pos='bottom'):
-        if pos=='bottom':
-            self.bar.setValue(self.scrollArea.bottom)
-        
-    # def setButton(self,B,I,pw,ph,objectname,position=None,connect=None):
-    #     if I is not None:
-    #         icon = QtGui.QIcon()
-    #         icon.addPixmap(QtGui.QPixmap(I) )
-    #         B.setIcon(icon)
-    #         B.setIconSize(QtCore.QSize(pw , ph))
-    #     B.setObjectName(objectname)
-    #     if position is not None:B.setGeometry(QtCore.QRect(*position))
-    #     if connect is not None:B.clicked.connect(connect)
+        self.scrollArea.slideBar(pos)
 
     def accept_callback(self,content,msg_type,message_sender):#message_sender是wxpy的一个User对象
         yxsid_send_user = self.bot.get_user_yxsid(message_sender)

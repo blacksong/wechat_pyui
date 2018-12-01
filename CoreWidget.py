@@ -128,6 +128,11 @@ class YScrollArea(QtWidgets.QScrollArea):
         self.main_widget.setMinimumSize(self.main_widget.width(), 2)
         [i.hide() for i in self.widgets]
         self.widgets = list()
+    def slideBar(self,pos='bottom'):
+        if pos == 'top':
+            self.bar.setValue(0)
+        else:
+            self.bar.setValue(self.bottom)
 #滚动区域的Widget
 class YWidget(QtWidgets.QWidget):
     def __init__(self,*d,**k):
