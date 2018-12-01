@@ -530,7 +530,7 @@ class myBot(wxpy.Bot):
         '''RSA解密时出现错误调用此函数，发送一条明文消息给对方，告诉对方消息发送错误，请对方重发，并且发送我方公钥给对方'''
         msg.sender.send_file(str(self.publicfile))
         msg.sender.send('信息错误，请尝试重发上一条信息')
-    def get_message(self,msg,file_path=None):#处理收到的消息
+    def get_message(self,msg,file_path:str=None):#处理收到的消息
         #yxsid_send 发送msg的人
         type_ = self.get_user_type(msg.chat)
         yxsid_send = self.get_user_yxsid(msg.sender)#
@@ -570,14 +570,29 @@ class myBot(wxpy.Bot):
                     return
             text_conversation = content
         elif msg_type == PICTURE:
-            content = str(self.image_path /(yxsid_chat+msg.file_name))
-            if not file_path:
-                msg.get_file(content)
-            else:
-                if not Path(content).exists():
-                    os.rename(file_path,content)
+            content = self.image_path / (yxsid_chat+msg.file_name)
 
-            is_existed = Path(content).is_file()
+            ii = 0
+            while content.exists():
+                ii+=1
+                content = content.with_suffix('.{}{}'.format(ii,content.suffix))
+            
+            if not file_path:
+                msg.get_file(str(content))
+            else:
+                os.rename(file_path,content)
+
+            if content.suffix == '.gif':
+                gif_md5 = self.get_img_md5(content.read_bytes())
+                gif_emoji_path = self.image_path /( gif_md5+'.gif')
+                if gif_emoji_path.exists():
+                    os.remove(content)
+                else:
+                    os.rename(content,gif_emoji_path)
+                content = gif_emoji_path
+
+
+            is_existed = content.is_file()
             if not is_existed or getsize(content) == 0:
                 if is_existed:
                     os.remove(content)
@@ -585,6 +600,7 @@ class myBot(wxpy.Bot):
                 content = '[收到了一个表情，请在手机上查看]'
                 text_conversation = content
             else:
+                content = str(content)
                 text_conversation = '[图片]'
         elif msg_type in [ATTACHMENT, VIDEO, RECORDING]:
             if msg.file_name.endswith(SUFFIX_PUBLICKEY):#如果文件后缀为SUFFIX_PUBLICKEY则不显示该文件 该文件是公钥文件，，进行保存
