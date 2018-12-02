@@ -28,12 +28,24 @@ class LogInThread(QtCore.QThread):
         @bot.register(except_self=False)
         def get_message(msg,index_file = [1]):
             filename = None
+            md5_value = None
             if msg.type in (PICTURE,VIDEO,ATTACHMENT,RECORDING):
                 filename = bot.path /(str(index_file[0]) + msg.file_name)
                 index_file[0]+=1
-                msg.get_file(str(filename))
-                filename = str(filename)
-            self.trigger.emit((msg,'MSG',filename))
+                md5_value = bot.get_msg_md5(msg)
+                if filename.suffix == '.gif':
+                    #该文件是表情
+                    if md5_value is not None:
+                        #文件存在 并且可下载
+                        if not bot.exists_md5_file(md5_value):
+                            #该文件不曾下载过
+                            msg.get_file(str(filename))
+                    filename = str(filename)
+                else:
+                    #该文件不是表情
+                    msg.get_file(str(filename))
+                    filename = str(filename)
+            self.trigger.emit((msg,'MSG',filename,md5_value))
 
         if bot.is_first:
             bot.first_run()
@@ -127,8 +139,10 @@ class WelcomeFrame:
     def bot_callback(self,callback_data):
         if len(callback_data) == 2:
             data, TYPE = callback_data
+        elif len(callback_data) == 4:
+            data, TYPE, file_path, md5_value= callback_data
         else:
-            data, TYPE, file_path= callback_data
+            raise Exception('length error: callback_data')
         if TYPE == 'BOT':
             self.bot=data
             self.father_view.bot = self.bot
@@ -137,7 +151,7 @@ class WelcomeFrame:
             self.father_view.setupUi()
             self.father_view.show()
         elif TYPE == 'MSG' and self.bot is not None:
-            self.bot.get_message(data,file_path)
+            self.bot.get_message(data,file_path,md5_value)
             return
         elif TYPE == 'FIRST':
             pass

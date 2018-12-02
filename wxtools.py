@@ -145,6 +145,7 @@ class myBot(wxpy.Bot):
         self.public_key_dict = dict()
         self.hash_write_auto = 1#记录自动写入硬盘的hash值
         self.img_saved_dict = dict()
+        self.auto_index = 0#全局公用的一个值，用来区别临时文件
     def enable_rsa(self):# 启用加密
 
         path_rsa_key = self.rsa_path
@@ -530,7 +531,20 @@ class myBot(wxpy.Bot):
         '''RSA解密时出现错误调用此函数，发送一条明文消息给对方，告诉对方消息发送错误，请对方重发，并且发送我方公钥给对方'''
         msg.sender.send_file(str(self.publicfile))
         msg.sender.send('信息错误，请尝试重发上一条信息')
-    def get_message(self,msg,file_path:str=None):#处理收到的消息
+    def get_msg_md5(self,msg):
+        #从消息中获取文件的md5值
+        content = msg.raw['Content']
+        n = content.find('md5=')
+        if n == -1:
+            return None
+        md5_value = content[n+5:n+37]
+        return md5_value
+
+    def exists_md5_file(self,md5_value:str):
+        t = self.image_path / (md5_value+'.gif')
+        return t.exists()
+    
+    def get_message(self,msg,file_path:str=None,md5_value:str = None):#处理收到的消息
         #yxsid_send 发送msg的人
         type_ = self.get_user_type(msg.chat)
         yxsid_send = self.get_user_yxsid(msg.sender)#
@@ -557,6 +571,15 @@ class myBot(wxpy.Bot):
             self.senders[yxsid_chat] = msg.chat
         receiver = self.message_dispatcher.get(yxsid_chat)
         
+        if msg_type in (PICTURE,VIDEO,ATTACHMENT,RECORDING) and file_path is None:
+            #如果文件没有随消息传入，则自己获取文件
+            file_path = str(self.path / (str(self.auto_index) + msg.file_name))
+            self.auto_index += 1
+            md5_value = self.get_msg_md5(msg)
+            if md5_value is not None:
+                msg.get_file(file_path)
+            
+
         #解析获取的消息
         if msg_type == TEXT:
             content = msg.text
@@ -576,32 +599,24 @@ class myBot(wxpy.Bot):
             while content.exists():
                 ii+=1
                 content = content.with_suffix('.{}{}'.format(ii,content.suffix))
-            
-            if not file_path:
-                msg.get_file(str(content))
-            else:
-                os.rename(file_path,content)
 
             if content.suffix == '.gif':
-                gif_md5 = self.get_img_md5(content.read_bytes())
-                gif_emoji_path = self.image_path /( gif_md5+'.gif')
-                if gif_emoji_path.exists():
-                    os.remove(content)
+                if md5_value is None:
+                    #表情文件无法接受
+                    msg_type = TEXT
+                    content = '[收到了一个表情，请在手机上查看]'
+                    text_conversation = content
                 else:
-                    os.rename(content,gif_emoji_path)
-                content = gif_emoji_path
-
-
-            is_existed = content.is_file()
-            if not is_existed or getsize(content) == 0:
-                if is_existed:
-                    os.remove(content)
-                msg_type = TEXT 
-                content = '[收到了一个表情，请在手机上查看]'
-                text_conversation = content
+                    text_conversation = '[图片]'
+                    gif_emoji_path = self.image_path /( md5_value+'.gif')
+                    if not gif_emoji_path.exists():
+                        os.rename(file_path,gif_emoji_path)
+                    content = str(gif_emoji_path)
             else:
                 content = str(content)
                 text_conversation = '[图片]'
+                os.rename(file_path,content)
+
         elif msg_type in [ATTACHMENT, VIDEO, RECORDING]:
             if msg.file_name.endswith(SUFFIX_PUBLICKEY):#如果文件后缀为SUFFIX_PUBLICKEY则不显示该文件 该文件是公钥文件，，进行保存
                 self.save_publickey(msg,file_path)
