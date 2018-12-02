@@ -42,7 +42,6 @@ class LogInThread(QtCore.QThread):
                             msg.get_file(str(filename))
                     filename = str(filename)
                 else:
-                    #该文件不是表情
                     msg.get_file(str(filename))
                     filename = str(filename)
             self.trigger.emit((msg,'MSG',filename,md5_value))

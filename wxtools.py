@@ -631,16 +631,12 @@ class myBot(wxpy.Bot):
             else:
                 text_conversation = '[文件]'
                 epath = self.attachment_path
-            filename = str(epath/msg.file_name)
-            if not file_path:
-                msg.get_file(filename)
-            else:
-                try:
-                    if Path(filename).exists():
-                        os.rename(file_path,filename)
-                except Exception as e:
-                    print('Error:文件已存在 无法删除',e)
-            content = filename
+            filename = epath/msg.file_name
+            try:
+                os.rename(file_path,filename)
+            except Exception as e:
+                print('Error:文件已存在 无法删除',e)
+            content = str(filename)
                 
         elif msg_type == NOTE:
             text_conversation = msg.text 
