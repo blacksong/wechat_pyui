@@ -400,6 +400,7 @@ class YTalkWidget(QtWidgets.QWidget):
             h = max(h,self.min_size)
         elif Format == PICTURE:#显示表情或者图片
             h=self.setMessage_Picture(value)
+            h = max(h,self.min_size)
         elif Format == SYSTEM_YXS:
             h=self.setMessage_System(value)
         elif Format == VIDEO:
