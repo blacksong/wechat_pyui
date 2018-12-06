@@ -44,6 +44,7 @@ RSA_PUBLIC_KEY_FILE_PASSWD = 'I just want encrypt this file!666'
 SUFFIX_PUBLICKEY = '.yprkf' #系统用文件后缀名
 PUBLIC_KEY_FILE = 'pupu.yprkf'
 PRIVATE_KEY_FILE = 'prpr.yprkf'
+PLATFORM = sys.platform
 class mydb:
     def __init__(self,conn):
         self.conn=conn
@@ -297,6 +298,10 @@ class myBot(wxpy.Bot):
         #读取数据
         def filter_data(yxsid,Value,Msg_type,Time,name):
             if Msg_type in (PICTURE,VIDEO,ATTACHMENT,RECORDING):
+                if PLATFORM.startswith('win'):
+                    Value = Value.replace('/','\\')
+                else:
+                    Value = Value.replace('\\','/')
                 Value = str(self.path / Value)
             return yxsid,Value,Msg_type,Time,name
 
