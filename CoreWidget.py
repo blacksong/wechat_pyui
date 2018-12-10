@@ -30,6 +30,8 @@ SYSTEM_YXS = 'SYSTEM_YXS'
 global_font=QtGui.QFont()
 global_font.setFamily('SimHei')
 
+data_path = Path(sys.path[0]) / 'wechat_data'
+WECHAT_DATA_PATH = str(data_path)+'/'
 
 #宏定义值
 AUTO_PUSH=1
@@ -44,7 +46,9 @@ class Emoji:
         self.emoji_path = Path(emoji_path)
         self.name_list = self.emoji_path.name[:-4].split('_')
         
-def read_emoji(path_emoji='./wechat_data/emoji'):
+def read_emoji(path_emoji=None):
+    if path_emoji is None:
+        path_emoji = WECHAT_DATA_PATH+'/emoji'
     p=Path(path_emoji)
     emo = {j:str(i) for i in p.glob('*.png') for j in Emoji(i).name_list}
     emoji.update(emo)
@@ -186,6 +190,9 @@ class YSentenceBubble(QtWidgets.QWidget):
         s=s.replace('[',r'\[')
         s=s.replace(']',r'\]')
         self.emoji_re = re.compile('({})'.format(s))
+        self.html_table = str.maketrans(
+            {'<':'&lt;','>':'&gt;','\n':'<br/>',' ':'&nbsp;'}
+        )
         self.min_height=d.min_height
     def paintEvent(self,e):
         qp = QPainter()
@@ -214,6 +221,7 @@ class YSentenceBubble(QtWidgets.QWidget):
             rect_pos=self.other_rect_pos[0]-self.border_text,self.other_rect_pos[1]
         
         self.move(*rect_pos)
+
     def setMessage(self,text,identity=ME):
         self.textEdit = QtWidgets.QTextEdit(self)
         self.textEdit.setObjectName("textEdit")
@@ -231,8 +239,8 @@ class YSentenceBubble(QtWidgets.QWidget):
             ft = '< img src="{src}" height="{height}"/>' 
             b = t.group() 
             return ft.format(src= emoji[b], height = int(self.font_size)) 
-        tt = self.emoji_re.sub(sub_func, text) 
-        text = '<p style="font-size:{height}px;font-family:SimHei">{text}</p >'.format(text = tt.replace('\n', '<br />'), height=self.font_size) 
+        tt = self.emoji_re.sub(sub_func, text.translate(self.html_table)) 
+        text = '<p style="font-size:{height}px;font-family:SimHei">{text}</p >'.format(text = tt, height=self.font_size) 
         self.textEdit.setHtml(text)
 
 

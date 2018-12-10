@@ -7,7 +7,6 @@ import CoreWidget
 import chat_view
 import ConversationFrame,MeFrame,ContactFrame,DiscoverFrame
 import WelcomeFrame
-data_path = './wechat_data/'
 import ctypes
 if sys.platform.startswith('win'):#为了使任务栏图标和标题栏图标一样，需要ctypes的设置
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
@@ -29,7 +28,7 @@ class Ui_Form:
 
         #在系统托盘显示图标
         self.pannelIcon = QSystemTrayIcon(Form)
-        self.system_icon = QtGui.QIcon(data_path+'icon/WeChat.ico')
+        self.system_icon = QtGui.QIcon(WECHAT_DATA_PATH+'icon/WeChat.ico')
         self.pannelIcon.setIcon(self.system_icon)
         self.pannelIcon.show()
         self.pannelIcon.setToolTip("微信")
@@ -38,7 +37,7 @@ class Ui_Form:
     def start_login(self,state=None):#进入登录界面 
         w,h = self.size
         # cache相当于设置了整个用户数据文件的存储位置
-        cache = Path('./user_data/log_in_cache') / 'wx.pkl'  
+        cache = Path(sys.path[0]) / Path('user_data/log_in_cache') / 'wx.pkl'  
         if not cache.parent.exists():
             os.makedirs(cache.parent)
         self.welcome = WelcomeFrame.WelcomeFrame(cache)
@@ -76,13 +75,13 @@ class Ui_Form:
         self.Button_4.setObjectName("Button_4")
         self.horizontalLayout.addWidget(self.Button_4)
 
-        self.setButton(self.Button_1,data_path+"icon/button1_ok.jpg",pw,ph,'Button_1',self.button1_click)
+        self.setButton(self.Button_1,WECHAT_DATA_PATH+"icon/button1_ok.jpg",pw,ph,'Button_1',self.button1_click)
 
-        self.setButton(self.Button_2,data_path+"icon/button2_no.jpg",pw,ph,'Button_2',self.button2_click)
+        self.setButton(self.Button_2,WECHAT_DATA_PATH+"icon/button2_no.jpg",pw,ph,'Button_2',self.button2_click)
 
-        self.setButton(self.Button_3,data_path+"icon/button3_no.jpg",pw,ph,'Button_3',self.button3_click)
+        self.setButton(self.Button_3,WECHAT_DATA_PATH+"icon/button3_no.jpg",pw,ph,'Button_3',self.button3_click)
 
-        self.setButton(self.Button_4,data_path+"icon/button4_no.jpg",pw,ph,'Button_4',self.button4_click)
+        self.setButton(self.Button_4,WECHAT_DATA_PATH+"icon/button4_no.jpg",pw,ph,'Button_4',self.button4_click)
         #顶部设计
         tw1,tw2=int(490/720*w+0.2),int((490+94)/720*w+0.2)
         ph_top=CRITERION
@@ -94,11 +93,11 @@ class Ui_Form:
 
 
         self.Button_search = YButton(Form)
-        self.setButton(self.Button_search,data_path+"icon/search.jpg",tw2-tw1,ph_top,'Button_search',self.button_search_click)
+        self.setButton(self.Button_search,WECHAT_DATA_PATH+"icon/search.jpg",tw2-tw1,ph_top,'Button_search',self.button_search_click)
         self.Button_search.setGeometry(QtCore.QRect( tw1,0,tw2-tw1,ph_top))
 
         self.Button_plus = YButton(Form)
-        self.setButton(self.Button_plus,data_path+"icon/plus.jpg",w-tw2,ph_top,'Button_plus',self.button_plus_click)
+        self.setButton(self.Button_plus,WECHAT_DATA_PATH+"icon/plus.jpg",w-tw2,ph_top,'Button_plus',self.button_plus_click)
         self.Button_plus.setGeometry(QtCore.QRect( tw2,0,w-tw2,ph_top))
 
         #主界面显示
@@ -193,7 +192,7 @@ class Ui_Form:
         # k is False: 鼠标点击 吗
         img = None
         if self.active!=1:
-            img=data_path+"icon/button1_ok.jpg"
+            img=WECHAT_DATA_PATH+"icon/button1_ok.jpg"
             self.release_button()
             self.active=1
             if self.surface_list[0] is None:
@@ -206,7 +205,7 @@ class Ui_Form:
             self.surface.hide()
             self.surface=self.surface_list[0]
         elif k is AUTO_PUSH:
-            img=data_path+"icon/button1_no.jpg"
+            img=WECHAT_DATA_PATH+"icon/button1_no.jpg"
         if img:
             icon = QtGui.QIcon()
             icon.addPixmap(QtGui.QPixmap(img)  )
@@ -214,7 +213,7 @@ class Ui_Form:
     def button2_click(self,k):
         img = None
         if k is False and self.active!=2:
-            img=data_path+"icon/button2_ok.jpg"
+            img=WECHAT_DATA_PATH+"icon/button2_ok.jpg"
             self.release_button()
             self.active=2
             if self.surface_list[1] is None:
@@ -227,7 +226,7 @@ class Ui_Form:
             self.surface.hide()
             self.surface=self.surface_list[1]
         elif k is AUTO_PUSH:
-            img=data_path+"icon/button2_no.jpg"
+            img=WECHAT_DATA_PATH+"icon/button2_no.jpg"
         if img:
             icon = QtGui.QIcon()
             icon.addPixmap(QtGui.QPixmap(img)  )
@@ -236,7 +235,7 @@ class Ui_Form:
     def button3_click(self,k):
         img = None
         if self.active!=3:
-            img=data_path+"icon/button3_ok.jpg"
+            img=WECHAT_DATA_PATH+"icon/button3_ok.jpg"
             self.release_button()
             self.active=3
             if self.surface_list[2] is None:
@@ -250,7 +249,7 @@ class Ui_Form:
             self.surface=self.surface_list[2]
 
         elif k is AUTO_PUSH:
-            img=data_path+"icon/button3_no.jpg"
+            img=WECHAT_DATA_PATH+"icon/button3_no.jpg"
         if img:
             icon = QtGui.QIcon()
             icon.addPixmap(QtGui.QPixmap(img)  )
@@ -258,7 +257,7 @@ class Ui_Form:
     def button4_click(self,k):
         img = None
         if k is False and self.active!=4:
-            img=data_path+"icon/button4_ok.jpg"
+            img=WECHAT_DATA_PATH+"icon/button4_ok.jpg"
             self.release_button()
             self.active=4
             if self.surface_list[3] is None:
@@ -271,7 +270,7 @@ class Ui_Form:
             self.surface.hide()
             self.surface=self.surface_list[3]
         elif k is AUTO_PUSH:
-            img=data_path+"icon/button4_no.jpg"
+            img=WECHAT_DATA_PATH+"icon/button4_no.jpg"
         if img:
             icon = QtGui.QIcon()
             icon.addPixmap(QtGui.QPixmap(img)  )
@@ -286,8 +285,8 @@ class myMainWindow(QWidget):
         self.chat_yxsid_present = None#记录当前对话框yxsid的一个变量，相当于一个全局变量，因为Form会出现在很多widget中
         self.chat_view_dict = None#记录单独剥离出来的对话框
         self.del_funs = []
-        self.system_icon = QtGui.QIcon(data_path+'icon/WeChat.ico')
-        self.warning_icon = QtGui.QIcon(data_path+'icon/WeChat_warning.ico')
+        self.system_icon = QtGui.QIcon(WECHAT_DATA_PATH+'icon/WeChat.ico')
+        self.warning_icon = QtGui.QIcon(WECHAT_DATA_PATH+'icon/WeChat_warning.ico')
         self.setWindowIcon(self.system_icon)#设置标题栏和系统任务栏图标
         self.is_warning = False
     def start_warning(self):
