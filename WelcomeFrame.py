@@ -58,6 +58,7 @@ class WelcomeFrame:
         self.users_login=self.get_users_login()
         self.cache_select = None
         self.bot = None
+        self.clicked_button = False #界面按钮是否被点击过，点击过则无法再次点击
     def get_users_login(self):
         users = [str(i.name).replace('.jpg','').split('_') for i in self.cache.parent.glob('*.jpg')]
         fun_sort = lambda x:0 - Path(self.cache.with_name(x[0]+'_wx.pkl')).stat().st_mtime
@@ -111,11 +112,21 @@ class WelcomeFrame:
                 self.cache_select = self.cache.with_name(yxsid+'_wx.pkl')
                 break
     def new_log_in(self):
+        if self.clicked_button:
+            return 
+        self.clicked_button = True
+        w = self.size[0]
+        self.reLogIn_button.setTextIcon("正在登录...",(12,234,12),(0,0,0),(int(w/4),int(w/12)))
         if Path(self.cache).is_file():
             os.remove(self.cache)
         self.get_QRcode()
     def saved_log_in(self):
+        if self.clicked_button:
+            return
+        self.clicked_button = True
         if self.cache_select is not None:
+            w = self.size[0]
+            self.LogIn_button.setTextIcon("正在登录...",(12,234,12),(0,0,0),(int(w/2),int(w/6)))
             print('used',str(self.cache_select))
             t1 = self.cache.stat().st_mtime 
             t2 = self.cache_select.stat().st_mtime
@@ -175,5 +186,6 @@ class WelcomeFrame:
     def hide(self):
         self.LogIn_button.hide()
         self.QR_label.hide()
+        self.clicked_button = False
 
     
