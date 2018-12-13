@@ -131,6 +131,7 @@ class ConversationFrame(object):
                     self.Form.start_warning()
                 else:
                     self.Form.stop_warning()
+                    # pass
                 self.setUnreadTitle()
                 self.scrollArea.bar.setValue(self.bar_value)
                 return

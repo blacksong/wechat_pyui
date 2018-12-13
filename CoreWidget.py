@@ -23,7 +23,7 @@ import imageio
 import webbrowser
 import subprocess
 from multiprocessing import Process
-
+GLOBAL_DICT = {}
 platform = sys.platform
 
 SYSTEM_YXS = 'SYSTEM_YXS'

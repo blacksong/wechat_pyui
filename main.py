@@ -11,6 +11,7 @@ import ctypes
 if sys.platform.startswith('win'):#为了使任务栏图标和标题栏图标一样，需要ctypes的设置
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
     del ctypes
+global_app = [None]
 class Ui_Form:
     def __init__(self, Form, h=1280/90, w=720/90):
         super().__init__()
@@ -286,16 +287,14 @@ class myMainWindow(QWidget):
         self.chat_view_dict = None#记录单独剥离出来的对话框
         self.del_funs = []
         self.system_icon = QtGui.QIcon(WECHAT_DATA_PATH+'icon/WeChat.ico')
-        self.warning_icon = QtGui.QIcon(WECHAT_DATA_PATH+'icon/WeChat_warning.ico')
         self.setWindowIcon(self.system_icon)#设置标题栏和系统任务栏图标
         self.is_warning = False
     def start_warning(self):
         if not self.is_warning:
-            self.setWindowIcon(self.warning_icon)    
+            GLOBAL_DICT['alert_msg']()
             self.is_warning=True
     def stop_warning(self):
         if self.is_warning:
-            self.setWindowIcon(self.system_icon)
             self.is_warning=False
     def setBot(self,bot):
         self.bot=bot
@@ -315,10 +314,15 @@ class myMainWindow(QWidget):
         except Exception as e:
             print('Error 0:',e)
         sys.exit()
-
+def alert_msg():
+    app,widget = global_app[0]
+    app.alert(widget)
+GLOBAL_DICT['alert_msg'] = alert_msg
 def main():
     app = QApplication(sys.argv)
+    
     mainWindow = myMainWindow()
+    global_app[0] = app,mainWindow
     ui = Ui_Form(mainWindow)
     mainWindow.setUi(ui)
     mainWindow.show()
