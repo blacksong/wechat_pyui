@@ -4,7 +4,7 @@ import time
 import sqlite3 as sql 
 import hashlib
 import sys
-import yxspkg_encrypt as encrypt
+from yxspkg import encrypt
 import os
 import asyncio
 import base64
