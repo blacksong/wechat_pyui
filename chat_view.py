@@ -31,9 +31,8 @@ class Ui_Chat(QWidget):
         self.scrollWidget_message_size= 200,70
         self.scrollWidget_message_bottom = 0
         self.emotionWidget = None   #用来显示表情的widget
-
     def set_chat_info(self,Bot,user_info):
-        print(user_info)
+        print('user_info',user_info)
         self.user_info = user_info
         self.me_info = Bot.get_me_info()
         self.bot = Bot
@@ -343,7 +342,8 @@ class Ui_Chat(QWidget):
     def closeEvent(self,e):
         self.bot.message_dispatcher.pop(self.user_info['yxsid'])
         self.father.chat_view_dict.pop(self.user_info['yxsid'])
-        self.destroy()
+        # self.destroy()
+        super().closeEvent(e)
 
 class Ui_Mobile(Ui_Chat):
     def setupUi(self, Form,w,h,view,user_info,Bot,ox=0,oy=0):

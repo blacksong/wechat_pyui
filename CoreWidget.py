@@ -16,7 +16,7 @@ import re
 import os
 from PIL import Image
 from os.path import getsize
-import yxspkg_songzviewer as ysv
+from yxspkg import songziviewer as ysv
 from wxpy import TEXT, PICTURE, MAP, CARD, NOTE, SHARING, RECORDING, ATTACHMENT, VIDEO, FRIENDS, SYSTEM
 import video_player
 import imageio
@@ -463,7 +463,7 @@ class YTalkWidget(QtWidgets.QWidget):
                 else:
                     value = self.value
             if self.Format == PICTURE:
-                self._display = ysv.GifPreview(name=value)
+                self._display = ysv.ImageViewer(name=value)
             elif self.Format == VIDEO:
                 if platform.startswith('linux'):
                     p = Process(target = subprocess.call,args=(['ffplay',value],))
